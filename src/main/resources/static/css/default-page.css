@@ -3,6 +3,18 @@ img {
     width: 100%;
 }
 
+.banner img {
+    display: block;
+    height: 360px;
+    object-fit: fill;
+}
+
+@media (max-width: 768px) {
+    .banner img {
+        height: 220px;
+    }
+}
+
 div [class^="col-"] {
     padding-left: 5px;
     padding-right: 5px;
