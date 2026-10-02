@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        .number {
+            display: inline;
+            border-radius: 15px;
+            padding: 3px 6px;
+            background-color: rgb(114, 187, 230);
+            color: white;
+            float: right;
+            margin-right: 20px;
+            font-size: 14px
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div th:fragment="thong-ke">
+        <div class="card-header  " style="background: #0070e9;;text-align: center;">
+            <label class="col-form-label" style="color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;font-weight: bold"><i class="fa-solid fa-ranking-star"></i>BXH TOP 10</label>
+        </div>
+        <div style="padding: 5px;">
+            <table class="table table-hover mr-3 h-50 rounded " id="tableHistory" style="font-size: 15px">
+                <tbody th:each="result,i :${sList}">
+                <tr style="background: white">
+                    <td style="display: flex;gap: 10px;margin: 5px 0">
+                        <div class="score-left" style="position: relative">
+                            <img th:src="@{${result.users.img}}"
+                                 style="width: 70px;height: 70px;object-fit: cover;border-radius: 5px;">
+                        </div>
+                        <div class="score-right" style="color: black;display: flex;flex-direction: column;gap: 5px;">
+                            <div class="score-name">
+                                <span style="padding: 5px;color: white;background: #2bb52b;text-align: center;border-radius: 5px;"
+                                      th:text="${new java.text.DecimalFormat('0.#').format(result.mark)} + ' điểm'"></span>
+                                <span th:text="${result.users.fullName}"></span>
+                            </div>
+                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam.id != null}">
+                                <span th:text="${result.exam.lesson.chapter.subjectClasses.classes.nameClass} + ', '"></span>
+                                <span th:text="${result.exam.lesson.chapter.subjectClasses.subject.name} + ', '"></span>
+                                <span th:text="${result.exam.idName}"></span>
+                            </div>
+                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam.id == null}">
+                                <span>Bài kiểm tra IQ</span>
+                            </div>
+                            <div class="score-total">
+                                <span th:text="'vào '+${#dates.format(result.endTime,'hh:mm:ss, dd/MM/yyyy')}"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <style>
+        .number {
+
+            display: inline;
+            border-radius: 15px;
+            padding: 3px 6px;
+            background-color: gray;
+            color: white;
+            float: right;
+            font-size: 12px;
+        }</style>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+    <div th:fragment="tai-lieu-tham-khao">
+        <div class="card-header  " style="background: #0070e9;;text-align: center;">
+            <label class="col-form-label"
+                   style="color: white;display: flex;align-items: center;justify-content: center;gap: 10px;font-weight: bold"><i
+                    class="fa-solid fa-book"></i>Tài liệu tham khảo</label>
+        </div>
+        <table class="table  mt-3 ml-2 mr-3 h-50 " id="tableHistory">
+
+            <tbody >
+            <tr class="bg-light text-primary" th:each="document,i :${documents}">
+                <td>
+                    <a th:href="@{/tai-lieu/__${document.id}__}" style="display: flex;gap: 10px;align-items: center;background: white;padding: 5px">
+                        <div class="document-img">
+                            <img th:src="@{${document.avatar}}" alt="Ảnh"
+                                 style="height: 70px;width: 70px;object-fit: cover;border-radius: 5px;">
+                        </div>
+                        <div class="document-info" style="display: flex;flex-direction: column;color: black;">
+                            <div class="document-title" style="font-weight: bold;">
+                                <span th:text="${document.title}"></span>
+                            </div>
+                            <div class="document-author">
+                                <span>Tác giả : <span style="color: blueviolet;font-style: italic;cursor: pointer;"
+                                                      th:text="${document.users.fullName}"></span></span>
+                            </div>
+                            <div class="document-date" style="color: #9c9c9c;font-size: 14px;">
+                                <span id="date-view" th:text="${#dates.format(document.createDate,'dd/MM/yyyy') + ' - '+document.view +' lượt xem'}"></span>
+                            </div>
+                        </div>
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${!documents.isEmpty()}">
+                <td class="text-center"><a href="/tai-lieu">Xem tất cả</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>

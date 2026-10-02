@@ -1,0 +1,16 @@
+#preloader {
+    background: #e5eff1 url("../img/loader-gif.gif") no-repeat center center;
+    background-size: 15%;
+    height: 100vh;
+    width: 100%;
+    position: fixed;
+    z-index: 100;
+}
+.display {
+    animation: opacity 5s forwards;
+}
+@keyframes opacity {
+    100% {
+        display: none;
+    }
+}

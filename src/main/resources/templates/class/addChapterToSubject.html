@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <!-- NProgress -->
+    <link th:href="@{/vendors/nprogress/nprogress.css}" rel="stylesheet">
+    <!-- iCheck -->
+    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+
+    <!-- bootstrap-progressbar -->
+    <link th:href="@{/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css}" rel="stylesheet">
+    <!-- JQVMap -->
+    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
+    <!-- bootstrap-daterangepicker -->
+    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/css/addChapter.css}">
+    <style>
+        .profile-information__avatar {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .profile-information__avatar .avatar-upload img {
+            width: 400px;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .profile-information__avatar .btn-upload-image label {
+            padding: 5px 20px;
+            background: #77beb0;
+            margin: 0;
+            text-transform: capitalize;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .profile-information__avatar .btn-upload-image label:hover {
+            background: #50e4c7;
+            transition: all linear 0.2s;
+        }
+
+        #btn-choose-image {
+            margin: 0;
+        }
+
+        .list-subject {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin: 10px;
+            background: antiquewhite;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .list-subject label {
+            margin: 0;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+        <div class="right_col" role="main">
+            <div class="row">
+                <div class="container-fluid" style="margin-bottom: 150px">
+                    <div class="h4 text-center mb-4">
+                        <p id="de">Thêm chương - <span style="text-transform: uppercase" th:text="${subjectClasses.subject.name} +' '+${subjectClasses.classes.nameClass}"></span></p>
+                    </div>
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert"
+                         th:if="${message != null}">
+                        <strong th:text="${message}"></strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form style="max-width: 1200px; margin: 0 auto; background-color: #d8f5ff;"
+                          th:object="${subjectClasses}"
+                          th:action="@{/subject/class/create}" method="post" enctype="multipart/form-data">
+                        <div id="wrapFormExam">
+                            <input type="text" th:field="*{id}" style="display: none">
+                            <input type="text" th:field="*{classes}" style="display:none;">
+                            <input type="text" th:field="*{subject}" style="display: none">
+                            <input type="text" th:value="${serial}" style="display: none" id="serial">
+                            <div class="border border-secondary rounded p-3 pt-5">
+                                <div class="form-group row mg-16-auto">
+                                    <label class="col-sm-3 col-form-label">Chương</label>
+                                    <div class="col-sm-8 row">
+                                        <div class="list-chapter col-md-12">
+                                            <div class="col-md-1">
+                                                <button type="button" id="addBefore" class="btn btn-primary"><i
+                                                        class="fa-solid fa-plus"></i></button>
+                                                <button type="button" id="addAfter" class="btn btn-warning"><i
+                                                        class="fa-solid fa-plus"></i></button>
+                                            </div>
+                                            <div id="chapter" class="col-md-8">
+                                                <div class="chapter-item" th:each="chapter : ${chapters}">
+                                                    <input type="text" th:value="${chapter.chapterName}">
+                                                    <input type="text" th:value="${chapter.id}" name="chapters"
+                                                           style="display: none">
+                                                    <span class="btn-delete" onclick="modal(this.parentElement)"><i
+                                                            class="fa-solid fa-trash-can"></i></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="saveBtn">Cập nhập</button>
+                                <a th:href="@{/chapter/list/__${subjectClasses.id}__}" class="btn btn-warning">Trở lại</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="name-delete">Bạn có muốn xóa chương này không ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="delRef" data-dismiss="modal">Có</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- NProgress -->
+<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
+<!-- Chart.js -->
+<script th:src="@{/vendors/Chart.js/dist/Chart.min.js}"></script>
+<!-- gauge.js -->
+<script th:src="@{/vendors/gauge.js/dist/gauge.min.js}"></script>
+<!-- bootstrap-progressbar -->
+<script th:src="@{/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Skycons -->
+<script th:src="@{/vendors/skycons/skycons.js}"></script>
+<!-- Flot -->
+<script th:src="@{/vendors/Flot/jquery.flot.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.pie.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.time.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.stack.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.resize.js}"></script>
+<!-- Flot plugins -->
+<script th:src="@{/vendors/flot.orderbars/js/jquery.flot.orderBars.js}"></script>
+<script th:src="@{/vendors/flot-spline/js/jquery.flot.spline.min.js}"></script>
+<script th:src="@{/vendors/flot.curvedlines/curvedLines.js}"></script>
+<!-- DateJS -->
+<script th:src="@{/vendors/DateJS/build/date.js}"></script>
+<!-- JQVMap -->
+<script th:src="@{/vendors/jqvmap/dist/jquery.vmap.js}"></script>
+<script th:src="@{/vendors/jqvmap/dist/maps/jquery.vmap.world.js}"></script>
+<script th:src="@{/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js}"></script>
+<!-- bootstrap-daterangepicker -->
+<script th:src="@{/vendors/moment/min/moment.min.js}"></script>
+<script th:src="@{/vendors/bootstrap-daterangepicker/daterangepicker.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script>
+    var stt = [[${serial}]];
+    stt++;
+    document.getElementById("addAfter").addEventListener("click", function () {
+        var div = document.getElementById("chapter");
+        var divWrap = document.createElement("div");
+        divWrap.setAttribute("class", "chapter-item")
+        var text = document.createElement("input");
+        text.type = "text";
+        text.name = "chapter";
+        text.placeholder = "Nhập tên chương " + stt;
+        var input = document.createElement("input");
+        input.name = "chapters";
+        input.value = "0";
+        input.style.display = "none";
+        stt++;
+        var span = document.createElement("span");
+        span.onclick = function(){modal(this.parentElement)};
+        var icon = document.createElement("i");
+        icon.setAttribute("class", "fa-solid fa-trash-can");
+        span.appendChild(icon);
+        span.setAttribute("class", "btn-delete");
+        divWrap.appendChild(text);
+        divWrap.appendChild(input);
+        divWrap.appendChild(span);
+        div.appendChild(divWrap);
+        var listChapter = document.querySelectorAll('input[name=chapter]');
+        for (let i = 1; i < listChapter.length; i++) {
+            listChapter[i].placeholder = "Nhập tên chương " + (i + 1);
+        }
+    });
+    document.getElementById("addBefore").addEventListener("click", function () {
+        var div = document.getElementById("chapter");
+        var divWrap = document.createElement("div");
+        divWrap.setAttribute("class", "chapter-item");
+        var text = document.createElement("input");
+        text.type = "text";
+        text.placeholder = "Nhập tên chương 1";
+        text.name = "chapter";
+        var input = document.createElement("input");
+        input.name = "chapters";
+        input.value = "0";
+        input.style.display = "none";
+        stt++;
+        var span = document.createElement("span");
+        span.onclick = function(){modal(this.parentElement)};
+        var icon = document.createElement("i");
+        icon.setAttribute("class", "fa-solid fa-trash-can");
+        span.appendChild(icon);
+        span.setAttribute("class", "btn-delete");
+        divWrap.appendChild(text);
+        divWrap.appendChild(input);
+        divWrap.appendChild(span);
+        div.prepend(divWrap);
+        var listChapter = document.querySelectorAll('input[name=chapter]');
+        for (let i = 1; i < listChapter.length; i++) {
+            listChapter[i].placeholder = "Nhập tên chương " + (i + 1);
+        }
+    });
+    $("#saveBtn").click(function () {
+        var chapter = [];
+        var listId = document.querySelectorAll('input[name=chapters]');
+        var listElement = document.querySelectorAll('.chapter-item');
+        for (let i = 0; i < listElement.length; i++) {
+            var chapterForm = {
+                id: listId[i].value,
+                chapterName: listElement[i].firstElementChild.value,
+            }
+            chapter.push(chapterForm);
+        }
+        console.log(...chapter);
+        $.ajax({
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            type: 'POST',
+            url: 'http://localhost:8095/api/chapter/'+$("#id").val(),
+            data: JSON.stringify(chapter),
+            success: function () {
+                window.location.replace("http://localhost:8095/chapter/list/" + $("#id").val() + "?create=" + true);
+            },
+            failure: function (response) {
+            }
+        });
+    });
+    function modal(obj) {
+        $("#deleteModal").modal();
+        document.getElementById("delRef").addEventListener("click", function () {
+            var div = document.getElementById("chapter");
+            div.removeChild(obj);
+            stt--;
+            var listLesson = document.querySelectorAll('input[name=chapter]');
+            for (let i = 1; i < listLesson.length; i++) {
+                listLesson[i].placeholder = "Nhập tên chương " + (i + 1);
+            }
+        });
+    }
+</script>

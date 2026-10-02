@@ -1,0 +1,132 @@
+img{
+    height:150px;
+    width:100%;
+}
+div [class^="col-"]{
+    padding-left:5px;
+    padding-right:5px;
+}
+/*===============================Navbar=============================*/
+.navbar {
+    justify-content: right ;
+}
+
+
+.navbar li:hover{
+    background-color: deepskyblue;
+}
+.navbar-collapse{
+    justify-content: center;
+    align-items: center;
+}
+.navbar-collapse li {
+    padding-left: 45px;
+    padding-right: 45px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+/*.navbar {*/
+/*    width: 100%;*/
+/*    background-color: #f3f3f3;overflow: auto;*/
+/*    height: 60px;*/
+/*}*/
+
+/*.navbar a {*/
+/*    float: left;*/
+/*    padding: 10px;*/
+/*    color: dodgerblue;*/
+/*    text-decoration: none;*/
+/*    font-size: 16px;*/
+/*    width: 14%;*/
+/*    text-align: center;*/
+/*    height: 7vh;*/
+/*}*/
+
+/*.navbar a:hover {*/
+/*    background-color: #ffffff;*/
+/*}*/
+
+/*.navbar a.active {*/
+/*    background-color: #c3e6cb;*/
+/*}*/
+/*====================== Mid ==============================*/
+.mid_card{
+    transition:0.5s;
+    cursor:pointer;
+}
+.mid_card-title{
+    font-size:15px;
+    transition:1s;
+    cursor:pointer;
+}
+.mid_card-title i{
+    font-size:15px;
+    transition:1s;
+    cursor:pointer;
+    color:#ffa710
+}
+.mid_card-title i:hover{
+    transform: scale(1.25) rotate(100deg);
+    color:#18d4ca;
+
+}
+.mid_card:hover{
+    transform: scale(1.05);
+    box-shadow: 10px 10px 15px rgba(0,0,0,0.3);
+}
+.mid_card-text{
+    height:80px;
+}
+
+.mid_card::before, .mid_card::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: scale3d(0, 0, 1);
+    transition: transform .3s ease-out 0s;
+    background: rgba(255, 255, 255, 0.1);
+    content: '';
+    pointer-events: none;
+}
+.mid_card::before {
+    transform-origin: left top;
+}
+.mid_card::after {
+    transform-origin: right bottom;
+}
+.mid_card:hover::before, .card:hover::after, .card:focus::before, .card:focus::after {
+    transform: scale3d(1, 1, 1);
+}
+/*==========================Side=============================*/
+.card-left {
+    margin-left: 4rem ; /* Added */
+    float: none; /* Added */
+    margin-bottom: 10px; /* Added */
+
+}
+
+.card-right{
+    margin-right: 2rem;
+    float: right;
+    margin-bottom: 10px;
+}
+.card-header{
+    background: #b8daff ;
+}
+.card-title{
+
+}
+.page-footer{
+    height: 10vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    text-align: center;
+    font-weight: bold;
+    font-style: italic;
+    /*border-top: 0.5px white ;*/
+    background: #2b2b2b;
+}

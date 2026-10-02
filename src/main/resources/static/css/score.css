@@ -1,0 +1,28 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+table {
+    width: 100%;
+    text-align: center;
+}
+
+tr {
+    border: 1px solid white;
+}
+
+th, td {
+    padding: 10px;
+}
+.ava{
+    width: 20px;
+    height: 20px;
+    clip-path: circle(50px at 50% 50%);
+}

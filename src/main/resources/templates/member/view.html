@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
+    <script th:src="@{https://code.jquery.com/jquery-3.5.1.min.js}"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="preconnect" th:href="@{https://fonts.googleapis.com}">
+    <link rel="preconnect" th:href="@{https://fonts.gstatic.com}" crossorigin>
+    <link th:href="@{https://fonts.googleapis.com/css2?family=Poppins&display=swap}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/slick.css}">
+    <link rel="stylesheet" th:href="@{/css/blog.css}">
+    <link rel="stylesheet" th:href="@{/css/dropdown.css}">
+    <link rel="stylesheet" th:href="@{/css/default-page.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+</head>
+<body>
+<div id="preloader"></div>
+<th:block th:insert="~{/default-page :: navbar}"></th:block>
+<div class="container mb-5 mt-5">
+    <div class="alert alert-primary alert-dismissible fade show" role="alert" th:if="${message != null}">
+        <strong th:text="${message}"></strong>
+        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="card mt-5 row col-md-8 mx-auto" style="border-color: #00BFFF">
+        <div class="card-header col-lg-12" style="background: #00BFFF; text-align: center;color: white">
+            <label class="col-form-label"><h4><strong>Thông tin cá nhân</strong></h4></label>
+        </div>
+        <form class="form-group row col-lg-12" th:object="${users}" th:method="post" th:action="@{/edit}" enctype="multipart/form-data">
+            <input type="hidden" th:field="*{passWord}" id="password">
+            <input type="hidden" th:field="*{rePassWord}" id="rePassword">
+            <div class="col-lg-4 mt-4">
+                <p class="text-center"><img id="view-avatar" th:src="@{${users.img}}" style="width: 10em;height: 10em;object-fit: cover"/></p>
+                <div style="display: flex;justify-content: center;align-items: center;gap: 10px;">
+                    <input class="btn btn-secondary" id="saveBtn" type="button" value="Cập Nhật"/>
+                    <label for="upload">
+                        <input type="file" id="upload" value="Chọn Tệp" class="btn" onchange="preview()" th:field="*{img}" required
+                               style="display: none">
+                        <span class="btn btn-info">Chọn ảnh</span>
+                    </label>
+                </div>
+            </div>
+            <div class="col-lg-8 mt-2 row justify-content-center align-items-center">
+                <div class="form-group row">
+                    <label class="col-lg-3">Tài Khoản:</label>
+                    <label class="col-lg-9" th:text="${users.id}"></label>
+                    <input type="hidden" th:field="*{id}">
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3">Tên:</label>
+                    <label class="col-lg-9" th:text="${users.fullName}"></label>
+                    <input type="hidden" th:field="*{fullName}" id="fullName">
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3">Email:</label>
+                    <label class="col-lg-9" th:text="${users.email}"></label>
+                    <input type="hidden" th:field="*{email}">
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3">Địa Chỉ:</label>
+                    <label class="col-lg-9" th:text="${users.address}"></label>
+                    <input type="hidden" th:field="*{address}">
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3">Số Điện Thoại:</label>
+                    <label class="col-lg-9" th:text="${users.phoneNumber}"></label>
+                    <input type="hidden" th:field="*{phoneNumber}" th:value="*{phoneNumber}" id="phone">
+                </div>
+                <div class="form-group row">
+                    <label class="col-lg-3" style="white-space: nowrap">Ngày tham gia:</label>
+                    <label class="col-lg-9" th:text="${#dates.format(users.createDate,'dd/MM/yyyy')}"></label>
+                    <input type="hidden" th:field="*{createDate}" th:value="*{createDate}" id="createDate">
+                </div>
+            </div>
+        </form>
+        <div class="mt-5" style="display: flex;align-items: center;justify-content: flex-end; gap: 10px;">
+            <a th:href="@{/editMember}" class="btn btn-warning" style="display: flex;align-items: center;justify-content: center;gap: 5px;"><i class="fa-solid fa-user-pen"></i>Chỉnh sửa</a>
+            <a class="btn btn-primary" th:href="@{/history}" style="display: flex;align-items: center;justify-content: center;gap: 5px;"><i class="fa-solid fa-paste"></i>Lịch Sử</a>
+            <a th:href="@{/}" class="btn btn-danger" style="display: flex;align-items: center;justify-content: center;gap: 5px;"><i class="fa-solid fa-house"></i>Trang chủ</a>
+        </div>
+        <div class="row col-lg-12 hide mt-3"></div>
+    </div>
+</div>
+<!-- Footer -->
+<div th:replace="~{/default-page :: footer}"></div>
+<!-- Footer -->
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
+<script type="text/javascript" th:src="@{//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js}"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script type="module" th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js}"></script>
+<script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script th:src="@{/js/slider.js}"></script>
+<script>
+    function preview() {
+        document.getElementById("view-avatar").src = URL.createObjectURL(event.target.files[0]);
+    }
+    $("#saveBtn").click(function () {
+        var id = $('#id').val();
+        var address = $('#address').val();
+        var createDate = $("#createDate").val();
+        var email = $("#email").val();
+        var fullName = $("#fullName").val();
+        var pass = $("#password").val();
+        var rePass = $("#rePassword").val();
+        var phone = $("#phone").val();
+
+        var userRequest = new FormData();
+        userRequest.append("id", id);
+        userRequest.append("fullName", fullName);
+        userRequest.append("passWord", pass);
+        userRequest.append("rePassWord", rePass);
+        userRequest.append("email", email);
+        userRequest.append("address", address);
+        userRequest.append("phoneNumber", phone);
+        userRequest.append("createDate", createDate);
+
+        if (upload.files[0] !== undefined) {
+            userRequest.append("img", upload.files[0]);
+        }
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8095/api/user',
+            data: userRequest,
+            enctype: 'multipart/form-data',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                window.location.replace('http://localhost:8095/view?update='+true);
+            }
+        });
+    });
+</script>
+</body>
+</html>

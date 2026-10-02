@@ -1,0 +1,32 @@
+.exam-header {
+    display: flex;
+    flex-direction: column;
+    text-align: initial;
+    background: #30b68c;
+    color: white;
+    padding: 15px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+.exam-title {
+    font-size: 19px;
+    font-weight: bold;
+}
+.exam-stats {
+    font-size: 15px;
+}
+.exam-body {
+    background: aliceblue;
+    text-align: initial;
+    padding: 10px 0;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+.exam-value {
+    color: #c2d334;
+}
+.mid_card:hover {
+    transform: scale(1);
+    box-shadow: none;
+    border: 1px solid transparent;
+}

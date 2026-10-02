@@ -1,0 +1,125 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+h1 {
+    font-size: 22px;
+    text-align: center;
+    padding: 15px 25px;
+    border-radius: 4px;
+}
+
+.ques-box {
+    width: 100%;
+    max-width: 800px;
+    padding: 15px 25px;
+    margin: 50px auto 0 auto;
+    border-radius: 4px;
+    position: relative;
+}
+
+.option {
+    display: flex;
+    flex-direction: row;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #28b651;
+}
+
+.option p {
+    margin-left: 15px;
+    position: relative;
+    margin-top: -6px;
+}
+.form-question {
+    position: relative;
+}
+.form-question-time {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.form-question-success {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 16%;
+    max-width: 100%;
+    background: antiquewhite;
+    border-radius: 1rem;
+    padding: 10px 5px;
+}
+.form-question-success .question-more {
+    padding: 10px 0;
+    font-size: 30px;
+    font-weight: bold;
+}
+.form-question-success .question-more .success {
+    color: green;
+}
+.form-question-success .question-more .total {
+    color: red;
+}
+.form-question-time .rounded {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.form-question-time .rounded .countdown {
+    font-size: 30px;
+}
+.question-link {
+    margin: 0 5px;
+    display: inline-block;
+    float: left;
+    margin-bottom: 10px;
+    padding: 6px 3px;
+    box-sizing: border-box;
+    text-align: center;
+    font-weight: bold;
+    background: #ccc;
+    cursor: pointer;
+    transition: 0.5s;
+    width: calc(25% - 10px);
+    color: black;
+}
+.choose {
+    background: #26bd35;
+    color: white;
+    transition: all linear .2s;
+}
+.tag-question {
+    max-height: 315px;
+    overflow-y: scroll;
+    margin-bottom: 25px;
+}
+
+/* SCROLL BAR CUSTOM */
+.tag-question::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Track */
+.tag-question::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+/* Handle */
+.tag-question::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+.tag-question::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

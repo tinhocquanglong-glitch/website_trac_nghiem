@@ -1,0 +1,103 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">-->
+<!--    <link rel="icon" type="image/png" href="../assets/img/favicon.png">-->
+<!--    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">-->
+<!--    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />-->
+<!--    <title>Website Trắc nghiệm</title>-->
+<!--    <link rel = "icon" href =-->
+<!--            "https://aztest.vn/uploads/news/2019/1_6.jpg"-->
+<!--          type = "image/x-icon">-->
+<!--    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">-->
+<!--    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>-->
+<!--    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>-->
+<!--    <link href="../static/css/default-page.css" rel="stylesheet" th:href="@{/css/default-page.css}">-->
+<!--</head>-->
+<!--<body>-->
+<!--<div  th:insert="~{default-admin.html :: navbarAdmin}"></div>-->
+<!--<div class="container">-->
+<!--    <div class="h3 text-center">-->
+<!--        Danh Sách Câu Hỏi-->
+<!--    </div>-->
+<!--    <div class="btn-group mb-3 d-flex justify-content-between">-->
+<!--        <form>-->
+<!--            <select class="btn dropdown-toggle" data-toggle="dropdown" style="background-color: #14c4ff" onchange="this.form.submit()" th:value ="${examId}" th:name="examId">-->
+<!--                <option value="" disabled selected> Chọn...</option>-->
+<!--                <th:block class="dropdown-menu" th:each = "exam : ${exams}">-->
+<!--                    <option class="dropdown-item" th:value="${exam.id}" th:text="${exam.nameExam}"></option>-->
+<!--                </th:block>-->
+<!--                <option value="">Hiển thị tất cả</option>-->
+<!--            </select>-->
+<!--        </form>-->
+<!--    </div>-->
+<!--    <table class="table table-striped table-bordered table-hover table-responsive-md">-->
+<!--        <thead>-->
+<!--        <tr style="background-color: #27c9ff;">-->
+<!--            <th>Mã câu hỏi</th>-->
+<!--            <th>Câu hỏi</th>-->
+<!--            <th>Đáp án</th>-->
+<!--            <th class="text-center">-->
+<!--                <i class="far fa-plus-square"></i>-->
+<!--            </th>-->
+<!--        </tr>-->
+<!--        </thead>-->
+<!--        <tbody>-->
+<!--        <tr th:each="question: ${questions}">-->
+<!--            <td th:text="${question.quesId}"></td>-->
+<!--            <td th:text="${question.title}"></td>-->
+<!--            <td th:text="${question.ans}"></td>-->
+<!--            <td class="text-center">-->
+<!--                <form th:action="@{/questionInExam/create}" th:object="${exam}" method="post">-->
+<!--                    <input type="checkbox" th:field="*{question}"> Add-->
+<!--                </form>-->
+<!--            </td>-->
+<!--        </tr>-->
+<!--        </tbody>-->
+<!--    </table>-->
+<!--</div>-->
+
+<!--<div class="table-pagination d-flex justify-content-center">-->
+<!--    <ul class="pagination">-->
+<!--        <li class="page-item" th:class="${questions.number eq 0} ? 'disabled' : ''">-->
+<!--            <a class="page-link" th:if="${questions.hasPrevious()}" th:href="@{'/questionInExam'(page=${questions.number - 1},size=${questions.size})}">Trước</a>-->
+<!--        </li>-->
+
+<!--        <li class="page-item" th:each="pageNo : ${#numbers.sequence(0, questions.totalPages - 1)}" th:class="${questions.number eq pageNo}? 'active' : ''">-->
+<!--            <a class="page-link" th:if="${questions.number  eq pageNo}" href="javascript:void(0);">-->
+<!--                <span th:text="${pageNo + 1}"></span>-->
+<!--            </a>-->
+<!--            <a class="page-link" th:if="${not (questions.number  eq pageNo)}" th:href="@{${'/questionInExam'}(page=${pageNo},size=${questions.size})}">-->
+<!--                <span th:text="${pageNo + 1}"></span>-->
+<!--            </a>-->
+<!--        </li>-->
+<!--        <li class="page-item" th:class="${questions.number + 1 ge questions.totalPages} ? 'disabled' : ''">-->
+<!--            <a class="page-link" th:if="${questions.hasNext()}" th:href="@{'/questionInExam'(page=${questions.number + 1},size=${questions.size})}">Sau</a>-->
+<!--        </li>-->
+<!--    </ul>-->
+<!--</div>-->
+
+<!--<div  th:insert="~{default-admin.html :: footer}"></div>-->
+
+<!--<script src="jquery/jquery-3.5.1.min.js"></script>-->
+<!--<script src="js/bootstrap.min.js"></script>-->
+
+<!--<script>-->
+<!--    $(document).ready(function () {-->
+<!--        $(".table #deleteButton").on('click', function (event) {-->
+<!--            event.preventDefault();-->
+<!--            var href = $(this).attr('href');-->
+<!--            $('#deleteModal #delRef').attr('href', href);-->
+<!--            $('#deleteModal').modal();-->
+<!--        })-->
+<!--    })-->
+
+<!--    $("#showExam").click(function(){-->
+<!--        $("#question").toggle();-->
+<!--    });-->
+<!--</script>-->
+
+<!--</body>-->
+<!--</html>-->

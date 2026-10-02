@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
+    <script th:src="@{https://code.jquery.com/jquery-3.5.1.min.js}"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="preconnect" th:href="@{https://fonts.googleapis.com}">
+    <link rel="preconnect" th:href="@{https://fonts.gstatic.com}" crossorigin>
+    <link th:href="@{https://fonts.googleapis.com/css2?family=Poppins&display=swap}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/slick.css}">
+    <link rel="stylesheet" th:href="@{/css/blog.css}">
+    <link href="../static/css/default-page.css" rel="stylesheet" th:href="@{/css/default-page.css}">
+    <link rel="stylesheet" th:href="@{/css/listExamSubject.css}">
+    <link rel="stylesheet" th:href="@{/css/dropdown.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+</head>
+<body>
+<div id="preloader"></div>
+<div th:insert="~{/default-page :: navbar}"></div>
+<div th:replace="~{/default-page :: banner}"></div>
+<!-- Main Container Start -->
+<div class="container-fluid mt-3">
+    <div class="row" style="margin: 0 5%">
+        <div class="col-md-3">
+            <div th:replace="~{/default-page :: card-left}"></div>
+        </div>
+        <div class="col-md-6">
+            <form class="d-inline-flex mr-5 gap-10" th:action="@{/listExamSubject/__${subjectId}__}" method="get">
+                <div class="d-flex gap-10" style="margin: 0px 25px 25px">
+                    <a class="btn btn-warning" th:href="@{/studyProgram/__${lesson.chapter.subjectClasses.classes.id}__/__${lesson.chapter.subjectClasses.subject.id}__}"><i class="fa-solid fa-rotate-left"></i></a>
+                    <input type="text" class="form-control" autocomplete="off" name="keyword"
+                           placeholder="Tìm kiếm đề thi" th:value="${keyword}">
+                    <button type="submit" class="btn btn-default"
+                            style="white-space: nowrap;white-space: nowrap;border: 1px solid olivedrab;color: olivedrab;">
+                        Tìm kiếm
+                    </button>
+                </div>
+            </form>
+            <div class="container-fluid">
+                <h4 class="text-danger warning" th:if="${warning}" th:text="${warning}"></h4>
+                <div class="row">
+                    <div class="mid_card card-block col-sm-12 col-lg-6 mb-2 rounded btn"
+                         th:each="exam : ${exams}">
+                        <div class="exam-header">
+                            <div class="exam-title">
+                                <span th:text="${exam.nameExam}"></span>
+                                <span style="text-transform: uppercase" th:text="' - '+${exam.lesson.chapter.subjectClasses.subject.name} + ' '+${exam.lesson.chapter.subjectClasses.classes.nameClass}"></span>
+                            </div>
+                            <div class="exam-stats">
+                                <span th:text="${exam.view + ' lượt xem' + ' | '+exam.turn+ ' lượt thi' + ' | '+#dates.format(exam.createDate,'dd/MM/yyyy')}"></span>
+                            </div>
+                        </div>
+                        <div class="exam-body text-center">
+                            <ul style="text-align: initial">
+                                <li>Mã đề: <span th:text="${exam.idName}"></span></li>
+                                <li><span>Số lượng câu hỏi: <span class="exam-value"
+                                                                  th:text="${exam.questions.size()}+ ' câu'"></span></span></li>
+                                <li><span>Thời gian làm bài: <span class="exam-value"
+                                                                   th:text="${exam.free == true ? 'Không' : exam.time + ' phút'}"></span></span>
+                                </li>
+                                <li><span>Chương: <span class="exam-value" th:text="${exam.lesson.chapter.chapterName}"></span></span>
+                                </li>
+                                <li><span>Bài: <span class="exam-value" th:text="${exam.lesson.nameLesson}"></span></span>
+                                </li>
+                            </ul>
+                            <a th:href="@{/listExamSubject/__${subjectId}__/__${exam.id}__}" class="btn btn-warning">Chi
+                                tiết</a>
+                        </div>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${exams.isEmpty()}" class="text-center">
+                <span>Hiện không có đề thi nào của bài học: <span style="text-transform: uppercase; font-weight: bold" th:text="${lesson.nameLesson}"></span></span>
+            </div>
+            <div class="d-flex justify-content-center mb-100" th:if="${!exams.isEmpty()}">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        <li class="page-item">
+                            <a class="page-link" th:href="@{'/listExamSubject'(id=${subjectId},page=0)}"
+                               th:if="${exams.hasPrevious()}" aria-label="Previous">
+                                <span aria-hidden="true">‹‹</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.number - 1})}"
+                               th:if="${exams.hasPrevious()}" aria-label="Previous">
+                                <span aria-hidden="true">‹</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" th:text="${exams.number}" th:if="${exams.hasPrevious()}"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.number - 1})}">
+                            </a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link" th:text="${exams.number + 1}"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.number})}">
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" th:text="${exams.number + 2}" th:if="${exams.hasNext()}"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.number + 1})}">
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.number + 1})}"
+                               th:if="${exams.hasNext()}" aria-label="Next">
+                                <span aria-hidden="true">›</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link"
+                               th:href="@{'/listExamSubject'(id=${subjectId},page=${exams.totalPages - 1})}"
+                               th:if="${exams.hasNext()}" aria-label="Next">
+                                <span aria-hidden="true">››</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div th:replace="~{/default-page :: card-right}"></div>
+        </div>
+    </div>
+</div>
+<div th:replace="~{/default-page :: news}"></div>
+<!-- Footer -->
+<div th:replace="~{/default-page :: footer}"></div>
+<!-- Footer -->
+
+<!-- Bootstrap JS -->
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
+<script type="text/javascript" th:src="@{//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js}"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script type="module" th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js}"></script>
+<script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script th:src="@{/js/slider.js}"></script>
+<script>
+    function chekkthi() {
+        var thi = document.getElementsByName("thi").value;
+        if (thi == 'Thi') {
+            document.getElementsByName("pThi").values()
+        }
+    }
+</script>
+</body>
+</html>

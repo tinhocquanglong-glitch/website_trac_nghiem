@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Trắc nghiệm</title>
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <!-- iCheck -->
+    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+    <!-- JQVMap -->
+    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
+    <!-- bootstrap-daterangepicker -->
+    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/css/switch.css}">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <style>
+        #lesson .list-lesson {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            gap: 5px;
+            font-size: 15px;
+        }
+        #lesson .list-lesson label {
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+        <div class="right_col" role="main">
+            <div class="row">
+                <div class="container-fluid" style="margin-bottom: 150px">
+                    <div class="h4 text-center mb-4">
+                        Chỉnh sửa câu hỏi
+                    </div>
+                    <form style="max-width: 600px; margin: 0 auto; background-color: #d8f5ff;"
+                          th:action="@{/question/update}"
+                          th:object="${question}" method="post">
+                        <div class="border border-secondary rounded p-3 pt-5">
+                            <input type="text" th:field="*{quesId}" style="display: none">
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Bài học</label>
+                                <div class="col-sm-8 pt-2">
+                                    <select id="subject" class="btn dropdown-toggle" data-toggle="dropdown"
+                                            style="background-color: #14c4ff" onchange="getClass()">
+                                        <option value="" disabled>--Chọn môn học--</option>
+                                        <th:block class="dropdown-menu" th:each="subject : ${subjects}">
+                                            <option class="dropdown-item" th:value="${subject.id}"
+                                                    th:text="${subject.name}" th:selected="${question.lesson.chapter.subjectClasses.subject.id == subject.id ? 'selected' : null}"></option>
+                                        </th:block>
+                                    </select>
+                                    <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
+                                            style="background-color: #14c4ff" onchange="getChapter()">
+                                        <option id="default" value="" disabled>--Chọn lớp học--</option>
+                                        <th:block class="dropdown-menu" th:each="class : ${classes}">
+                                            <option class="dropdown-item" th:value="${class.id}"
+                                                    th:text="${class.nameClass}" th:selected="${question.lesson.chapter.subjectClasses.classes.id == class.id ? 'selected' : null}"></option>
+                                        </th:block>
+                                        </th:block>
+                                    </select>
+                                    <div id="lesson">
+                                        <th:block th:each="chapter,i : ${question.lesson.chapter.subjectClasses.chapters}">
+                                            <button type="button" class="btn btn-info" data-toggle="collapse" th:data-target="'#collapse'+${chapter.id}" th:text="'CHƯƠNG '+${chapter.serial}+'. '+${chapter.chapterName}"></button>
+                                            <div th:id="'collapse'+${chapter.id}" th:class="${chapter.id == question.lesson.chapter.id ? 'collapse show' : 'collapse'}">
+                                                <div class="list-lesson" th:each=" lesson : ${chapter.lessons}">
+                                                    <input type="radio" th:value="${lesson.id}" name="lesson" th:checked="${lesson.id == question.lesson.id}">
+                                                    <label th:text="'Bài '+${lesson.serial}+'. '+${lesson.nameLesson}"></label>
+                                                </div>
+                                            </div>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Câu hỏi</label>
+                                <div class="col-sm-8 pt-2">
+                                    <div id="editor"></div>
+                                    <textarea th:field="*{title}" style="display: none"></textarea>
+                                    <!--                    <div th:if="${#fields.hasErrors('idName')}" th:errors="*{idName}" style="color: red"></div>-->
+                                </div>
+                            </div>
+
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Đáp án A</label>
+                                <div class="col-sm-8 pt-2">
+
+                                    <input type="text" class="form-control" th:field="*{optionA}" id="an1"
+                                           onchange="return validate()">
+                                    <!--                        <div th:if="${#fields.hasErrors('idName')}" th:errors="*{idName}" style="color: red"></div>-->
+
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Đáp án B</label>
+                                <div class="col-sm-8 pt-2">
+                                    <input type="text" class="form-control" th:field="*{optionB}" id="an2"
+                                           onchange="return validate()">
+                                    <!--                    <div th:if="${#fields.hasErrors('nameExam')}" th:errors="*{nameExam}" style="color: red"></div>-->
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Đáp án C</label>
+                                <div class="col-sm-8 pt-2">
+
+                                    <input type="text" class="form-control" th:field="*{optionC}" id="an3"
+                                           onchange="return validate()">
+
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Đáp án D</label>
+                                <div class="col-sm-8 pt-2">
+
+                                    <input type="text" class="form-control" th:field="*{optionD}" id="an4"
+                                           onchange="return validate()">
+
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Đáp án</label>
+                                <div class="col-sm-8 pt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" value="1" th:field="*{ans}" name="answer" onblur="validate()">
+                                        <label class="form-check-label">A</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" value="2" th:field="*{ans}" name="answer" onblur="validate()">
+                                        <label class="form-check-label">B</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" value="3" th:field="*{ans}" name="answer" onblur="validate()">
+                                        <label class="form-check-label">C</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" value="4" th:field="*{ans}" name="answer" onblur="validate()">
+                                        <label class="form-check-label">D</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Mức độ câu hỏi</label>
+                                <div class="col-sm-8 pt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" th:field="*{level}" value="1" onchange="return validate()">
+                                        <label class="form-check-label">Dễ</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" th:field="*{level}" value="2" onchange="return validate()">
+                                        <label class="form-check-label">Trung bình</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" th:field="*{level}" value="3" onchange="return validate()">
+                                        <label class="form-check-label">Khó</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn" style="background-color: #3bceff" id="btnSub">Cập nhật
+                                </button>
+                                <a href="/question/list" type="button" class="btn btn-warning">Quay về</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{index.html :: footer}"></div>
+    </div>
+</div>
+</body>
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/js/loader.js}"></script>
+<script th:src="@{https://cdn.ckeditor.com/ckeditor5/37.0.1/classic/ckeditor.js}"></script>
+<script>
+    function checkEmpty(obj) {
+        if($(obj).val() === "" || $(obj).val() === undefined) {
+            return false;
+        }
+        return true;
+    }
+    let edit;
+    ClassicEditor
+        .create( document.querySelector( '#editor' ) )
+        .then( newEditor => {
+            edit = newEditor;
+            edit.setData($("#title").val());
+            edit.model.document.on( 'change', () => {
+                validate();
+            } );
+        } )
+        .catch( error => {
+            console.error( error );
+        } );
+    function validate() {
+        var valid = true;
+        valid = valid && edit.getData() !== '';
+        valid = valid && (checkEmpty($("#an1")) || checkEmpty($("#an2")) || checkEmpty($("#an3")) || checkEmpty($("#an4")) );
+        valid = valid && checkEmpty($('input[name="ans"]:checked'));
+
+        $("#btnSub").attr("disabled", true);
+        if (valid) {
+            $("#btnSub").attr("disabled", false);
+        }
+    }
+    $("#btnSub").click(function () {
+        var quesId = $("#quesId").val();
+        var title = edit.getData();
+        var optionA = $('#an1').val();
+        var optionB = $('#an2').val();
+        var optionC = $("#an3").val();
+        var optionD = $("#an4").val();
+        var ans = $("input[name=ans]:checked").val();
+        var subjectId = $("#subject").val();
+        var lesson = $("input[name=lesson]:checked").val();
+        var level = $("input[name=level]:checked").val();
+
+        var question = new FormData();
+        question.append("quesId",quesId);
+        question.append("title", title);
+        question.append("optionA", optionA);
+        question.append("optionB", optionB);
+        question.append("optionC", optionC);
+        question.append("optionD", optionD);
+        question.append("ans", ans);
+        question.append("idSubject", subjectId);
+        question.append("lesson",lesson);
+        question.append("level",level);
+
+        console.log(...question);
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8095/api/question',
+            data: question,
+            enctype: 'multipart/form-data',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+                console.log(error);
+            },
+            success: function () {
+                window.location.replace('http://localhost:8095/question/list?update=' + true);
+            }
+        });
+    });
+    function getClass() {
+        var subId = $("#subject").val();
+        $("#lesson").html('');
+        $('#class').find('option:not(:first)').remove();
+        document.getElementById("default").selected = true;
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/class/' + subId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                for (let i = 0; i < response.length; i++) {
+                    var x = document.getElementById("class");
+                    var option = document.createElement("option");
+                    option.text = response[i].nameClass;
+                    option.value = response[i].id;
+                    x.add(option);
+                }
+                $("#class").css("display", "inline-block");
+            }
+        });
+    }
+    function getChapter() {
+        var subId = $("#subject").val();
+        var classId = $("#class").val();
+        $("#lesson").html('');
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                var x = document.getElementById("lesson");
+                for (let i = 0; i < response.length; i++) {
+                    var button = document.createElement("button");
+                    button.type = "button";
+                    button.setAttribute("class","btn btn-info");
+                    button.setAttribute("data-toggle","collapse");
+                    button.setAttribute("data-target",'#collapse'+response[i].id);
+                    button.textContent = 'CHƯƠNG '+(i + 1)+'.'+response[i].chapterName;
+                    x.appendChild(button);
+                    var demo = document.createElement("div");
+                    demo.setAttribute("id",'collapse'+response[i].id);
+                    demo.setAttribute("class","collapse");
+                    response[i].lessons.sort(function(it1, it2) {
+                        let a = it1.serial;
+                        let b = it2.serial;
+                        return a === b ? 0 : a > b ? 1 : -1;
+                    });
+                    for(let j = 0; j<response[i].lessons.length;j++){
+                        var div = document.createElement("div");
+                        div.setAttribute("class","list-lesson");
+                        var radio = document.createElement("input");
+                        radio.type = "radio";
+                        radio.value = response[i].lessons[j].id;
+                        radio.name = "lesson";
+                        radio.addEventListener("change",validate);
+                        div.appendChild(radio);
+                        var label = document.createElement("label");
+                        label.textContent = 'Bài '+(j + 1)+'.'+response[i].lessons[j].nameLesson;
+                        div.appendChild(label);
+                        demo.appendChild(div);
+                    }
+                    x.appendChild(demo);
+                }
+            }
+        });
+    }
+</script>
+</html>

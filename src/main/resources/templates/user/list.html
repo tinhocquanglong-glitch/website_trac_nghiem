@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <!-- iCheck -->
+    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <!-- bootstrap-progressbar -->
+    <link th:href="@{/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css}" rel="stylesheet">
+    <!-- JQVMap -->
+    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
+    <!-- bootstrap-daterangepicker -->
+    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
+
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <style>
+        .gap-10 {
+            gap: 10px;
+        }
+        .table tbody tr td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+<div th:insert="~{index.html :: navbarAdmin}"></div>
+<div th:insert="~{index.html :: topnavAdmin}"></div>
+<div class="right_col" role="main">
+    <div class="container">
+
+        <div class="h4 text-center mb-4">
+            Danh Sách Người Dùng
+        </div>
+        <div class="alert alert-primary alert-dismissible fade show" role="alert" th:if="${message != null}">
+            <strong th:text="${message}"></strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="btn-group mb-3 d-flex justify-content-between">
+            <div class="d-inline-flex">
+                <form class="d-inline-flex mr-5 gap-10" action="/user/list" method="get">
+                    <div class="d-flex gap-10">
+                        <input type="text" class="form-control" autocomplete="off" name="keyword"
+                               placeholder="Tìm kiếm người dùng" th:value="${keyword}">
+                        <button type="submit" class="btn btn-default" style="white-space: nowrap;white-space: nowrap;border: 1px solid olivedrab;color: olivedrab;">Tìm kiếm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <table class="table table-bordered table-striped " id="tableList">
+            <tr style="background-color: #27c9ff;">
+                <th class="text-center">STT</th>
+                <th class="text-center">Họ tên</th>
+                <th class="text-center">Hình ảnh</th>
+                <th class="text-center">Địa chỉ nhà</th>
+                <th class="text-center">Số điện thoại</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+            <tr th:if="${users.isEmpty()}">
+                <td colspan="6" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ liệu</td>
+            </tr>
+            <tr th:each="user, count : ${users}">
+                <td th:text="${count.index + 1}" class="text-center"></td>
+                <td th:text="${user.fullName}" class="text-center"></td>
+                <td><img th:src="@{${user.img}}" alt="Avatar" style="width: 100px;height: 100px;object-fit: cover;border-radius: 5px"></td>
+                <td th:text="${user.address}" class="text-center"></td>
+                <td th:text="${user.phoneNumber}" class="text-center"></td>
+                <td th:if="${admins.contains(user)}" class="text-center">ADMIN</td>
+                <td class="text-center" th:if="${!admins.contains(user)}">
+                    <a th:href="@{/user/editMember/{id}(id=${user.id})}"><i class="fas fa-edit text-primary"></i></a>
+                    <span>&nbsp;&nbsp;</span>
+                    <a th:href="@{/user/delete/{id}(id=${user.id})}" id="deleteButton"><i
+                            class="far fa-trash-alt text-danger"></i></a>
+                    <span>&nbsp;&nbsp;</span>
+                    <a th:href="@{/user/editPass/{id}(id=${user.id})}"><i class="fas fa-key text-success"></i></a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="table-pagination d-flex justify-content-center">
+        <ul class="pagination">
+            <ul class="pagination">
+                <li class="page-item">
+                    <a class="page-link"
+                       th:href="@{'/user/list'(page=${users.number - 1})}"
+                       th:if="${users.hasPrevious()}" aria-label="Previous">
+                        <span aria-hidden="true">Trước</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" th:text="${users.number}" th:if="${users.hasPrevious()}"
+                       th:href="@{'/user/list'(page=${users.number - 1})}">
+
+                    </a>
+                </li>
+                <li class="page-item active">
+                    <a class="page-link" th:text="${users.number + 1}"
+                       th:href="@{'/user/list'(page=${users.number})}">
+
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" th:text="${users.number + 2}" th:if="${users.hasNext()}"
+                       th:href="@{'/user/list'(page=${users.number + 1})}">
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                       th:href="@{'/user/list'(page=${users.number + 1})}"
+                       th:if="${users.hasNext()}" aria-label="Next">
+                        <span aria-hidden="true">Sau</span>
+                    </a>
+                </li>
+            </ul>
+        </ul>
+    </div>
+</div>
+<div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info">
+                <h5 class="modal-title">Xác nhận xóa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có muốn xoá người dùng này không ?<a></a></p>
+            </div>
+            <div class="modal-footer">
+                <a href="" type="button" class="btn btn-primary" id="delRef">Có</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- Chart.js -->
+<script th:src="@{/vendors/Chart.js/dist/Chart.min.js}"></script>
+<!-- gauge.js -->
+<script th:src="@{/vendors/gauge.js/dist/gauge.min.js}"></script>
+<!-- bootstrap-progressbar -->
+<script th:src="@{/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Skycons -->
+<script th:src="@{/vendors/skycons/skycons.js}"></script>
+<!-- Flot -->
+<script th:src="@{/vendors/Flot/jquery.flot.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.pie.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.time.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.stack.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.resize.js}"></script>
+<!-- Flot plugins -->
+<script th:src="@{/vendors/flot.orderbars/js/jquery.flot.orderBars.js}"></script>
+<script th:src="@{/vendors/flot-spline/js/jquery.flot.spline.min.js}"></script>
+<script th:src="@{/vendors/flot.curvedlines/curvedLines.js}"></script>
+<!-- DateJS -->
+<script th:src="@{/vendors/DateJS/build/date.js}"></script>
+<!-- JQVMap -->
+<script th:src="@{/vendors/jqvmap/dist/jquery.vmap.js}"></script>
+<script th:src="@{/vendors/jqvmap/dist/maps/jquery.vmap.world.js}"></script>
+<script th:src="@{/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js}"></script>
+<!-- bootstrap-daterangepicker -->
+<script th:src="@{/vendors/moment/min/moment.min.js}"></script>
+<script th:src="@{/vendors/bootstrap-daterangepicker/daterangepicker.js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/js/loader.js}"></script>
+<script>
+    $(document).ready(function () {
+        $(".table #deleteButton").on('click', function (event) {
+            event.preventDefault();
+            var href = $(this).attr('href');
+            $('#deleteModal #delRef').attr('href', href);
+            $('#deleteModal').modal();
+        })
+    })
+
+    $("#showExam").click(function () {
+        $("#question").toggle();
+    });
+</script>
+</body>
+</html>

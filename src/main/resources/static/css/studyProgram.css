@@ -1,0 +1,22 @@
+.chapter {
+    text-align: initial;
+    border: 2px solid purple;
+    border-radius: 10px;
+    overflow: hidden;
+}
+.chapter .title {
+    font-size: 20px;
+    padding: 10px 20px;
+    background: purple;
+    color: white;
+    margin-bottom: 0;
+}
+.lesson {
+    padding: 10px;
+}
+.lesson p {
+    margin: 0 20px;
+    background: #fce5c6a8;
+    padding: 5px;
+    border-radius: 5px;
+}

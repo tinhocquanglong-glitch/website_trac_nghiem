@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+      <title>Website Trắc nghiệm</title>
+      <link rel = "icon" href =
+              "https://aztest.vn/uploads/news/2019/1_6.jpg"
+            type = "image/x-icon">
+      <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+  <body>
+      <div class="container">
+          <div class="card border-success">
+            <div class="alert alert-success" role="alert">Đăng kí
+            </div>
+
+            <form class="mx-5 mb-3 mt-2" th:action="@{/user/create}" th:object="${user}" method="post">
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">User<span class="text-danger ml-3">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="text" class="form-control"  placeholder="User" th:field="*{user}">
+                        <div th:if="${#fields.hasErrors('user')}" th:errors="*{user}" style="color: red"></div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Mật khẩu<span class="text-danger">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="password" class="form-control"  placeholder="Password" th:field="*{passWord}">
+                        <div th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}" style="color: red"></div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Nhập lại mật khẩu<span class="text-danger">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="password" class="form-control"  placeholder="Re_Password"  th:field="*{rePassWord}">
+                        <div th:if="${#fields.hasErrors('rePassWord')}" th:errors="*{rePassWord}" style="color: red"></div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Tên đầy đủ<span class="text-danger ">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="text" class="form-control"  placeholder="Name" th:field="*{fullName}">
+                        <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" style="color: red"></div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Địa chỉ email<span class="text-danger ml-3">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="text" class="form-control"  placeholder="Email" th:field="*{email}">
+                        <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: red"></div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Địa chỉ nhà<span class="text-danger ml-3">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="text" class="form-control"  placeholder="Address" th:field="*{address}">
+                        <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color: red"></div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label">Số điện thoại<span class="text-danger ml-3">*</span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <input type="text" class="form-control"  placeholder="Number" th:field="*{phoneNumber}">
+                        <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" style="color: red"></div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label hiden"></span></label>
+                    <div class="col-lg-10 col-sm-8">
+                        <label  class="col-lg-10 col-sm-12 col-form-label "><span class="text-danger mr-1">*</span>Các trường bắt buộc điền</label>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label  class="col-lg-2 col-sm-4 col-form-label hiden"></span></label>
+                    <div class="col-lg-10 col-sm-8">
+                      <button class="btn btn-primary" type="submit">Tạo mới</button>
+                    </div>
+                </div>
+            </form>
+
+          </div>
+      </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>

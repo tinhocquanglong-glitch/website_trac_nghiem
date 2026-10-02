@@ -1,0 +1,9 @@
+.dropdown-menu {
+    width: 100%;
+    top: 5px!important;
+}
+.dropdown-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

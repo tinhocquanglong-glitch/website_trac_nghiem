@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Trắc nghiệm</title>
+    <link rel = "icon" href =
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type = "image/x-icon">
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
+    <script th:src="@{https://code.jquery.com/jquery-3.5.1.min.js}"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="preconnect" th:href="@{https://fonts.googleapis.com}">
+    <link rel="preconnect" th:href="@{https://fonts.gstatic.com}" crossorigin>
+    <link th:href="@{https://fonts.googleapis.com/css2?family=Poppins&display=swap}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/slick.css}">
+    <link rel="stylesheet" th:href="@{/css/blog.css}">
+    <link rel="stylesheet" th:href="@{/css/dropdown.css}">
+    <link rel="stylesheet" th:href="@{/css/default-page.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+</head>
+<body>
+<div id="preloader"></div>
+<th:block th:insert="~{/default-page :: navbar}"></th:block>
+<div class="container mb-5 mt-5" style="width: 700px">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${message}">
+        <strong th:text="${message}"></strong>
+        <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="row card" style="border-color: #00BFFF">
+        <div class="alert text-center" role="alert" style="background: #00BFFF">
+            <h4><strong> Đổi mật khẩu</strong></h4>
+        </div>
+        <form class="mb-3 mt-2" method="post" th:object="${users}" th:action="@{/editPass}" style="padding: 30px;display: flex;flex-direction: column;gap: 10px;">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{img}">
+            <input type="hidden" th:field="*{fullName}">
+            <input type="hidden" th:field="*{address}">
+            <input type="hidden" th:field="*{email}">
+            <input type="hidden" th:field="*{phoneNumber}">
+            <input type="hidden" th:field="*{createDate}">
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label" for="mk">Mật khẩu cũ<span class="text-danger">*</span></label>
+                <div class="col-lg-8 col-sm-8">
+                    <input type="password" class="form-control" id="mk" name="oldPass">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label" for="email">Mật khẩu mới<span class="text-danger">*</span></label>
+                <div class="col-lg-8 col-sm-8">
+                    <input type="password" class="form-control" id="email" th:field="*{passWord}">
+                    <label th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}" style="color: red"></label>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label" for="address">Nhập lại mật khẩu<span class="text-danger" >*</span></label>
+                <div class="col-lg-8 col-sm-8">
+                    <input type="password" class="form-control" id="address" th:field="*{rePassWord}">
+                    <label th:if="${#fields.hasErrors('rePassWord')}" th:errors="*{rePassWord}" style="color: red"></label>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label hiden"></span></label>
+                <div class="col-lg-8 col-sm-8">
+                    <label class="col-lg-10 col-sm-12 col-form-label "><span class="text-danger mr-1">*</span>Các trường
+                        bắt buộc điền</label>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label hiden"></span></label>
+                <div class="col-lg-81 col-sm-8">
+                    <button class="btn btn-primary " type="submit"><i class="fa-solid fa-circle-check" style="vertical-align: middle;margin: 0px 5px;"></i>Cập nhập</button>
+                    <a th:href="@{/editMember}" class="btn btn-primary">
+                        <i class="fa-solid fa-rotate-left" style="vertical-align: middle;margin: 0px 5px;"></i>Quay lại
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Footer -->
+<div th:replace="~{/default-page :: footer}"></div>
+<!-- Footer -->
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
+<script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
+<script type="text/javascript" th:src="@{//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js}"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script type="module" th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js}"></script>
+<script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script th:src="@{/js/slider.js}"></script>
+</body>
+</html>

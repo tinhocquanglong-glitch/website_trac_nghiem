@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Website Trắc nghiệm</title>
+    <link rel = "icon" th:href =
+            "@{https://aztest.vn/uploads/news/2019/1_6.jpg}"
+          type = "image/x-icon">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link th:href="@{https://fonts.googleapis.com/css?family=Lato:300,400,700,900&display=swap}" rel="stylesheet">
+
+    <link rel="stylesheet"th:href="@{https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <link rel="stylesheet" th:href="@{/login/css/style.css}">
+    <style>
+        #remember {
+            max-width: 15px;
+            max-height: 15px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="preloader"></div>
+<section class="ftco-section">
+    <div class="container">
+        <div class="alert alert-primary alert-dismissible fade show" role="alert" th:if="${message}">
+            <strong th:text="${message}"></strong>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center mb-5">
+                <!--                <h2 class="heading-section">Login #07</h2>-->
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-12 col-lg-10">
+                <div class="wrap d-md-flex">
+                    <div class="text-wrap p-4 p-lg-5 text-center d-flex align-items-center order-md-last" style="background: #00BFFF">
+                        <div class="text w-100">
+                            <h2><strong style="font-family: 'Times New Roman'">Chào mừng bạn đến với Website thi trắc nghiệm </strong></h2>
+                            <p>Không có tài khoản?</p>
+                            <a th:href="@{/signup}" class="btn btn-white btn-outline-white">Đăng Kí</a>
+                        </div>
+                    </div>
+                    <div class="login-wrap p-4 p-lg-5">
+                        <div class="d-flex">
+                            <div class="w-100">
+                                <h3 class="mb-4"><strong style="font-family: 'Times New Roman'">Đăng Nhập</strong></h3>
+                            </div>
+                            <div class="w-100">
+                                <p class="social-media d-flex justify-content-end">
+                                    <a href="/" class="social-icon d-flex align-items-center justify-content-center"><span
+                                            class="fa fa-home"></span></a>
+
+                                </p>
+                            </div>
+                        </div>
+                        <form action="/login"  method="post" class="signin-form">
+                            <div class="form-group mb-3">
+                                <label class="label" id="name">Tài Khoản</label>
+                                <input type="text" class="form-control" placeholder="Username" name="username"
+                                       oninvalid="InvalidMsg(this);" oninput="InvalidMsg(this);" required="required">
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="label" id="password">Mật Khẩu</label>
+                                <input type="password" class="form-control" placeholder="Password" name="password"
+                                       oninvalid="InvalidMsg(this);" oninput="InvalidMsg(this);" required="required">
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="label">Remember Me? </label>
+                                <input type="checkbox" class="form-control" id="remember" name="remember-me">
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="form-control btn btn-primary submit px-3">Đăng Nhập</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--<script>-->
+<!--    function InvalidMsg(textbox) {-->
+<!--        if (textbox.value == '') {-->
+<!--            textbox.setCustomValidity('Trường này bắt buộc điền!!');-->
+<!--        }-->
+<!--        else if (textbox.validity.typeMismatch){-->
+<!--            textbox.setCustomValidity('Vui lòng nhập thông tin đúng!!');-->
+<!--        }-->
+<!--        else {-->
+<!--                textbox.setCustomValidity('');-->
+<!--            }-->
+<!--        return true;-->
+<!--    }-->
+
+<!--</script>-->
+<script th:src="@{/login/js/jquery.min.js}"></script>
+<script th:src="@{/login/js/popper.js}"></script>
+<script th:src="@{/login/js/bootstrap.min.js}"></script>
+<script th:src="@{/login/js/main.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script>
+    function InvalidMsg(textbox) {
+        if (textbox.value == '') {
+            textbox.setCustomValidity('Trường này bắt buộc điền!!');
+        }
+        else if (textbox.validity.typeMismatch){
+            textbox.setCustomValidity('Vui lòng nhập thông tin đúng!!');
+        }
+        else {
+            textbox.setCustomValidity('');
+        }
+        return true;
+    }
+
+</script>
+</body>
+</html>

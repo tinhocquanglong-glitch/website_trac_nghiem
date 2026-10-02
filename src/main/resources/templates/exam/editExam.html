@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
+    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <!-- iCheck -->
+    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+    <!-- JQVMap -->
+    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
+    <!-- bootstrap-daterangepicker -->
+    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/switch.css}">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" th:href="@{//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css}">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <style>
+        .gap-10 {
+            gap: 10px;
+        }
+
+        #lesson .list-lesson {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            gap: 5px;
+            font-size: 15px;
+        }
+
+        #lesson .list-lesson label {
+            margin: 0;
+        }
+
+        .custom-question {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 15px;
+            margin: 0px 5px;
+        }
+
+        .custom-question label {
+            margin: 0;
+        }
+
+        #lesson button {
+            display: block;
+            text-align: initial;
+        }
+
+        #questForm tr td img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
+        #questForm tr th {
+            white-space: nowrap;
+        }
+
+        .form-outline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-outline label {
+            margin: 0;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+        <div class="right_col" role="main">
+            <div class="row">
+                <div class="container-fluid" style="margin-bottom: 150px">
+                    <div class="h4 text-center mb-4">
+                        <p id="de">Bước 1: Cật Nhật Đề Thi</p>
+                    </div>
+
+                    <form style="max-width: 1200px; margin: 0 auto; background-color: #d8f5ff;"
+                          th:object="${exam}">
+                        <div id="wrapFormExam">
+                            <input th:type="hidden" name="id" th:field="*{id}">
+                            <div class="border border-secondary rounded p-3 pt-5">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mã đề thi</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" th:field="*{idName}" name="idName"
+                                               id="idName" disabled>
+                                        <div th:if="${#fields.hasErrors('idName')}" th:errors="*{idName}"
+                                             style="color: red"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Bài học</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <select id="subject" class="btn dropdown-toggle" data-toggle="dropdown"
+                                                style="background-color: #14c4ff" onchange="getClass()" disabled>
+                                            <option value="" disabled>--Chọn môn học--</option>
+                                            <th:block class="dropdown-menu" th:each="subject : ${subjects}">
+                                                <option class="dropdown-item" th:value="${subject.id}"
+                                                        th:text="${subject.name}"
+                                                        th:selected="${exam.lesson.chapter.subjectClasses.subject.id == subject.id ? 'selected' : null}"></option>
+                                            </th:block>
+                                        </select>
+                                        <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
+                                                style="background-color: #14c4ff" onchange="getChapter()" disabled>
+                                            <option id="default" value="" disabled>--Chọn lớp học--</option>
+                                            <th:block class="dropdown-menu" th:each="class : ${classes}">
+                                                <option class="dropdown-item" th:value="${class.id}"
+                                                        th:text="${class.nameClass}"
+                                                        th:selected="${exam.lesson.chapter.subjectClasses.classes.id == class.id ? 'selected' : null}"></option>
+                                            </th:block>
+                                            </th:block>
+                                        </select>
+                                        <div id="lesson"
+                                             style="background: #bce1f0;padding: 5px;border-radius: 5px;pointer-events: none;">
+                                            <th:block
+                                                    th:each="chapter,i : ${exam.lesson.chapter.subjectClasses.chapters}">
+                                                <button type="button" class="btn btn-info" data-toggle="collapse"
+                                                        th:data-target="'#collapse'+${chapter.id}"
+                                                        th:text="'CHƯƠNG '+${i.count}+'. '+${chapter.chapterName}"></button>
+                                                <div th:id="'collapse'+${chapter.id}"
+                                                     th:class="${chapter.id == exam.lesson.chapter.id ? 'collapse show' : 'collapse'}">
+                                                    <div class="list-lesson" th:each=" lesson,i : ${chapter.lessons}">
+                                                        <input type="radio" th:value="${lesson.id}"
+                                                               th:id="'lesson'+${lesson.id}" name="lesson"
+                                                               th:checked="${lesson.id == exam.lesson.id}"
+                                                               onchange="getQuestion();validate();displayChooseQuestion()">
+                                                        <label th:text="'Bài '+${i.count}+'. '+${lesson.nameLesson}"></label>
+                                                    </div>
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Thời gian</label>
+                                    <div class="col-sm-8">
+                                        <label class="switch">
+                                            <input type="checkbox" id="hasTime" autocomplete="off"
+                                                   onchange="checkHasTime()">
+                                            <span class="slider round"></span>
+                                        </label>
+                                        <input type="text" class="form-control" th:field="*{free}" name="free" id="free"
+                                               style="display: none">
+                                        <div>
+                                            <input type="number" class="form-control" autocomplete="off"
+                                                   th:field="*{time}"
+                                                   name="time"
+                                                   id="time" onchange="return validateTime()" required
+                                                   style="display: none">
+                                            <div th:if="${#fields.hasErrors('time')}" th:errors="*{time}"
+                                                 style="color: red"></div>
+                                            <span id="timeError" style="color: red"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Tên đề thi</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" class="form-control" th:field="*{nameExam}" name="nameExam"
+                                               id="nameExam"
+                                               onblur="validate()">
+                                        <div th:if="${#fields.hasErrors('nameExam')}" th:errors="*{nameExam}"
+                                             style="color: red"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group row" style="display: none">
+                                    <label class="col-sm-3 col-form-label">Ngày tạo</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <input class="form-check-input" type="text" th:field="*{createDate}"
+                                               name="createDate">
+                                    </div>
+                                </div>
+                                <input type="text" th:field="*{view}" style="display:none" id="view-exam">
+                                <input type="text" th:field="*{turn}" style="display:none" id="turn-exam">
+                                <div class="form-group row" style="display: none">
+                                    <label class="col-sm-3 col-form-label">Sửa đổi cuối</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <input class="form-check-input" type="text" th:field="*{lastModify}"
+                                               id="last-modify">
+                                    </div>
+                                </div>
+                                <div class="form-group row" style="display: none">
+                                    <label class="col-sm-3 col-form-label">Người tạo</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <input class="form-check-input" type="text" th:field="*{users}"
+                                               id="author">
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="saveBtn"
+                                        onclick="displayFormQuestion()">Sửa câu hỏi
+                                </button>
+                                <a th:href="@{/exam/list}" class="btn btn-warning">Trở lại</a>
+                            </div>
+                        </div>
+                        <div id="wrapFormQuestion" style="background-color: white" class="wrapFormQuestionHide">
+                            <div style="text-align: center;padding: 15px 0px;">
+                                <select id="sub-question" class="btn dropdown-toggle" data-toggle="dropdown"
+                                        style="background-color: #14c4ff" onchange="getSubClass()">
+                                    <option value="" selected>--Chọn môn--</option>
+                                    <th:block class="dropdown-menu" th:each="sub : ${subjects}">
+                                        <option class="dropdown-item" th:value="${sub.id}"
+                                                th:text="${sub.name}"></option>
+                                    </th:block>
+                                </select>
+                                <select id="sub-class" class="btn dropdown-toggle" data-toggle="dropdown"
+                                        style="background-color: #14c4ff" onchange="getSubChapter()">
+                                    <option value="" id="sub-default">--Chọn lớp--</option>
+                                    <th:block th:each="classOJ : ${classes}">
+                                        <option class="dropdown-item" th:value="${classOJ.id}"
+                                                th:text="${classOJ.nameClass}"
+                                                th:selected="${classOJ.id == exam.lesson.chapter.subjectClasses.subject.id}"></option>
+                                    </th:block>
+                                </select>
+                                <select id="sub-chapter" class="btn dropdown-toggle" data-toggle="dropdown"
+                                        style="background-color: #14c4ff" onchange="getSubLesson()">
+                                    <option value="" id="sub-chapter-default">--Chọn chương--</option>
+                                </select>
+                                <select id="sub-lesson" class="btn dropdown-toggle" data-toggle="dropdown"
+                                        style="background-color: #14c4ff" onchange="getQuestion()">
+                                    <option value="" id="sub-lesson-default">--Chọn bài--</option>
+                                </select>
+                            </div>
+                            <div id="random">
+                            </div>
+                            <button id="unchecked" type="button" style="float: right;margin-bottom: 10px"
+                                    onclick="resetChecked()">Bỏ chọn tất
+                                cả
+                            </button>
+                            <table id="questForm"
+                                   class="table table-striped table-bordered table-hover table-responsive-md">
+                                <thead style="    background-color: deepskyblue;">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Câu hỏi</th>
+                                    <th>Tên môn học</th>
+                                    <th>Lớp học</th>
+                                    <th>Bài học</th>
+                                    <th style="display:none;">Chương</th>
+                                    <th>A</th>
+                                    <th>B</th>
+                                    <th>C</th>
+                                    <th>D</th>
+                                    <th class="col-1">Đáp án</th>
+                                    <th class="text-center">
+                                        <i class="far fa-plus-square"></i>
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                <tr th:each="question ,i: ${questions}">
+                                    <td th:text="${i.count}"></td>
+                                    <td th:utext="${question.title}"></td>
+                                    <td th:text="${question.lesson.chapter.subjectClasses.subject.name}"></td>
+                                    <td th:text="${question.lesson.chapter.subjectClasses.classes.nameClass}"></td>
+                                    <td th:text="${question.lesson.nameLesson}"></td>
+                                    <td style="display:none;" th:text="${question.lesson.chapter.id}"></td>
+                                    <td th:text="${question.optionA}"></td>
+                                    <td th:text="${question.optionB}"></td>
+                                    <td th:text="${question.optionC}"></td>
+                                    <td th:text="${question.optionD}"></td>
+                                    <td th:text="${question.ans}"></td>
+                                    <td class="text-center">
+                                        <div class="justify-content-center">
+                                            <input type="checkbox" name="A" class="check"
+                                                   th:value="${question.quesId}" th:field="*{questions}">
+                                            <label class="form-check-label" th:value="${question.quesId}"></label>
+                                            <div th:if="${#fields.hasErrors('questions')}" th:errors="*{questions}"
+                                                 style="color: red"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div class="text-center">
+                                <button type="button" id="saveExam" class="btn m-2" style="background-color: #3bceff">
+                                    Cập
+                                    nhập
+                                </button>
+                                <a href="/exam/list" class="btn btn-secondary m-2"
+                                   style="background-color: #3bceff">Hủy</a>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<!-- Bootstrap -->
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<!-- FastClick -->
+<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
+<!-- Chart.js -->
+<script th:src="@{/vendors/Chart.js/dist/Chart.min.js}"></script>
+<!-- gauge.js -->
+<script th:src="@{/vendors/gauge.js/dist/gauge.min.js}"></script>
+<!-- iCheck -->
+<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
+<!-- Skycons -->
+<script th:src="@{/vendors/skycons/skycons.js}"></script>
+<!-- Flot -->
+<script th:src="@{/vendors/Flot/jquery.flot.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.pie.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.time.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.stack.js}"></script>
+<script th:src="@{/vendors/Flot/jquery.flot.resize.js}"></script>
+<!-- Flot plugins -->
+<script th:src="@{/vendors/flot.orderbars/js/jquery.flot.orderBars.js}"></script>
+<script th:src="@{/vendors/flot-spline/js/jquery.flot.spline.min.js}"></script>
+<script th:src="@{/vendors/flot.curvedlines/curvedLines.js}"></script>
+<!-- DateJS -->
+<script th:src="@{/vendors/DateJS/build/date.js}"></script>
+<!-- JQVMap -->
+<script th:src="@{/vendors/jqvmap/dist/jquery.vmap.js}"></script>
+<script th:src="@{/vendors/jqvmap/dist/maps/jquery.vmap.world.js}"></script>
+<script th:src="@{/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js}"></script>
+<!-- bootstrap-daterangepicker -->
+<script th:src="@{/vendors/moment/min/moment.min.js}"></script>
+<script th:src="@{/vendors/bootstrap-daterangepicker/daterangepicker.js}"></script>
+<script type="text/javascript" th:src="@{https://cdn.jsdelivr.net/npm/toastify-js}"></script>
+
+<!-- Custom Theme Scripts -->
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script th:src="@{/js/loader.js}"></script>
+<script type="text/javascript" charset="utf8"
+        th:src="@{//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js}"></script>
+<script type="text/javascript">
+    if ($("#free").val() === 'false') {
+        document.getElementById("hasTime").checked = true;
+        $("#time").toggle();
+    }
+    var listExam = [];
+    $.ajax({
+        type: 'GET',
+        url: 'http://localhost:8095/api/exam',
+        enctype: 'application/json',
+        dataType: 'json',
+        processData: false,
+        cache: false,
+        contentType: false,
+        error: function (error) {
+            console.log(error);
+        },
+        success: function (response) {
+            console.log(response);
+            for (let i = 0; i < response.length; i++) {
+                listExam[i] = response[i];
+            }
+        }
+    });
+    var table = $("#questForm").DataTable({
+        'aoColumnDefs': [{
+            'bSortable': false,
+            'aTargets': [-1] /* 1st one, start by the right */
+        }],
+        language: {
+            processing: "Message khi đang tải dữ liệu",
+            search: "Tìm Kiếm",
+            lengthMenu: "Điều chỉnh số lượng bản ghi trên 1 trang _MENU_ ",
+            info: "Bản ghi từ _START_ đến _END_ Tổng công _TOTAL_ bản ghi",
+            infoEmpty: "Khi không có dữ liệu, Hiển thị 0 bản ghi trong 0 tổng cộng 0 ",
+            infoFiltered: "(Message bổ sung cho info khi không search đc record nào _MAX_)",
+            loadingRecords: "",
+            zeroRecords: "Không tìm thấy câu hỏi nào của môn học này",
+            emptyTable: "Không có dữ liệu",
+            paginate: {
+                first: "Trang đầu",
+                previous: "Trang trước",
+                next: "Trang sau",
+                last: "Trang cuối"
+            },
+        }
+    });
+
+    $('#sub-question').on('change', function () {
+        if (this.value === '') {
+            table.search("").draw();
+        } else {
+            table.columns(2).search($("#sub-question option:selected").text()).draw();
+        }
+    });
+
+    function a() {
+        document.getElementById('forms1').submit();
+    }
+
+    function displayFormExam() {
+        document.getElementById("wrapFormExam").style.display = "block";
+        document.getElementById("wrapFormQuestion").style.display = "none";
+    }
+
+    displayFormExam();
+    $('#sub-question').on('change', function () {
+        if (this.value === '') {
+            table.columns(2).search("").draw();
+        } else {
+            table.columns(2).search($("#sub-question option:selected").text()).draw();
+        }
+        table.columns(3).search("").draw();
+        table.columns(5).search("").draw();
+        table.columns(4).search("").draw();
+    });
+    $('#sub-class').on('change', function () {
+        if (this.value === '') {
+            $("#random").css("display", "none");
+            table.columns(3).search("").draw();
+        } else {
+            $("#random").css("display", "initial");
+            table.columns(3).search($("#sub-class option:selected").text()).draw();
+        }
+        table.columns(5).search("").draw();
+        table.columns(4).search("").draw();
+    });
+    $('#sub-chapter').on('change', function () {
+        if (this.value === '') {
+            getSubChapter();
+            table.columns(5).search("").draw();
+        } else {
+            table.columns(5).search($("#sub-chapter option:selected").val()).draw();
+        }
+        table.columns(4).search("").draw();
+    });
+    $('#sub-lesson').on('change', function () {
+        if (this.value === '') {
+            getSubLesson();
+            table.columns(4).search("").draw();
+        } else {
+            table.columns(4).search($("#sub-lesson option:selected").text()).draw();
+        }
+    });
+
+    function displayFormQuestion() {
+        document.getElementById("sub-question").value = $("#subject").val();
+        table.columns(2).search($("#sub-question option:selected").text()).draw()
+        table.columns(3).search($("#sub-class option:selected").text()).draw();
+        document.getElementById("de").innerText = "Bước 2: Sửa câu hỏi đề thi!";
+        document.getElementById("wrapFormExam").style.display = "none";
+        document.getElementById("wrapFormQuestion").style.display = "block";
+        getSubChapter();
+    }
+
+    var questionList;
+    $("#saveExam").click(function () {
+        var exam = new FormData();
+        var data = table.$("input[name=questions]:checked");
+        if (data.length === 0) {
+            Toastify({
+                text: "Vui lòng chọn một câu hỏi! Đề thi phải có ít nhất 1 câu hỏi.",
+                destination: "https://github.com/apvarun/toastify-js",
+                duration: 5000,
+                newWindow: true,
+                close: true,
+                gravity: "top", // `top` or `bottom`
+                position: "right", // `left`, `center` or `right`
+                stopOnFocus: true, // Prevents dismissing of toast on hover
+                style: {
+                    background: "linear-gradient(to right, #bd4f6c, #d7816a)"
+                },
+            }).showToast();
+            return;
+        }
+        for (let i = 0; i < data.length; i++) {
+            exam.append('questions[]', data[i].value);
+        }
+        var id = $("#id").val();
+        var idName = $('#idName').val();
+        var free = $('#free').val();
+        var time = $('#time').val();
+        var lastModify = $("#last-modify").val();
+        var nameExam = $("#nameExam").val();
+        var classes = $("input[name=classes]:checked").val();
+        var subjectId = $("#select").val();
+        var lessonId = $("input[name=lesson]:checked").val();
+        var users = $("#author").val();
+        var createDate = $("#createDate").val();
+        var view = $("#view-exam").val();
+        var turn = $("#turn-exam").val();
+
+        exam.append("id", id);
+        exam.append("idName", idName);
+        exam.append("free", free);
+        exam.append("time", time);
+        exam.append("createDate", createDate);
+        exam.append("lastModify", lastModify);
+        exam.append("nameExam", nameExam);
+        exam.append("classes", classes);
+        exam.append("subject", subjectId);
+        exam.append("lesson", lessonId);
+        exam.append("users", users);
+        exam.append("view", view);
+        exam.append("turn", turn);
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8095/api/exam',
+            data: exam,
+            enctype: 'multipart/form-data',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+                console.log(error);
+            },
+            success: function () {
+                window.location.replace('http://localhost:8095/exam/list?update=' + true);
+            }
+        });
+    });
+
+    function validate() {
+        var valid = true;
+        valid = valid && checkEmpty($("#nameExam"));
+        valid = valid && checkEmpty($("input[name=lesson]:checked"));
+        // valid = valid && checkEmpty($("input[name=questions]:checked"));
+
+        $("#saveBtn").attr("disabled", true);
+        if (valid) {
+            $("#saveBtn").attr("disabled", false);
+        }
+    }
+
+    function validateTime() {
+        return checkTime($("#time").val());
+    }
+
+    function checkEmpty(obj) {
+        if ($(obj).val() === "" || $(obj).val() === undefined) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function checkTime(obj) {
+        if (document.getElementById("free").value === true) {
+            return true;
+        } else {
+            if (obj < 1 || obj > 300) {
+                document.getElementById("timeError").innerHTML = "Thời lượng của đề thi tối thiểu 1 phút và tối đa 300 phút";
+                return false;
+            } else {
+                document.getElementById("timeError").innerHTML = null;
+                return true;
+            }
+        }
+    }
+
+    // create date
+    function createDate() {
+        var date = new Date()
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        if (month < 10)
+            month = "0" + month;
+        if (day < 10)
+            day = "0" + day;
+        document.getElementById('last-modify').value = year + "-" + month + "-" + day;
+    }
+
+    createDate();
+
+    function checkHasTime() {
+        if (document.getElementById("hasTime").checked === true) {
+            $("#free").val(false);
+        } else {
+            $("#free").val(true);
+        }
+        $("#time").toggle();
+    }
+
+    function getClass() {
+        var subId = $("#subject").val();
+        $("#lesson").html('');
+        $('#class').find('option:not(:first)').remove();
+        document.getElementById("default").selected = true;
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/class/' + subId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                for (let i = 0; i < response.length; i++) {
+                    var x = document.getElementById("class");
+                    var option = document.createElement("option");
+                    option.text = response[i].nameClass;
+                    option.value = response[i].id;
+                    x.add(option);
+                }
+                $("#class").css("display", "inline-block");
+            }
+        });
+    }
+
+    function getChapter() {
+        var subId = $("#subject").val();
+        var classId = $("#class").val();
+        $("#lesson").html('');
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                var x = document.getElementById("lesson");
+                for (let i = 0; i < response.length; i++) {
+                    var button = document.createElement("button");
+                    button.type = "button";
+                    button.setAttribute("class", "btn btn-info");
+                    button.setAttribute("data-toggle", "collapse");
+                    button.setAttribute("data-target", '#collapse' + response[i].id);
+                    button.textContent = response[i].chapterName;
+                    x.appendChild(button);
+                    var demo = document.createElement("div");
+                    demo.setAttribute("id", 'collapse' + response[i].id);
+                    demo.setAttribute("class", "collapse");
+                    for (let j = 0; j < response[i].lessons.length; j++) {
+                        var div = document.createElement("div");
+                        div.setAttribute("class", "list-lesson");
+                        var radio = document.createElement("input");
+                        radio.type = "radio";
+                        radio.value = response[i].lessons[j].id;
+                        radio.name = "lesson";
+                        radio.setAttribute("id", "lesson" + response[i].lessons[j].id);
+                        radio.textContent = response[i].lessons[j].nameLesson;
+                        radio.addEventListener("change", getQuestion);
+                        radio.addEventListener("change", validate);
+                        radio.addEventListener("change", displayChooseQuestion);
+                        div.appendChild(radio);
+                        var label = document.createElement("label");
+                        label.textContent = response[i].lessons[j].nameLesson;
+                        div.appendChild(label);
+                        demo.appendChild(div);
+                    }
+                    x.appendChild(demo);
+                }
+            }
+        });
+    }
+
+    function getSubClass() {
+        var subId = $("#sub-question").val();
+        $('#sub-class').find('option:not(:first)').remove();
+        $("#sub-chapter").find('option:not(:first)').remove();
+        $("#sub-lesson").find('option:not(:first)').remove();
+        document.getElementById("default").selected = true;
+        document.getElementById("sub-chapter-default").selected = true;
+        document.getElementById("sub-lesson-default").selected = true;
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/class/' + subId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                for (let i = 0; i < response.length; i++) {
+                    var x = document.getElementById("sub-class");
+                    var option = document.createElement("option");
+                    option.text = response[i].nameClass;
+                    option.value = response[i].id;
+                    option.setAttribute("class", "dropdown-item");
+                    x.add(option);
+                }
+            }
+        });
+    }
+
+    function getSubChapter() {
+        var subId = $("#sub-question").val();
+        var classId = $("#sub-class").val();
+        $('#sub-chapter').find('option:not(:first)').remove();
+        $('#sub-lesson').find('option:not(:first)').remove();
+        document.getElementById("sub-chapter-default").selected = true;
+        document.getElementById("sub-lesson-default").selected = true;
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                questions = [];
+                var x = document.getElementById("sub-chapter");
+                for (let i = 0; i < response.length; i++) {
+                    var option = document.createElement("option");
+                    option.text = 'Chương ' + (i + 1);
+                    option.value = response[i].id;
+                    x.add(option);
+                    // response[i].lessons.sort(function (it1, it2) {
+                    //     let a = it1.serial;
+                    //     let b = it2.serial;
+                    //     return a === b ? 0 : a > b ? 1 : -1;
+                    // });
+                    for (let j = 0; j < response[i].lessons.length; j++) {
+                        questions = questions.concat(response[i].lessons[j].questions);
+                    }
+                }
+                customQuestion();
+            }
+        });
+    }
+
+    function getSubLesson() {
+        var chapId = $("#sub-chapter").val();
+        $('#sub-lesson').find('option:not(:first)').remove();
+        document.getElementById("sub-lesson-default").selected = true;
+        $.ajax({
+            type: 'GET',
+            url: 'http://localhost:8095/api/lesson/' + chapId,
+            enctype: 'application/json',
+            dataType: 'json',
+            processData: false,
+            cache: false,
+            contentType: false,
+            error: function (error) {
+            },
+            success: function (response) {
+                questions = [];
+                var x = document.getElementById("sub-lesson");
+                for (let i = 0; i < response.length; i++) {
+                    var option = document.createElement("option");
+                    option.text = response[i].nameLesson;
+                    option.value = response[i].id;
+                    x.add(option);
+                    questions = questions.concat(response[i].questions);
+                }
+                customQuestion();
+            }
+        });
+    }
+
+    function displayChooseQuestion() {
+        $("#note").css("display", "none");
+        $("#choose-question").css("display", "flex");
+    }
+
+    function getQuestion() {
+        var id = $("#sub-lesson").val();
+        if (id === '') {
+            getSubLesson();
+        } else {
+            $.ajax({
+                type: 'GET',
+                url: 'http://localhost:8095/api/question/' + id,
+                enctype: 'application/json',
+                dataType: 'json',
+                processData: false,
+                cache: false,
+                contentType: false,
+                error: function (error) {
+                },
+                success: function (response) {
+                    questions = response;
+                    customQuestion();
+                }
+            });
+        }
+    }
+
+    function customQuestion() {
+        $("#random").html("");
+        var easyN = 0;
+        var mediumN = 0;
+        var hardN = 0;
+        for (let i = 0; i < questions.length; i++) {
+            if (questions[i].level === 1) {
+                easyN++;
+                continue;
+            }
+            if (questions[i].level === 2) {
+                mediumN++;
+                continue;
+            }
+            if (questions[i].level === 3) {
+                hardN++;
+            }
+        }
+        var custom = document.getElementById("random");
+        var div = document.createElement("div");
+        div.setAttribute("class", "form-outline");
+        // Câu dễ
+        var easy = document.createElement("input");
+        easy.max = easyN;
+        easy.min = 0;
+        easy.value = easyN;
+        easy.type = "number";
+        easy.setAttribute("id", "easy");
+        easy.setAttribute("class", "form-control");
+        easy.setAttribute("style", "width : max-content");
+        var labelE = document.createElement("label");
+        labelE.setAttribute("class", "form-label");
+        labelE.setAttribute("for", "easy");
+        labelE.textContent = "Câu dễ";
+        div.appendChild(easy);
+        div.appendChild(labelE);
+        // Câu trung bình
+        var medium = document.createElement("input");
+        medium.max = mediumN;
+        medium.min = 0;
+        medium.type = "number";
+        medium.value = mediumN;
+        medium.setAttribute("id", "medium");
+        medium.setAttribute("class", "form-control");
+        medium.setAttribute("style", "width : max-content");
+        var labelM = document.createElement("label");
+        labelM.setAttribute("class", "form-label");
+        labelM.setAttribute("for", "medium");
+        labelM.textContent = "Câu trung bình";
+        div.appendChild(medium);
+        div.appendChild(labelM);
+        // Câu khó
+        var hard = document.createElement("input");
+        hard.max = hardN;
+        hard.min = 0;
+        hard.type = "number";
+        hard.value = hardN;
+        hard.setAttribute("id", "hard");
+        hard.setAttribute("class", "form-control");
+        hard.setAttribute("style", "width : max-content");
+        var labelH = document.createElement("label");
+        labelH.setAttribute("class", "form-label");
+        labelH.setAttribute("for", "hard");
+        labelH.textContent = "Câu khó";
+        div.appendChild(hard);
+        div.appendChild(labelH);
+        var btn = document.createElement("button");
+        btn.setAttribute("class", "btn btn-primary");
+        btn.textContent = "Random";
+        btn.addEventListener("click", Random);
+        btn.type = "button";
+        div.appendChild(btn);
+        custom.appendChild(div);
+    }
+
+    function Random() {
+        resetChecked();
+        var copyQuestions = [];
+        questions.forEach(value => {
+            copyQuestions.push(value);
+        });
+        var numOfEasy = parseInt($("#easy").val());
+        var numOfMedium = parseInt($("#medium").val());
+        var numOfHard = parseInt($("#hard").val());
+        while (numOfEasy > 0 || numOfMedium > 0 || numOfHard > 0) {
+            var index = Math.floor(Math.random() * copyQuestions.length);
+            var item = copyQuestions[index];
+            var data = table.$("input[name=questions]");
+            for (let i = 0; i < data.length; i++) {
+                if (parseInt(data[i].value) === item.quesId) {
+                    data[i].checked = true;
+                    break;
+                }
+            }
+            if (item.level === 1 && numOfEasy > 0) {
+                numOfEasy--;
+            }
+            if (item.level === 2 && numOfMedium > 0) {
+                numOfMedium--;
+            }
+            if (item.level === 3 && numOfHard > 0) {
+                numOfHard--;
+            }
+            copyQuestions.splice(index, 1);
+        }
+    }
+
+    function resetChecked() {
+        var data = table.$("input[name=questions]:checked");
+        for (let i = 0; i < data.length; i++) {
+            data[i].checked = false;
+        }
+    }
+</script>
+</body>
+</html>

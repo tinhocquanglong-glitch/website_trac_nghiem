@@ -1,0 +1,23 @@
+.list-chapter {
+    display: flex;
+    gap: 20px;
+}
+.list-chapter #chapter input {
+    display: block;
+    padding: 10px;
+    font-size: 15px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+#chapter .chapter-item {
+    position: relative;
+}
+#chapter .chapter-item .btn-delete {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translate(-50%, -50%);
+    font-size: 15px;
+    color: red;
+    cursor: pointer;
+}

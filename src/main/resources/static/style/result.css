@@ -1,0 +1,36 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.main-container {
+    min-height: calc(100vh - 136px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 50px;
+}
+
+.card button {
+    width: 45%;
+}
+
+.result-more {
+    margin: 0 auto;
+}
+
+.more-value {
+    color: antiquewhite;
+    font-weight: bold;
+}
