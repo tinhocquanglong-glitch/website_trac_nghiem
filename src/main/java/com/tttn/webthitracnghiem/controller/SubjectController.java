@@ -119,7 +119,7 @@ public class SubjectController {
         model.addAttribute("subjects",subjectService.getAll());
         model.addAttribute("subjectOfClass",subjectList);
         model.addAttribute("class",classesService.findById(classId));
-        return "/class/addSubjectToClass";
+        return "class/addSubjectToClass";
     }
     @GetMapping("/class/{classId}/{subjectId}")
     public String deleteSubject(@PathVariable("classId") Integer classId,

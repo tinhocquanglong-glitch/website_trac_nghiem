@@ -53,7 +53,7 @@ public class ChapterController {
         model.addAttribute("serial", chapterService.getSerial(subjectClasses.getId()));
         model.addAttribute("subjectClasses", subjectClasses);
         model.addAttribute("chapters", chapters);
-        return "/class/addChapterToSubject";
+        return "class/addChapterToSubject";
     }
 
     @GetMapping("/delete/{id}")
@@ -80,7 +80,7 @@ public class ChapterController {
         }
         model.addAttribute("subjectClasses", chapter.getSubjectClasses());
         model.addAttribute("chapter", chapter);
-        return "/class/editChapter";
+        return "class/editChapter";
     }
 
     @PostMapping("/edit")
