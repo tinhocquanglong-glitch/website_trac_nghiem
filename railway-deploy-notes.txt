@@ -1,0 +1,6 @@
+Railway deployment notes:
+- Use Java 17.
+- Set SPRING_PROFILES_ACTIVE=deploy.
+- Set NIXPACKS_JDK_VERSION=17.
+- Keep Database variables for Railway MySQL.
+- Build command should be ./mvnw clean package -DskipTests or empty.
