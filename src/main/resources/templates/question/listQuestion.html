@@ -278,7 +278,7 @@
             $.ajax({
                 contentType: 'application/json; charset=utf-8',
                 type: 'DELETE',
-                url: 'http://localhost:8095/api/question/' + id,
+                url: '/api/question/' + id,
                 success: function () {
                     var url = window.location.href;
                     if (url.endsWith("delete=true")) {

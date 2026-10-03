@@ -263,7 +263,7 @@
 
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8095/api/document',
+            url: '/api/document',
             data: document,
             enctype: 'multipart/form-data',
             processData: false,
@@ -272,7 +272,7 @@
             error: function (error) {
             },
             success: function (response) {
-                window.location.replace('http://localhost:8095/document/list?update=' + true);
+                window.location.replace('/document/list?update=' + true);
             }
         });
 

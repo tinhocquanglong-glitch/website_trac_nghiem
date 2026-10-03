@@ -367,7 +367,7 @@
     var listExam = [];
     $.ajax({
         type: 'GET',
-        url: 'http://localhost:8095/api/exam',
+        url: '/api/exam',
         enctype: 'application/json',
         dataType: 'json',
         processData: false,
@@ -526,7 +526,7 @@
         exam.append("turn", turn);
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8095/api/exam',
+            url: '/api/exam',
             data: exam,
             enctype: 'multipart/form-data',
             processData: false,
@@ -536,7 +536,7 @@
                 console.log(error);
             },
             success: function () {
-                window.location.replace('http://localhost:8095/exam/list?update=' + true);
+                window.location.replace('/exam/list?update=' + true);
             }
         });
     });
@@ -610,7 +610,7 @@
         document.getElementById("default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -637,7 +637,7 @@
         $("#lesson").html('');
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            url: '/api/chapter/' + subId + '/' + classId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -692,7 +692,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -722,7 +722,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            url: '/api/chapter/' + subId + '/' + classId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -758,7 +758,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/lesson/' + chapId,
+            url: '/api/lesson/' + chapId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -793,7 +793,7 @@
         } else {
             $.ajax({
                 type: 'GET',
-                url: 'http://localhost:8095/api/question/' + id,
+                url: '/api/question/' + id,
                 enctype: 'application/json',
                 dataType: 'json',
                 processData: false,

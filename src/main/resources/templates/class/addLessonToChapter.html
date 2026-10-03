@@ -281,10 +281,10 @@
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             type: 'POST',
-            url: 'http://localhost:8095/api/lesson/'+$("#id").val(),
+            url: '/api/lesson/'+$("#id").val(),
             data: JSON.stringify(lessonRequest),
             success: function () {
-                window.location.replace("http://localhost:8095/lesson/list/" + $("#id").val() + "?create=" + true);
+                window.location.replace("/lesson/list/" + $("#id").val() + "?create=" + true);
             },
             failure: function (response) {
             }

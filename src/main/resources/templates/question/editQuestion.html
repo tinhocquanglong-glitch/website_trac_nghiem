@@ -252,7 +252,7 @@
         console.log(...question);
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8095/api/question',
+            url: '/api/question',
             data: question,
             enctype: 'multipart/form-data',
             processData: false,
@@ -262,7 +262,7 @@
                 console.log(error);
             },
             success: function () {
-                window.location.replace('http://localhost:8095/question/list?update=' + true);
+                window.location.replace('/question/list?update=' + true);
             }
         });
     });
@@ -273,7 +273,7 @@
         document.getElementById("default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -299,7 +299,7 @@
         $("#lesson").html('');
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            url: '/api/chapter/' + subId + '/' + classId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,

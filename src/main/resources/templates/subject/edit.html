@@ -173,7 +173,7 @@
         }
         $.ajax({
             type: 'POST',
-            url: 'http://localhost:8095/api/subject',
+            url: '/api/subject',
             data: subjectRequest,
             enctype: 'multipart/form-data',
             processData: false,
@@ -182,7 +182,7 @@
             error: function (error) {
             },
             success: function (response) {
-                window.location.replace('http://localhost:8095/subject/list?update='+true);
+                window.location.replace('/subject/list?update='+true);
             }
         });
     });

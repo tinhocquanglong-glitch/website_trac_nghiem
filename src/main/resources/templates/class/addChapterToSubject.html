@@ -279,10 +279,10 @@
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             type: 'POST',
-            url: 'http://localhost:8095/api/chapter/'+$("#id").val(),
+            url: '/api/chapter/'+$("#id").val(),
             data: JSON.stringify(chapter),
             success: function () {
-                window.location.replace("http://localhost:8095/chapter/list/" + $("#id").val() + "?create=" + true);
+                window.location.replace("/chapter/list/" + $("#id").val() + "?create=" + true);
             },
             failure: function (response) {
             }

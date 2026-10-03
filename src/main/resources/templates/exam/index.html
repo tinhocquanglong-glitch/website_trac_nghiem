@@ -180,7 +180,7 @@
         document.getElementById("default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,

@@ -538,7 +538,7 @@
     var listExam = [];
     $.ajax({
         type: 'GET',
-        url: 'http://localhost:8095/api/exam',
+        url: '/api/exam',
         enctype: 'application/json',
         dataType: 'json',
         processData: false,
@@ -719,7 +719,7 @@
                     //     return xhr;
                     // },
                     type: 'POST',
-                    url: 'http://localhost:8095/api/excel',
+                    url: '/api/excel',
                     data: excel,
                     enctype: 'multipart/form-data',
                     processData: false,
@@ -886,10 +886,10 @@
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     type: 'POST',
-                    url: 'http://localhost:8095/api/exam/excel',
+                    url: '/api/exam/excel',
                     data: JSON.stringify(exam),
                     success: function () {
-                        window.location.replace("http://localhost:8095/exam/list?create=" + true);
+                        window.location.replace("/exam/list?create=" + true);
                     },
                     failure: function (response) {
                     }
@@ -921,7 +921,7 @@
                 exam.append("users", users);
                 $.ajax({
                     type: 'POST',
-                    url: 'http://localhost:8095/api/exam',
+                    url: '/api/exam',
                     data: exam,
                     enctype: 'multipart/form-data',
                     processData: false,
@@ -931,7 +931,7 @@
                         console.log(error);
                     },
                     success: function () {
-                        window.location.replace('http://localhost:8095/exam/list?create=' + true);
+                        window.location.replace('/exam/list?create=' + true);
                     }
                 });
             }
@@ -1019,7 +1019,7 @@
         document.getElementById("default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -1050,7 +1050,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/class/' + subId,
+            url: '/api/class/' + subId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -1079,7 +1079,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            url: '/api/chapter/' + subId + '/' + classId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -1115,7 +1115,7 @@
         document.getElementById("sub-lesson-default").selected = true;
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/lesson/' + chapId,
+            url: '/api/lesson/' + chapId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -1146,7 +1146,7 @@
         $("#number-question").css({"opacity": "0", "visibility": "hidden"});
         $.ajax({
             type: 'GET',
-            url: 'http://localhost:8095/api/chapter/' + subId + '/' + classId,
+            url: '/api/chapter/' + subId + '/' + classId,
             enctype: 'application/json',
             dataType: 'json',
             processData: false,
@@ -1203,7 +1203,7 @@
         } else {
             $.ajax({
                 type: 'GET',
-                url: 'http://localhost:8095/api/question/' + id,
+                url: '/api/question/' + id,
                 enctype: 'application/json',
                 dataType: 'json',
                 processData: false,
