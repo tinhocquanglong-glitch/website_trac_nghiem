@@ -1,0 +1,11 @@
+.git/
+.idea/
+.vscode/
+target/
+bin/
+*.iml
+mvnw
+mvnw.cmd
+.mvn/
+package-lock.json
+railway-deploy-notes.txt
