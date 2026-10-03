@@ -29,13 +29,13 @@
 </head>
 <body>
 <div id="preloader"></div>
-<div th:insert="~{/default-page :: navbar}"></div>
-<div th:replace="~{/default-page :: banner}"></div>
+<div th:insert="~{default-page :: navbar}"></div>
+<div th:replace="~{default-page :: banner}"></div>
 <!-- Main Container Start -->
 <div class="container-fluid mt-3">
     <div class="row" style="margin: 0 5%">
         <div class="col-md-3">
-            <div th:replace="~{/default-page :: card-left}"></div>
+            <div th:replace="~{default-page :: card-left}"></div>
         </div>
         <div class="col-md-6">
             <form class="d-inline-flex mr-5 gap-10" th:action="@{/listExamSubject/__${subjectId}__}" method="get">
@@ -136,13 +136,13 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div th:replace="~{/default-page :: card-right}"></div>
+            <div th:replace="~{default-page :: card-right}"></div>
         </div>
     </div>
 </div>
-<div th:replace="~{/default-page :: news}"></div>
+<div th:replace="~{default-page :: news}"></div>
 <!-- Footer -->
-<div th:replace="~{/default-page :: footer}"></div>
+<div th:replace="~{default-page :: footer}"></div>
 <!-- Footer -->
 
 <!-- Bootstrap JS -->

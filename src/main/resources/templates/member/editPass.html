@@ -27,7 +27,7 @@
 </head>
 <body>
 <div id="preloader"></div>
-<th:block th:insert="~{/default-page :: navbar}"></th:block>
+<th:block th:insert="~{default-page :: navbar}"></th:block>
 <div class="container mb-5 mt-5" style="width: 700px">
     <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${message}">
         <strong th:text="${message}"></strong>
@@ -87,7 +87,7 @@
     </div>
 </div>
 <!-- Footer -->
-<div th:replace="~{/default-page :: footer}"></div>
+<div th:replace="~{default-page :: footer}"></div>
 <!-- Footer -->
 <script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
 <script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
