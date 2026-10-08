@@ -1,13 +1,43 @@
 # website_trac_nghiem
 
-## Run locally
+## Chon moi truong chay
 
-Requirements: JDK 17, MySQL, and a database named `web_tn_v1`.
+Ung dung co ba Spring profile: `local`, `docker` va `deploy`. Neu khong khai
+bao `SPRING_PROFILES_ACTIVE`, profile `local` se duoc su dung.
 
-Set the `DB_PASSWORD` environment variable to the password for your MySQL user, then run from the project directory:
+### Local
+
+Yeu cau JDK 17, MySQL o cong `3306` va database `web_tn_v1`.
 
 ```powershell
-./mvnw spring-boot:run
+$env:SPRING_PROFILES_ACTIVE = 'local'
+$env:DB_PASSWORD = 'mat-khau-mysql-cua-ban'
+.\mvnw.cmd spring-boot:run
 ```
 
-Open http://localhost:8095/.
+### Docker Compose
+
+Chay ca ung dung va MySQL:
+
+```powershell
+docker compose up --build
+```
+
+Hoac chi chay MySQL bang Docker, sau do chay ung dung tu IDE/terminal voi
+profile `docker`:
+
+```powershell
+docker compose up -d mysql
+$env:SPRING_PROFILES_ACTIVE = 'docker'
+.\mvnw.cmd spring-boot:run
+```
+
+MySQL Docker duoc mo tai `localhost:3307`. Mat khau mac dinh la `root`; co the
+ghi de bang bien `MYSQL_ROOT_PASSWORD` truoc khi chay Compose.
+
+### Deploy
+
+Dat `SPRING_PROFILES_ACTIVE=deploy` cung cac bien `MYSQLHOST`, `MYSQLPORT`,
+`MYSQLDATABASE`, `MYSQLUSER` va `MYSQLPASSWORD` tren he thong trien khai.
+
+Ung dung mo tai http://localhost:8095/ khi chay local hoac Docker Compose.

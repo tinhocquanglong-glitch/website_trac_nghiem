@@ -1,0 +1,56 @@
+.tracking-page { max-width: 1500px; margin: 0 auto; padding: 20px 12px 48px; }
+.tracking-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.tracking-page-header h1 { margin: 0; color: #243746; font-size: 24px; font-weight: 600; }
+.tracking-header-actions, .tracking-row-actions { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tracking-row-actions form { margin: 0; }
+.tracking-actions { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(360px, 1.4fr); gap: 16px; margin-bottom: 24px; }
+.tracking-panel { border: 1px solid #d9e2e8; border-radius: 6px; background: #fff; padding: 16px; }
+.tracking-panel h2 { margin: 0 0 14px; color: #243746; font-size: 17px; font-weight: 600; }
+.tracking-search { margin-bottom: 24px; border-top: 1px solid #d9e2e8; border-bottom: 1px solid #d9e2e8; background: #f8fafb; padding: 18px 0; }
+.tracking-section-heading h2 { margin: 0; color: #243746; font-size: 18px; font-weight: 600; }
+.tracking-section-heading p { margin: 3px 0 14px; color: #64727a; }
+.tracking-search-form { display: flex; align-items: flex-end; gap: 10px; }
+.tracking-search-form .form-group { margin: 0; }
+.tracking-search-query { flex: 1 1 360px; }
+.tracking-search-class { flex: 0 1 280px; }
+.tracking-search-results { margin-top: 16px; }
+.tracking-results-table { min-width: 620px; }
+.tracking-search-empty { margin: 0; border: 1px solid #d9e2e8; background: #fff; }
+.tracking-form-row { display: flex; align-items: flex-end; gap: 10px; }
+.tracking-form-row .form-group { flex: 1; margin-bottom: 0; }
+.tracking-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #cfd9df; background: #fff; }
+.tracking-table { min-width: 1180px; margin-bottom: 0; }
+.tracking-table thead th { position: sticky; top: 0; z-index: 1; vertical-align: middle; border-color: #a9c4cf; background: #d9f3f8; color: #20343f; text-align: center; white-space: nowrap; }
+.tracking-table td { vertical-align: middle; }
+.tracking-table .cell-order { width: 54px; text-align: center; }
+.tracking-table .cell-name { min-width: 230px; }
+.tracking-table .cell-score { width: 92px; }
+.tracking-table .cell-comment { min-width: 320px; }
+.tracking-table .cell-status { min-width: 150px; }
+.tracking-table input, .tracking-table select, .tracking-table textarea { width: 100%; min-height: 38px; border: 1px solid #c8d3da; border-radius: 4px; background: #fff; padding: 7px 8px; }
+.tracking-table textarea { min-height: 64px; resize: vertical; }
+.semester-tabs { display: inline-flex; border: 1px solid #167c8c; border-radius: 6px; overflow: hidden; }
+.semester-tabs a { min-width: 104px; padding: 8px 14px; color: #116878; text-align: center; text-decoration: none; }
+.semester-tabs a.active { background: #167c8c; color: #fff; }
+.tracking-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.tracking-view-controls { display: flex; align-items: flex-end; gap: 10px; }
+.tracking-class-switcher { width: 250px; }
+.tracking-class-switcher label { display: block; margin-bottom: 4px; color: #52636d; font-weight: 600; }
+.tracking-student-form { display: flex; align-items: flex-end; gap: 8px; min-width: min(100%, 440px); }
+.tracking-student-form .form-group { flex: 1; margin: 0; }
+.tracking-local-search { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.tracking-local-search label { margin: 0; color: #52636d; font-weight: 600; white-space: nowrap; }
+.tracking-local-search-control { position: relative; width: min(100%, 360px); }
+.tracking-local-search-control i { position: absolute; top: 50%; left: 11px; color: #64727a; transform: translateY(-50%); }
+.tracking-local-search-control input { padding-left: 34px; }
+.tracking-empty { padding: 34px 16px !important; color: #64727a; text-align: center; }
+.tracking-save-bar { display: flex; justify-content: flex-end; margin-top: 14px; }
+@media (max-width: 900px) {
+    .tracking-actions { grid-template-columns: 1fr; }
+    .tracking-page-header, .tracking-toolbar, .tracking-view-controls, .tracking-form-row, .tracking-student-form, .tracking-search-form { align-items: stretch; flex-direction: column; }
+    .tracking-class-switcher { width: 100%; }
+    .tracking-local-search { align-items: stretch; flex-direction: column; }
+    .tracking-local-search-control { width: 100%; }
+    .tracking-page-header .btn, .tracking-form-row .btn, .tracking-student-form .btn { width: 100%; }
+    .tracking-header-actions { align-items: stretch; flex-direction: column; width: 100%; }
+}

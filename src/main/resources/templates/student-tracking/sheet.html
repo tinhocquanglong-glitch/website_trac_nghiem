@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sổ theo dõi học sinh</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/student-tracking.css}" rel="stylesheet">
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+        <main class="right_col" role="main">
+            <div class="tracking-page">
+                <div class="tracking-page-header">
+                    <div>
+                        <h1 th:text="|Sổ theo dõi lớp ${trackingClass.className}|">Sổ theo dõi lớp</h1>
+                        <div class="text-muted" th:text="|Năm học ${trackingClass.schoolYear}|">Năm học</div>
+                    </div>
+                    <div class="tracking-header-actions">
+                        <a class="btn btn-success" th:href="@{/student-tracking/export(classId=${trackingClass.id})}" download>
+                            <i class="fa fa-file-excel-o" aria-hidden="true"></i> Xuất Excel
+                        </a>
+                        <a class="btn btn-outline-secondary" th:href="@{/student-tracking}"><i class="fa fa-arrow-left" aria-hidden="true"></i> Danh sách lớp</a>
+                    </div>
+                </div>
+                <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
+                <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+
+                <div class="tracking-toolbar">
+                    <div class="tracking-view-controls">
+                        <div class="tracking-class-switcher">
+                            <label for="trackingClassSelector">Lớp đang xem</label>
+                            <select id="trackingClassSelector" class="form-control"
+                                    onchange="if (this.value) window.location.href = this.value;">
+                                <option th:each="classOption : ${trackingClasses}"
+                                        th:value="@{/student-tracking/classes/{id}(id=${classOption.id},semester=${semester})}"
+                                        th:text="|${classOption.className} - ${classOption.schoolYear}|"
+                                        th:selected="${classOption.id == trackingClass.id}">Tên lớp - Năm học</option>
+                            </select>
+                        </div>
+                        <nav class="semester-tabs" aria-label="Chọn học kỳ">
+                            <a th:classappend="${semester == 1} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=1)}">Học kỳ 1</a>
+                            <a th:classappend="${semester == 2} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=2)}">Học kỳ 2</a>
+                        </nav>
+                    </div>
+                    <form class="tracking-student-form" method="post" th:action="@{/student-tracking/classes/{id}/students(id=${trackingClass.id})}">
+                        <input type="hidden" name="semester" th:value="${semester}">
+                        <div class="form-group"><label for="fullName">Thêm học sinh</label><input id="fullName" name="fullName" class="form-control" maxlength="150" required></div>
+                        <button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Thêm</button>
+                    </form>
+                </div>
+
+                <div class="tracking-local-search" role="search">
+                    <label for="classStudentSearch">Tìm học sinh trong lớp</label>
+                    <div class="tracking-local-search-control">
+                        <i class="fa fa-search" aria-hidden="true"></i>
+                        <input id="classStudentSearch" type="search" class="form-control"
+                               maxlength="150" placeholder="Nhập tên học sinh" autocomplete="off">
+                    </div>
+                    <span id="classStudentSearchStatus" class="sr-only" role="status" aria-live="polite"></span>
+                </div>
+
+                <form method="post" th:action="@{/student-tracking/classes/{id}/records(id=${trackingClass.id})}">
+                    <input type="hidden" name="semester" th:value="${semester}">
+                    <div class="tracking-table-wrap">
+                        <table class="table table-bordered tracking-table" aria-label="Bảng theo dõi học sinh">
+                            <thead><tr>
+                                <th class="cell-order">STT</th><th class="cell-name">Họ và tên</th>
+                                <th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th>
+                                <th class="cell-score">ĐGK</th><th class="cell-score">ĐCK</th><th class="cell-score">ĐTBM</th>
+                                <th class="cell-comment">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
+                                <th class="cell-status">Điểm danh</th><th class="cell-order">Xóa</th>
+                            </tr></thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td colspan="10" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
+                            <tr th:each="row, stat : ${sheetForm.rows}">
+                                <td class="cell-order" th:text="${stat.count}"></td>
+                                <td class="cell-name">
+                                    <input type="hidden" th:name="|rows[${stat.index}].studentId|" th:value="${row.studentId}">
+                                    <input th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}" maxlength="150" required aria-label="Họ và tên">
+                                </td>
+                                <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].regularScore1|" th:value="${row.regularScore1}" aria-label="ĐGTX 1"></td>
+                                <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].regularScore2|" th:value="${row.regularScore2}" aria-label="ĐGTX 2"></td>
+                                <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].midtermScore|" th:value="${row.midtermScore}" aria-label="Điểm giữa kỳ"></td>
+                                <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].finalScore|" th:value="${row.finalScore}" aria-label="Điểm cuối kỳ"></td>
+                                <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].averageScore|" th:value="${row.averageScore}" aria-label="Điểm trung bình môn"></td>
+                                <td class="cell-comment"><textarea th:name="|rows[${stat.index}].progressComment|" th:text="${row.progressComment}" maxlength="2000" aria-label="Nhận xét sự tiến bộ"></textarea></td>
+                                <td class="cell-status">
+                                    <select th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
+                                        <option value="">Không có</option>
+                                        <option th:each="status : ${attendanceStatuses}" th:value="${status}" th:text="${status.displayName}"
+                                                th:selected="${status == row.attendanceStatus}"></option>
+                                    </select>
+                                </td>
+                                <td class="cell-order">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa học sinh" name="semester" th:value="${semester}"
+                                            th:formaction="@{/student-tracking/classes/{classId}/students/{studentId}/delete(classId=${trackingClass.id},studentId=${row.studentId})}"
+                                            onclick="return confirm('Xóa học sinh này khỏi lớp?');">
+                                        <i class="fa fa-trash" aria-hidden="true"></i><span class="sr-only">Xóa học sinh</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tracking-save-bar"><button class="btn btn-success" type="submit"><i class="fa fa-save" aria-hidden="true"></i> Lưu sổ theo dõi</button></div>
+                </form>
+            </div>
+        </main>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/student-tracking.js}"></script>
+</body>
+</html>

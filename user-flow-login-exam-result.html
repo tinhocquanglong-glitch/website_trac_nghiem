@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luồng người dùng: đăng nhập đến kết quả</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&family=Noto+Serif:ital@0;1&family=Noto+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --paper: #f4f7fb;
+      --paper-2: #ffffff;
+      --ink: #17324d;
+      --muted: #54708c;
+      --soft: #7890a6;
+      --rule: rgba(23,50,77,.16);
+      --blue: #2f6f9f;
+      --blue-tint: #e8f2fa;
+      --accent: #e36b3d;
+      --accent-tint: #fff0e9;
+    }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Geist', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+    }
+    .frame { width: min(1280px, 100%); }
+    .eyebrow, .technical, .legend, .message-label {
+      font-family: 'Geist Mono', Consolas, monospace;
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Instrument Serif', 'Noto Serif', Georgia, serif;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: -.02em;
+      margin-bottom: 8px;
+    }
+    .intro { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+    .diagram-container { overflow-x: auto; background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; }
+    svg { display: block; width: 100%; min-width: 1120px; }
+    .legend { color: var(--muted); font-size: 11px; letter-spacing: .02em; }
+    @media print {
+      body { padding: 0; background: #fff; }
+      .diagram-container { overflow: visible; border: 0; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <p class="eyebrow">USER JOURNEY · SPRING BOOT + MYSQL</p>
+    <h1>Luồng người dùng từ đăng nhập đến kết quả</h1>
+    <p class="intro">Luồng happy path dựa trên các route hiện có: <span class="technical">/login</span>, <span class="technical">/listExamSubject/{id}</span>, <span class="technical">/quiz1/{id}</span> và <span class="technical">/submit1/{id}</span>.</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="user-flow-title user-flow-desc">
+        <title id="user-flow-title">Luồng người dùng từ đăng nhập đến kết quả</title>
+        <desc id="user-flow-desc">Sơ đồ tuần tự mô tả người dùng đăng nhập, chọn đề, tải câu hỏi, nộp bài và nhận kết quả từ ứng dụng Spring Boot cùng cơ sở dữ liệu MySQL.</desc>
+        <defs>
+          <marker id="flow-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <path d="M0 0 L9 3.5 L0 7 Z" fill="#2f6f9f"/>
+          </marker>
+          <marker id="return-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <path d="M0 0 L9 3.5 L0 7 Z" fill="#54708c"/>
+          </marker>
+          <marker id="accent-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <path d="M0 0 L9 3.5 L0 7 Z" fill="#e36b3d"/>
+          </marker>
+        </defs>
+
+        <rect width="1280" height="720" fill="#f4f7fb"/>
+        <rect x="24" y="24" width="1232" height="672" rx="8" fill="#ffffff" stroke="rgba(23,50,77,.16)"/>
+
+        <!-- Lifelines -->
+        <line x1="140" y1="118" x2="140" y2="654" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="390" y1="118" x2="390" y2="654" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="730" y1="118" x2="730" y2="654" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="1080" y1="118" x2="1080" y2="654" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+
+        <!-- Message arrows, drawn before actor boxes -->
+        <line x1="140" y1="154" x2="390" y2="154" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="390" y1="194" x2="730" y2="194" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="730" y1="234" x2="390" y2="234" stroke="#54708c" stroke-width="1.2" stroke-dasharray="6,4" marker-end="url(#return-arrow)"/>
+        <line x1="390" y1="274" x2="730" y2="274" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="730" y1="314" x2="1080" y2="314" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="1080" y1="354" x2="730" y2="354" stroke="#54708c" stroke-width="1.2" stroke-dasharray="6,4" marker-end="url(#return-arrow)"/>
+        <line x1="730" y1="394" x2="390" y2="394" stroke="#e36b3d" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#accent-arrow)"/>
+        <line x1="140" y1="434" x2="390" y2="434" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="390" y1="474" x2="730" y2="474" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="730" y1="514" x2="1080" y2="514" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="1080" y1="554" x2="730" y2="554" stroke="#54708c" stroke-width="1.2" stroke-dasharray="6,4" marker-end="url(#return-arrow)"/>
+        <line x1="140" y1="594" x2="390" y2="594" stroke="#2f6f9f" stroke-width="1.4" marker-end="url(#flow-arrow)"/>
+        <line x1="390" y1="634" x2="730" y2="634" stroke="#e36b3d" stroke-width="1.6" marker-end="url(#accent-arrow)"/>
+
+        <!-- Activation bars -->
+        <rect x="386" y="188" width="8" height="48" fill="#e8f2fa" stroke="#2f6f9f"/>
+        <rect x="726" y="268" width="8" height="130" fill="#e8f2fa" stroke="#2f6f9f"/>
+        <rect x="1076" y="308" width="8" height="52" fill="#e8f2fa" stroke="#2f6f9f"/>
+        <rect x="386" y="468" width="8" height="170" fill="#e8f2fa" stroke="#2f6f9f"/>
+
+        <!-- Labels with opaque masks and visible gaps -->
+        <g class="message-label" fill="#17324d" font-size="10" text-anchor="middle">
+          <rect x="174" y="137" width="182" height="16" rx="3" fill="#ffffff"/>
+          <text x="265" y="149">NHẬP TÀI KHOẢN / MẬT KHẨU</text>
+          <rect x="510" y="177" width="100" height="16" rx="3" fill="#ffffff"/>
+          <text x="560" y="189">GET /login</text>
+          <rect x="510" y="217" width="100" height="16" rx="3" fill="#ffffff"/>
+          <text x="560" y="229">login.html</text>
+          <rect x="510" y="257" width="100" height="16" rx="3" fill="#ffffff"/>
+          <text x="560" y="269">POST /login</text>
+          <rect x="830" y="297" width="150" height="16" rx="3" fill="#ffffff"/>
+          <text x="905" y="309">SELECT USER + ROLE</text>
+          <rect x="830" y="337" width="150" height="16" rx="3" fill="#ffffff"/>
+          <text x="905" y="349">AUTH RESULT</text>
+          <rect x="504" y="377" width="212" height="16" rx="3" fill="#ffffff"/>
+          <text x="610" y="389">REDIRECT /role · AUTH OK</text>
+          <rect x="174" y="417" width="182" height="16" rx="3" fill="#ffffff"/>
+          <text x="265" y="429">CHỌN MÔN + ĐỀ THI</text>
+          <rect x="500" y="457" width="120" height="16" rx="3" fill="#ffffff"/>
+          <text x="560" y="469">GET /listExamSubject</text>
+          <rect x="830" y="497" width="150" height="16" rx="3" fill="#ffffff"/>
+          <text x="905" y="509">LOAD EXAM + QUESTIONS</text>
+          <rect x="830" y="537" width="150" height="16" rx="3" fill="#ffffff"/>
+          <text x="905" y="549">EXAM DATA</text>
+          <rect x="174" y="577" width="182" height="16" rx="3" fill="#ffffff"/>
+          <text x="265" y="589">CHỌN ĐÁP ÁN + NỘP BÀI</text>
+          <rect x="500" y="617" width="212" height="16" rx="3" fill="#fff0e9"/>
+          <text x="606" y="629" fill="#b34b25">POST /submit1/{id} · LƯU RESULT</text>
+        </g>
+
+        <!-- Actor boxes -->
+        <g>
+          <rect x="76" y="48" width="128" height="54" rx="6" fill="#e8f2fa" stroke="#2f6f9f" stroke-width="1.2"/>
+          <text x="140" y="72" text-anchor="middle" fill="#17324d" font-size="14" font-weight="600">Người dùng</text>
+          <text x="140" y="89" text-anchor="middle" fill="#54708c" font-size="10" font-family="'Geist Mono', monospace">ACTOR</text>
+
+          <rect x="326" y="48" width="128" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+          <text x="390" y="72" text-anchor="middle" fill="#17324d" font-size="14" font-weight="600">Trình duyệt</text>
+          <text x="390" y="89" text-anchor="middle" fill="#54708c" font-size="10" font-family="'Geist Mono', monospace">HTTP CLIENT</text>
+
+          <rect x="646" y="48" width="168" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+          <text x="730" y="72" text-anchor="middle" fill="#17324d" font-size="14" font-weight="600">Spring Boot</text>
+          <text x="730" y="89" text-anchor="middle" fill="#54708c" font-size="10" font-family="'Geist Mono', monospace">SECURITY · MVC · JPA</text>
+
+          <rect x="1016" y="48" width="128" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+          <text x="1080" y="72" text-anchor="middle" fill="#17324d" font-size="14" font-weight="600">MySQL</text>
+          <text x="1080" y="89" text-anchor="middle" fill="#54708c" font-size="10" font-family="'Geist Mono', monospace">web_tn_v1</text>
+        </g>
+
+        <!-- Bottom legend strip -->
+        <line x1="56" y1="668" x2="1224" y2="668" stroke="rgba(23,50,77,.16)"/>
+        <text x="72" y="687" class="legend" font-size="10">MŨI TÊN LIỀN · REQUEST</text>
+        <text x="282" y="687" class="legend" font-size="10">MŨI TÊN NÉT · RESPONSE</text>
+        <text x="514" y="687" class="legend" font-size="10" fill="#e36b3d">CAM · BƯỚC THÀNH CÔNG / KẾT QUẢ</text>
+        <text x="930" y="687" class="legend" font-size="10">THỜI GIAN CHẢY TỪ TRÊN XUỐNG</text>
+      </svg>
+    </div>
+  </main>
+</body>
+</html>

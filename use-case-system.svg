@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="use-case-title use-case-desc">
+  <title id="use-case-title">Biểu đồ Use Case tổng quát của hệ thống</title>
+  <desc id="use-case-desc">Biểu đồ mô tả các chức năng chính của website thi trắc nghiệm và tương tác của người dùng và quản trị viên với hệ thống.</desc>
+  <defs>
+    <style>
+      .title { font-family: 'Segoe UI', Arial, sans-serif; fill: #17324d; font-size: 34px; font-weight: 600; }
+      .eyebrow { font-family: Consolas, monospace; fill: #2f6f9f; font-size: 12px; font-weight: 600; letter-spacing: 2px; }
+      .actor { font-family: 'Segoe UI', Arial, sans-serif; fill: #17324d; font-size: 18px; font-weight: 600; text-anchor: middle; }
+      .actor-sub { font-family: Consolas, monospace; fill: #54708c; font-size: 11px; text-anchor: middle; letter-spacing: 1px; }
+      .usecase { font-family: 'Segoe UI', Arial, sans-serif; fill: #17324d; font-size: 16px; font-weight: 600; text-anchor: middle; }
+      .route { font-family: Consolas, monospace; fill: #54708c; font-size: 11px; text-anchor: middle; }
+      .boundary-label { font-family: Consolas, monospace; fill: #54708c; font-size: 12px; font-weight: 600; letter-spacing: 1.5px; }
+      .legend { font-family: Consolas, monospace; fill: #54708c; font-size: 11px; letter-spacing: .5px; }
+    </style>
+    <marker id="uc-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0 L9 3.5 L0 7" fill="none" stroke="#54708c" stroke-width="1.2"/>
+    </marker>
+    <marker id="uc-accent-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0 L9 3.5 L0 7" fill="none" stroke="#e36b3d" stroke-width="1.2"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="#f4f7fb"/>
+  <rect x="28" y="28" width="1544" height="844" rx="10" fill="#ffffff" stroke="rgba(23,50,77,.16)"/>
+  <text x="72" y="72" class="eyebrow">USE CASE · SYSTEM OVERVIEW</text>
+  <text x="72" y="118" class="title">Biểu đồ Use Case tổng quát của hệ thống</text>
+  <text x="72" y="146" class="legend">Website thi trắc nghiệm · Spring Boot · Thymeleaf · Spring Security · MySQL</text>
+
+  <!-- System boundary -->
+  <rect x="330" y="178" width="960" height="610" rx="10" fill="#f4f7fb" stroke="#7890a6" stroke-width="1.2" stroke-dasharray="7,5"/>
+  <rect x="354" y="166" width="214" height="26" rx="4" fill="#ffffff"/>
+  <text x="366" y="184" class="boundary-label">SYSTEM · WEBSITE THI TRẮC NGHIỆM</text>
+
+  <!-- Relationship lines, routed orthogonally and drawn before nodes -->
+  <!-- User relationships -->
+  <path d="M190 385 H270 Q278 385 278 377 V205 H565" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <path d="M190 397 H250 Q258 397 258 405 V325 H565" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <path d="M190 409 H230 Q238 409 238 417 V445 H565" fill="none" stroke="#e36b3d" stroke-width="1.5" marker-end="url(#uc-accent-arrow)"/>
+  <path d="M190 421 H210 Q218 421 218 429 V565 H565" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <!-- Admin relationships -->
+  <path d="M1410 385 H1360 Q1352 385 1352 377 V205 H735" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <path d="M1410 397 H1340 Q1332 397 1332 405 V265 H1145" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <path d="M1410 409 H1320 Q1312 409 1312 417 V405 H1145" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+  <path d="M1410 421 H1300 Q1292 421 1292 429 V545 H1145" fill="none" stroke="#54708c" stroke-width="1.2" marker-end="url(#uc-arrow)"/>
+
+  <!-- Actors -->
+  <g>
+    <circle cx="140" cy="340" r="28" fill="#e8f2fa" stroke="#2f6f9f" stroke-width="1.4"/>
+    <line x1="140" y1="368" x2="140" y2="448" stroke="#2f6f9f" stroke-width="1.4"/>
+    <line x1="92" y1="392" x2="188" y2="392" stroke="#2f6f9f" stroke-width="1.4"/>
+    <line x1="140" y1="448" x2="100" y2="500" stroke="#2f6f9f" stroke-width="1.4"/>
+    <line x1="140" y1="448" x2="180" y2="500" stroke="#2f6f9f" stroke-width="1.4"/>
+    <text x="140" y="536" class="actor">Người dùng</text>
+    <text x="140" y="555" class="actor-sub">ROLE_USER</text>
+  </g>
+  <g>
+    <circle cx="1460" cy="340" r="28" fill="#fff0e9" stroke="#e36b3d" stroke-width="1.4"/>
+    <line x1="1460" y1="368" x2="1460" y2="448" stroke="#e36b3d" stroke-width="1.4"/>
+    <line x1="1412" y1="392" x2="1508" y2="392" stroke="#e36b3d" stroke-width="1.4"/>
+    <line x1="1460" y1="448" x2="1420" y2="500" stroke="#e36b3d" stroke-width="1.4"/>
+    <line x1="1460" y1="448" x2="1500" y2="500" stroke="#e36b3d" stroke-width="1.4"/>
+    <text x="1460" y="536" class="actor">Quản trị viên</text>
+    <text x="1460" y="555" class="actor-sub">ROLE_ADMIN</text>
+  </g>
+
+  <!-- Use cases -->
+  <g>
+    <ellipse cx="650" cy="205" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="650" y="201" class="usecase">Đăng nhập &amp; phân quyền</text>
+    <text x="650" y="221" class="route">/login · /role</text>
+
+    <ellipse cx="650" cy="325" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="650" y="321" class="usecase">Xem môn học &amp; tài liệu</text>
+    <text x="650" y="341" class="route">/subject · /tai-lieu</text>
+
+    <ellipse cx="650" cy="445" rx="150" ry="42" fill="#fff0e9" stroke="#e36b3d" stroke-width="1.8"/>
+    <text x="650" y="441" class="usecase">Làm bài trắc nghiệm</text>
+    <text x="650" y="461" class="route" fill="#b34b25">/quiz1 · /submit1</text>
+
+    <ellipse cx="650" cy="565" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="650" y="561" class="usecase">Xem điểm &amp; lịch sử</text>
+    <text x="650" y="581" class="route">/score · /history</text>
+
+    <ellipse cx="1030" cy="265" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="1030" y="261" class="usecase">Quản lý người dùng</text>
+    <text x="1030" y="281" class="route">/user/**</text>
+
+    <ellipse cx="1030" cy="405" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="1030" y="401" class="usecase">Quản lý đề &amp; câu hỏi</text>
+    <text x="1030" y="421" class="route">/exam · /question · /api/excel</text>
+
+    <ellipse cx="1030" cy="545" rx="150" ry="42" fill="#ffffff" stroke="#2f6f9f" stroke-width="1.3"/>
+    <text x="1030" y="541" class="usecase">Quản lý nội dung học tập</text>
+    <text x="1030" y="561" class="route">/class · /chapter · /lesson · /news</text>
+  </g>
+
+  <!-- Legend strip -->
+  <line x1="72" y1="824" x2="1528" y2="824" stroke="rgba(23,50,77,.16)"/>
+  <text x="72" y="850" class="legend">ĐƯỜNG LIỀN · ACTOR TƯƠNG TÁC VỚI USE CASE</text>
+  <text x="580" y="850" class="legend" fill="#e36b3d">CAM · CHỨC NĂNG TRUNG TÂM CỦA HỆ THỐNG</text>
+  <text x="1120" y="850" class="legend">BIÊN NÉT ĐỨT · PHẠM VI HỆ THỐNG</text>
+</svg>

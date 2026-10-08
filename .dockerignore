@@ -1,4 +1,5 @@
 .git/
+.codebase-memory
 .idea/
 .vscode/
 target/
@@ -9,3 +10,4 @@ mvnw.cmd
 .mvn/
 package-lock.json
 railway-deploy-notes.txt
+.env

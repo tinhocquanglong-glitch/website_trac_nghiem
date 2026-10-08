@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sổ theo dõi học sinh</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/student-tracking.css}" rel="stylesheet">
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+        <main class="right_col" role="main">
+            <div class="tracking-page">
+                <div class="tracking-page-header">
+                    <h1>Sổ theo dõi học sinh</h1>
+                    <a class="btn btn-success" th:href="@{/student-tracking/export}" download>
+                        <i class="fa fa-file-excel-o" aria-hidden="true"></i> Xuất toàn bộ
+                    </a>
+                </div>
+                <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
+                <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+
+                <div class="tracking-actions">
+                    <section class="tracking-panel" aria-labelledby="create-class-title">
+                        <h2 id="create-class-title">Thêm lớp</h2>
+                        <form method="post" th:action="@{/student-tracking/classes}" class="tracking-form-row">
+                            <div class="form-group">
+                                <label for="className">Tên lớp</label>
+                                <input id="className" name="className" class="form-control" maxlength="50" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="schoolYear">Năm học</label>
+                                <input id="schoolYear" name="schoolYear" class="form-control" placeholder="2026-2027"
+                                       pattern="[0-9]{4}-[0-9]{4}" maxlength="9" required>
+                            </div>
+                            <button class="btn btn-primary" type="submit"><i class="fa fa-plus" aria-hidden="true"></i> Thêm</button>
+                        </form>
+                    </section>
+
+                    <section class="tracking-panel" aria-labelledby="import-title">
+                        <h2 id="import-title">Nhập từ Excel</h2>
+                        <form method="post" enctype="multipart/form-data" th:action="@{/student-tracking/import}" class="tracking-form-row">
+                            <div class="form-group">
+                                <label for="file">File .xls hoặc .xlsx</label>
+                                <input id="file" name="file" type="file" class="form-control-file" accept=".xls,.xlsx" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="semester">Học kỳ</label>
+                                <select id="semester" name="semester" class="form-control">
+                                    <option value="1">Học kỳ 1</option>
+                                    <option value="2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success" type="submit"><i class="fa fa-upload" aria-hidden="true"></i> Tải lên</button>
+                        </form>
+                    </section>
+                </div>
+
+                <section class="tracking-search" aria-labelledby="student-search-title">
+                    <div class="tracking-section-heading">
+                        <div>
+                            <h2 id="student-search-title">Tìm học sinh</h2>
+                            <p>Tìm trong một lớp hoặc trên toàn bộ danh sách lớp.</p>
+                        </div>
+                    </div>
+                    <form method="get" th:action="@{/student-tracking}" class="tracking-search-form" role="search">
+                        <div class="form-group tracking-search-query">
+                            <label for="studentQuery">Họ và tên học sinh</label>
+                            <input id="studentQuery" type="search" name="q" class="form-control"
+                                   th:value="${query}" maxlength="150" placeholder="Nhập tên học sinh" required>
+                        </div>
+                        <div class="form-group tracking-search-class">
+                            <label for="searchClassId">Phạm vi lớp</label>
+                            <select id="searchClassId" name="classId" class="form-control">
+                                <option value="">Tất cả lớp</option>
+                                <option th:each="item : ${trackingClasses}" th:value="${item.id}"
+                                        th:text="|${item.className} - ${item.schoolYear}|"
+                                        th:selected="${selectedClassId != null and selectedClassId == item.id}"></option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa fa-search" aria-hidden="true"></i> Tìm kiếm
+                        </button>
+                        <a class="btn btn-outline-secondary" th:if="${searchPerformed}" th:href="@{/student-tracking}">
+                            Xóa lọc
+                        </a>
+                    </form>
+
+                    <div class="tracking-search-results" th:if="${searchPerformed}">
+                        <div class="tracking-table-wrap" th:if="${!#lists.isEmpty(searchResults)}">
+                            <table class="table table-bordered table-hover tracking-table tracking-results-table"
+                                   aria-label="Kết quả tìm kiếm học sinh">
+                                <thead><tr><th>Họ và tên</th><th>Lớp</th><th>Năm học</th><th>Mở sổ</th></tr></thead>
+                                <tbody>
+                                <tr th:each="result : ${searchResults}">
+                                    <td th:text="${result.fullName}"></td>
+                                    <td th:text="${result.className}"></td>
+                                    <td th:text="${result.schoolYear}"></td>
+                                    <td class="text-center">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           th:href="@{/student-tracking/classes/{id}(id=${result.classId},semester=1)}">
+                                            <i class="fa fa-folder-open" aria-hidden="true"></i> Mở lớp
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="tracking-empty tracking-search-empty" role="status"
+                           th:if="${#lists.isEmpty(searchResults)}">Không tìm thấy học sinh phù hợp.</p>
+                    </div>
+                </section>
+
+                <div class="tracking-table-wrap">
+                    <table class="table table-bordered table-hover tracking-table" aria-label="Danh sách lớp theo dõi">
+                        <thead><tr><th class="cell-order">STT</th><th>Tên lớp</th><th>Năm học</th><th>Học kỳ</th><th>Thao tác</th></tr></thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(trackingClasses)}"><td colspan="5" class="tracking-empty">Chưa có lớp theo dõi</td></tr>
+                        <tr th:each="item, stat : ${trackingClasses}">
+                            <td class="cell-order" th:text="${stat.count}"></td>
+                            <td th:text="${item.className}"></td>
+                            <td th:text="${item.schoolYear}"></td>
+                            <td class="text-center">
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=1)}">HK1</a>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=2)}">HK2</a>
+                            </td>
+                            <td class="text-center">
+                                <div class="tracking-row-actions">
+                                    <a class="btn btn-sm btn-outline-success"
+                                       th:href="@{/student-tracking/export(classId=${item.id})}"
+                                       title="Xuất Excel lớp" download>
+                                        <i class="fa fa-file-excel-o" aria-hidden="true"></i><span class="sr-only">Xuất Excel lớp</span>
+                                    </a>
+                                    <form method="post" th:action="@{/student-tracking/classes/{id}/delete(id=${item.id})}"
+                                          onsubmit="return confirm('Xóa lớp và toàn bộ sổ theo dõi?');">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa lớp">
+                                            <i class="fa fa-trash" aria-hidden="true"></i><span class="sr-only">Xóa lớp</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+</body>
+</html>

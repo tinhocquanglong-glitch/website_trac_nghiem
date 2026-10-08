@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 980" role="img" aria-labelledby="signup-login-title signup-login-desc">
+  <title id="signup-login-title">Biểu đồ tuần tự đăng ký và đăng nhập</title>
+  <desc id="signup-login-desc">Sơ đồ tuần tự mô tả người dùng đăng ký tài khoản, hệ thống kiểm tra và lưu dữ liệu, sau đó đăng nhập qua Spring Security và được chuyển hướng theo quyền.</desc>
+  <defs>
+    <style>
+      .title { font-family: 'Segoe UI', Arial, sans-serif; fill: #17324d; font-size: 34px; font-weight: 600; }
+      .eyebrow { font-family: Consolas, monospace; fill: #2f6f9f; font-size: 12px; font-weight: 600; letter-spacing: 2px; }
+      .actor { font-family: 'Segoe UI', Arial, sans-serif; fill: #17324d; font-size: 16px; font-weight: 600; text-anchor: middle; }
+      .actor-sub { font-family: Consolas, monospace; fill: #54708c; font-size: 10px; text-anchor: middle; letter-spacing: .7px; }
+      .msg { font-family: Consolas, monospace; fill: #17324d; font-size: 10px; text-anchor: middle; letter-spacing: .2px; }
+      .legend { font-family: Consolas, monospace; fill: #54708c; font-size: 11px; letter-spacing: .5px; }
+    </style>
+    <marker id="seq-arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0 L9 3.5 L0 7 Z" fill="#2f6f9f"/>
+    </marker>
+    <marker id="seq-return" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0 L9 3.5 L0 7 Z" fill="#54708c"/>
+    </marker>
+    <marker id="seq-accent" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0 0 L9 3.5 L0 7 Z" fill="#e36b3d"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="980" fill="#f4f7fb"/>
+  <rect x="28" y="28" width="1544" height="924" rx="10" fill="#ffffff" stroke="rgba(23,50,77,.16)"/>
+  <text x="72" y="72" class="eyebrow">SEQUENCE · ACCOUNT ACCESS</text>
+  <text x="72" y="118" class="title">Biểu đồ tuần tự đăng ký và đăng nhập</text>
+  <text x="72" y="146" class="legend">Happy path: tạo tài khoản → mã hóa mật khẩu → xác thực → chuyển hướng theo quyền</text>
+
+  <!-- Lifelines -->
+  <line x1="128" y1="220" x2="128" y2="876" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="390" y1="220" x2="390" y2="876" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="700" y1="220" x2="700" y2="876" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="1030" y1="220" x2="1030" y2="876" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="1360" y1="220" x2="1360" y2="876" stroke="rgba(23,50,77,.24)" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- Messages: arrows are drawn before boxes and labels -->
+  <line x1="128" y1="270" x2="390" y2="270" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="390" y1="320" x2="700" y2="320" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="700" y1="370" x2="1360" y2="370" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="1360" y1="420" x2="700" y2="420" stroke="#54708c" stroke-width="1.1" stroke-dasharray="6,4" marker-end="url(#seq-return)"/>
+  <line x1="700" y1="470" x2="390" y2="470" stroke="#54708c" stroke-width="1.1" stroke-dasharray="6,4" marker-end="url(#seq-return)"/>
+  <line x1="128" y1="520" x2="390" y2="520" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="390" y1="570" x2="700" y2="570" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="700" y1="620" x2="1360" y2="620" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="1360" y1="670" x2="700" y2="670" stroke="#54708c" stroke-width="1.1" stroke-dasharray="6,4" marker-end="url(#seq-return)"/>
+  <line x1="700" y1="720" x2="1030" y2="720" stroke="#2f6f9f" stroke-width="1.3" marker-end="url(#seq-arrow)"/>
+  <line x1="1030" y1="770" x2="700" y2="770" stroke="#54708c" stroke-width="1.1" stroke-dasharray="6,4" marker-end="url(#seq-return)"/>
+  <line x1="700" y1="820" x2="390" y2="820" stroke="#e36b3d" stroke-width="1.6" marker-end="url(#seq-accent)"/>
+
+  <!-- Activation bars -->
+  <rect x="386" y="314" width="8" height="162" fill="#e8f2fa" stroke="#2f6f9f"/>
+  <rect x="696" y="364" width="112" height="112" fill="#e8f2fa" stroke="#2f6f9f"/>
+  <rect x="696" y="564" width="112" height="260" fill="#e8f2fa" stroke="#2f6f9f"/>
+  <rect x="1026" y="714" width="8" height="62" fill="#e8f2fa" stroke="#2f6f9f"/>
+  <rect x="1356" y="364" width="8" height="62" fill="#e8f2fa" stroke="#2f6f9f"/>
+  <rect x="1356" y="614" width="8" height="62" fill="#e8f2fa" stroke="#2f6f9f"/>
+
+  <!-- Message labels with opaque masks and visible gap -->
+  <g class="msg">
+    <rect x="174" y="251" width="170" height="16" rx="3" fill="#ffffff"/><text x="259" y="263">GET /signup</text>
+    <rect x="490" y="301" width="110" height="16" rx="3" fill="#ffffff"/><text x="545" y="313">register.html</text>
+    <rect x="952" y="351" width="156" height="16" rx="3" fill="#ffffff"/><text x="1030" y="363">CHECK USER + EMAIL</text>
+    <rect x="952" y="401" width="156" height="16" rx="3" fill="#ffffff"/><text x="1030" y="413">VALIDATION RESULT</text>
+    <rect x="490" y="451" width="110" height="16" rx="3" fill="#ffffff"/><text x="545" y="463">register.html</text>
+    <rect x="174" y="501" width="170" height="16" rx="3" fill="#ffffff"/><text x="259" y="513">POST /signup</text>
+    <rect x="490" y="551" width="110" height="16" rx="3" fill="#ffffff"/><text x="545" y="563">VALIDATE FORM</text>
+    <rect x="952" y="601" width="156" height="16" rx="3" fill="#ffffff"/><text x="1030" y="613">SAVE USER + ROLE_USER</text>
+    <rect x="952" y="651" width="156" height="16" rx="3" fill="#ffffff"/><text x="1030" y="663">SAVE SUCCESS</text>
+    <rect x="800" y="701" width="130" height="16" rx="3" fill="#ffffff"/><text x="865" y="713">POST /login</text>
+    <rect x="800" y="751" width="130" height="16" rx="3" fill="#ffffff"/><text x="865" y="763">USER + ROLES</text>
+    <rect x="490" y="801" width="190" height="16" rx="3" fill="#fff0e9"/><text x="585" y="813" fill="#b34b25">REDIRECT /role · LOGIN OK</text>
+  </g>
+
+  <!-- Actor boxes -->
+  <g>
+    <rect x="62" y="166" width="132" height="54" rx="6" fill="#e8f2fa" stroke="#2f6f9f" stroke-width="1.2"/>
+    <text x="128" y="190" class="actor">Người dùng</text><text x="128" y="207" class="actor-sub">ACTOR</text>
+    <rect x="324" y="166" width="132" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+    <text x="390" y="190" class="actor">Trình duyệt</text><text x="390" y="207" class="actor-sub">HTTP CLIENT</text>
+    <rect x="614" y="166" width="172" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+    <text x="700" y="190" class="actor">MemberController</text><text x="700" y="207" class="actor-sub">MVC · USER SERVICE</text>
+    <rect x="944" y="166" width="172" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+    <text x="1030" y="190" class="actor">Spring Security</text><text x="1030" y="207" class="actor-sub">BCrypt · ROLE CHECK</text>
+    <rect x="1296" y="166" width="128" height="54" rx="6" fill="#ffffff" stroke="#17324d" stroke-width="1.2"/>
+    <text x="1360" y="190" class="actor">MySQL</text><text x="1360" y="207" class="actor-sub">web_tn_v1</text>
+  </g>
+
+  <!-- Note for validation branch -->
+  <rect x="84" y="866" width="1432" height="42" rx="6" fill="#f4f7fb" stroke="rgba(23,50,77,.16)"/>
+  <text x="104" y="892" class="legend">GHI CHÚ: nếu dữ liệu không hợp lệ hoặc tài khoản đã tồn tại, hệ thống trả lại trang đăng ký; đăng nhập sai chuyển về /login?error=true.</text>
+</svg>
