@@ -1,11 +1,15 @@
 package com.tttn.webthitracnghiem.service;
 
+import com.tttn.webthitracnghiem.model.AttendanceStatus;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.TrackingRowForm;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataValidation;
+import org.apache.poi.ss.usermodel.DataValidationConstraint;
+import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -14,6 +18,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -24,6 +29,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 public class StudentTrackingExcelExporter {
@@ -92,7 +98,25 @@ public class StudentTrackingExcelExporter {
         for (int index = 0; index < rows.size(); index++) {
             writeStudentRow(sheet.createRow(index + 5), rows.get(index), index + 1, styles);
         }
+        addAttendanceValidation(sheet, rows.size());
         setColumnWidths(sheet);
+    }
+
+    private void addAttendanceValidation(Sheet sheet, int studentCount) {
+        String[] options = Stream.of(AttendanceStatus.values())
+                .map(AttendanceStatus::getDisplayName)
+                .toArray(String[]::new);
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        DataValidationConstraint constraint = helper.createExplicitListConstraint(options);
+        int lastRowIndex = Math.max(204, studentCount + 4);
+        DataValidation validation = helper.createValidation(
+                constraint, new CellRangeAddressList(5, lastRowIndex, 8, 8));
+        validation.setEmptyCellAllowed(true);
+        // XSSF maps true to showDropDown=false; Excel displays the arrow only with that OOXML value.
+        validation.setSuppressDropDownArrow(true);
+        validation.setShowErrorBox(true);
+        validation.createErrorBox("Điểm danh không hợp lệ", "Hãy chọn một trạng thái trong danh sách.");
+        sheet.addValidationData(validation);
     }
 
     private void writeStudentRow(Row excelRow, TrackingRowForm row, int order, WorkbookStyles styles) {

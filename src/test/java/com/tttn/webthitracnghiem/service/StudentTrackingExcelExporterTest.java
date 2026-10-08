@@ -4,6 +4,7 @@ import com.tttn.webthitracnghiem.model.AttendanceStatus;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.TrackingRowForm;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +41,14 @@ class StudentTrackingExcelExporterTest {
                     .isEqualTo(8.5);
             assertThat(workbook.getSheetAt(0).getRow(5).getCell(8).getStringCellValue())
                     .isEqualTo("Đầy đủ");
+            var attendanceValidations = workbook.getSheetAt(0).getDataValidations();
+            assertThat(attendanceValidations).hasSize(1);
+            assertThat(attendanceValidations.get(0).getSuppressDropDownArrow()).isTrue();
+            assertThat(attendanceValidations.get(0).getValidationConstraint().getExplicitListValues())
+                    .containsExactly("Đầy đủ", "Vắng", "Bỏ học", "Chuyển trường");
+            assertThat(attendanceValidations.get(0).getRegions().getCellRangeAddresses())
+                    .extracting(CellRangeAddress::formatAsString)
+                    .containsExactly("I6:I205");
         }
     }
 
