@@ -19,10 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.Normalizer;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,9 +35,6 @@ import java.util.stream.Collectors;
 public class StudentTrackingService {
     private static final long MAX_IMPORT_BYTES = 5L * 1024 * 1024;
     private static final Pattern SCHOOL_YEAR_PATTERN = Pattern.compile("\\d{4}-\\d{4}");
-    private static final Pattern ATTENDANCE_DATE_PATTERN = Pattern.compile("(?i)^(V|BH|CT)\\.(\\d{2}/\\d{2})$");
-    private static final DateTimeFormatter DAY_MONTH_FORMATTER = DateTimeFormatter
-            .ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     private final StudentTrackingClassRepository classRepository;
     private final TrackedStudentRepository studentRepository;
@@ -354,7 +347,7 @@ public class StudentTrackingService {
         if (row.getProgressComment() != null && row.getProgressComment().length() > 2000) {
             throw new IllegalArgumentException("Nhan xet toi da 2000 ky tu");
         }
-        row.setAttendanceDates(normalizeAttendanceDates(row.getAttendanceStatus(), row.getAttendanceDates()));
+        row.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
     }
 
     private void validateScore(BigDecimal score) {
@@ -442,7 +435,7 @@ public class StudentTrackingService {
         record.setAverageScore(row.getAverageScore());
         record.setProgressComment(row.getProgressComment() == null ? null : row.getProgressComment().trim());
         record.setAttendanceStatus(row.getAttendanceStatus());
-        record.setAttendanceDates(normalizeAttendanceDates(row.getAttendanceStatus(), row.getAttendanceDates()));
+        record.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
     }
 
     private void copyImportedToRecord(StudentTrackingExcelParser.ImportedStudent imported,
@@ -454,54 +447,18 @@ public class StudentTrackingService {
         record.setAverageScore(imported.getAverageScore());
         record.setProgressComment(imported.getProgressComment());
         record.setAttendanceStatus(imported.getAttendanceStatus());
-        record.setAttendanceDates(normalizeAttendanceDates(imported.getAttendanceStatus(), imported.getAttendanceDates()));
+        record.setAttendanceDates(cleanAttendanceNote(imported.getAttendanceDates()));
     }
 
-    private String normalizeAttendanceDates(AttendanceStatus status, String value) {
-        if (status == null || status == AttendanceStatus.FULL || status == AttendanceStatus.NONE) {
-            return null;
-        }
+    private String cleanAttendanceNote(String value) {
         String raw = value == null ? "" : value.trim();
         if (raw.isEmpty()) {
-            throw new IllegalArgumentException("So ngay khong duoc de trong voi trang thai " + status.getDisplayName());
+            return null;
         }
         if (raw.length() > 500) {
             throw new IllegalArgumentException("So ngay toi da 500 ky tu");
         }
-        String expectedPrefix = attendanceDatePrefix(status);
-        List<String> normalizedDates = new ArrayList<>();
-        for (String part : raw.split("[;,]")) {
-            String token = part.trim().toUpperCase(Locale.ROOT);
-            var matcher = ATTENDANCE_DATE_PATTERN.matcher(token);
-            if (!matcher.matches() || !expectedPrefix.equals(matcher.group(1).toUpperCase(Locale.ROOT))) {
-                throw invalidAttendanceDate(status);
-            }
-            try {
-                LocalDate.parse(matcher.group(2) + "/2000", DAY_MONTH_FORMATTER);
-            } catch (DateTimeParseException ex) {
-                throw invalidAttendanceDate(status);
-            }
-            normalizedDates.add(expectedPrefix + "." + matcher.group(2));
-        }
-        return String.join(", ", normalizedDates);
-    }
-
-    private String attendanceDatePrefix(AttendanceStatus status) {
-        switch (status) {
-            case ABSENT:
-                return "V";
-            case DROPPED_OUT:
-                return "BH";
-            case TRANSFERRED:
-                return "CT";
-            default:
-                throw new IllegalArgumentException("Trang thai diem danh khong can So ngay");
-        }
-    }
-
-    private IllegalArgumentException invalidAttendanceDate(AttendanceStatus status) {
-        String format = attendanceDatePrefix(status) + ".dd/MM";
-        return new IllegalArgumentException("So ngay phai co dang " + format + ", co the nhap nhieu gia tri cach nhau boi dau phay");
+        return raw;
     }
 
     public static class ImportSummary {

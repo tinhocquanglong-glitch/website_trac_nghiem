@@ -48,10 +48,10 @@ hoc sinh hay du lieu dang ky mon hoc.
 
 - Trang thai diem danh gom: `Di hoc`, `Vang`, `Bo hoc`, `Chuyen truong`, `Khong co`.
 - Du lieu cu luu ma `FULL` duoc giu tuong thich nhung hien thi thanh `Di hoc`.
-- Moi ban ghi hoc ky co them cot `So ngay` de luu nhieu moc ngay/thang. Vang dung
-  dang `V.dd/MM`, bo hoc dung `BH.dd/MM`, chuyen truong dung `CT.dd/MM`; cac gia
-  tri cach nhau boi dau phay. `Di hoc` va `Khong co` khong co moc ngay.
-- Bang tren web cho phep sua va luu cot `So ngay` canh cot `Diem danh`.
+- Moi ban ghi hoc ky co them cot `So ngay` de giao vien ghi chu tu do, khong phu
+  thuoc trang thai diem danh va khong bat buoc dinh dang ngay.
+- Bang tren web cho phep sua va luu cot `So ngay` canh cot `Diem danh`; o nay luon
+  cho phep nhap va co the de trong.
 - File import/export co cot `So ngay`; export giu dropdown trang thai va gia tri da
   luu. Tieu de `DGTX` duoc gop ngang tren hai cot con `DGTX 1`, `DGTX 2`.
 

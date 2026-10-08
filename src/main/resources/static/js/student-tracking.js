@@ -21,35 +21,6 @@
         updateImportMonths();
     }
 
-    var attendancePlaceholders = {
-        ABSENT: "V.08/10, V.15/10",
-        DROPPED_OUT: "BH.08/10, BH.15/10",
-        TRANSFERRED: "CT.08/10, CT.15/10"
-    };
-    var attendanceSelects = document.querySelectorAll('select[name$=".attendanceStatus"]');
-
-    function updateAttendanceDates(select) {
-        var row = select.closest("tr");
-        var datesInput = row && row.querySelector('input[name$=".attendanceDates"]');
-        if (!datesInput) {
-            return;
-        }
-        var placeholder = attendancePlaceholders[select.value];
-        datesInput.disabled = !placeholder;
-        datesInput.required = Boolean(placeholder);
-        datesInput.placeholder = placeholder || "Không cần nhập ngày";
-        if (!placeholder) {
-            datesInput.value = "";
-        }
-    }
-
-    Array.prototype.forEach.call(attendanceSelects, function (select) {
-        updateAttendanceDates(select);
-        select.addEventListener("change", function () {
-            updateAttendanceDates(select);
-        });
-    });
-
     var searchInput = document.getElementById("classStudentSearch");
     if (!searchInput) {
         return;

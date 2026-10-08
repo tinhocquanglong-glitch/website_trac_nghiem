@@ -191,37 +191,26 @@ class StudentTrackingServiceTest {
     }
 
     @Test
-    void normalizesMultipleAttendanceDatesBeforeSaving() {
-        StudentMonthlyRecord saved = saveAttendance(AttendanceStatus.ABSENT, "V.08/10; v.15/10");
-
-        assertThat(saved.getAttendanceDates()).isEqualTo("V.08/10, V.15/10");
+    void keepsAttendanceNoteAsFreeTextForEveryStatus() {
+        assertThat(saveAttendance(AttendanceStatus.ABSENT, "  Nghỉ có phép, phụ huynh đã báo  ")
+                .getAttendanceDates()).isEqualTo("Nghỉ có phép, phụ huynh đã báo");
+        assertThat(saveAttendance(AttendanceStatus.FULL, "Đã đi học bù vào thứ bảy")
+                .getAttendanceDates()).isEqualTo("Đã đi học bù vào thứ bảy");
+        assertThat(saveAttendance(AttendanceStatus.NONE, "Ghi chú riêng của giáo viên")
+                .getAttendanceDates()).isEqualTo("Ghi chú riêng của giáo viên");
     }
 
     @Test
-    void rejectsAttendanceDatesThatDoNotMatchTheStatus() {
-        assertThatThrownBy(() -> saveAttendance(AttendanceStatus.ABSENT, "BH.08/10"))
+    void allowsBlankAttendanceNoteForEveryStatus() {
+        assertThat(saveAttendance(AttendanceStatus.TRANSFERRED, "  ").getAttendanceDates()).isNull();
+        assertThat(saveAttendance(AttendanceStatus.DROPPED_OUT, null).getAttendanceDates()).isNull();
+    }
+
+    @Test
+    void rejectsAttendanceNoteLongerThanDatabaseLimit() {
+        assertThatThrownBy(() -> saveAttendance(AttendanceStatus.ABSENT, "a".repeat(501)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("V.dd/MM");
-    }
-
-    @Test
-    void rejectsInvalidCalendarDates() {
-        assertThatThrownBy(() -> saveAttendance(AttendanceStatus.ABSENT, "V.31/02"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("V.dd/MM");
-    }
-
-    @Test
-    void requiresDatesForStatusesThatRecordAnEventDate() {
-        assertThatThrownBy(() -> saveAttendance(AttendanceStatus.TRANSFERRED, ""))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("So ngay");
-    }
-
-    @Test
-    void clearsAttendanceDatesForGoingToSchoolAndNoStatus() {
-        assertThat(saveAttendance(AttendanceStatus.FULL, "V.08/10").getAttendanceDates()).isNull();
-        assertThat(saveAttendance(AttendanceStatus.NONE, "BH.08/10").getAttendanceDates()).isNull();
+                .hasMessageContaining("500");
     }
 
     @Test

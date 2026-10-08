@@ -91,7 +91,7 @@ class StudentTrackingTemplateTest {
         row.setStudentId(10);
         row.setFullName("Nguyen Van A");
         row.setAttendanceStatus(AttendanceStatus.ABSENT);
-        row.setAttendanceDates("V.08/10, V.15/10");
+        row.setAttendanceDates("Nghỉ có phép, phụ huynh đã báo");
         sheetForm.setRows(List.of(row));
 
         WebContext context = webContext();
@@ -107,7 +107,8 @@ class StudentTrackingTemplateTest {
 
         assertThat(html)
                 .contains("Sổ theo dõi lớp 6A", "rows[0].studentId", "Nguyen Van A", "Vắng", "Đi học", "Không có")
-                .contains("ĐGTX", "colspan=\"2\"", "Số ngày", "rows[0].attendanceDates", "V.08/10, V.15/10")
+                .contains("ĐGTX", "colspan=\"2\"", "Số ngày", "rows[0].attendanceDates",
+                        "Nghỉ có phép, phụ huynh đã báo", "placeholder=\"Ghi chú tùy ý\"")
                 .contains("class=\"tracking-view-controls\"")
                 .contains("id=\"trackingClassSelector\"")
                 .contains("id=\"classStudentSearch\"")
