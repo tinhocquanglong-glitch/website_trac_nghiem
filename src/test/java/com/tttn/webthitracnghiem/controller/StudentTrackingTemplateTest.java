@@ -50,6 +50,7 @@ class StudentTrackingTemplateTest {
 
         assertThat(html)
                 .contains("Sổ theo dõi học sinh", "Nhập từ Excel", "Tìm học sinh", "Xuất toàn bộ")
+                .contains("data-import-month", "value=\"9\"", "value=\"5\"")
                 .contains("/student-tracking/export");
     }
 
@@ -71,7 +72,7 @@ class StudentTrackingTemplateTest {
 
         assertThat(html)
                 .contains("Nguyễn Văn An", "6A", "2026-2027")
-                .contains("/student-tracking/classes/7?semester=1");
+                .contains("/student-tracking/classes/7?semester=1&amp;month=9");
     }
 
     @Test
@@ -90,6 +91,7 @@ class StudentTrackingTemplateTest {
         row.setStudentId(10);
         row.setFullName("Nguyen Van A");
         row.setAttendanceStatus(AttendanceStatus.ABSENT);
+        row.setAttendanceDates("V.08/10, V.15/10");
         sheetForm.setRows(List.of(row));
 
         WebContext context = webContext();
@@ -97,18 +99,23 @@ class StudentTrackingTemplateTest {
         context.setVariable("trackingClasses", List.of(trackingClass, otherClass));
         context.setVariable("sheetForm", sheetForm);
         context.setVariable("semester", 1);
+        context.setVariable("month", 10);
+        context.setVariable("months", List.of(9, 10, 11, 12, 1));
         context.setVariable("attendanceStatuses", AttendanceStatus.values());
 
         String html = templateEngine.process("student-tracking/sheet", context);
 
         assertThat(html)
-                .contains("Sổ theo dõi lớp 6A", "rows[0].studentId", "Nguyen Van A", "Vắng", "Đầy đủ")
+                .contains("Sổ theo dõi lớp 6A", "rows[0].studentId", "Nguyen Van A", "Vắng", "Đi học", "Không có")
+                .contains("ĐGTX", "colspan=\"2\"", "Số ngày", "rows[0].attendanceDates", "V.08/10, V.15/10")
                 .contains("class=\"tracking-view-controls\"")
                 .contains("id=\"trackingClassSelector\"")
                 .contains("id=\"classStudentSearch\"")
-                .contains("value=\"/student-tracking/classes/1?semester=1\"")
+                .contains("value=\"/student-tracking/classes/1?semester=1&amp;month=10\"")
                 .contains("selected=\"selected\">6A - 2026-2027")
-                .contains("value=\"/student-tracking/classes/2?semester=1\"")
+                .contains("value=\"/student-tracking/classes/2?semester=1&amp;month=10\"")
+                .contains("name=\"month\" value=\"10\"")
+                .contains("Tháng 9", "Tháng 10", "Tháng 1")
                 .contains("/student-tracking/export?classId=1");
     }
 

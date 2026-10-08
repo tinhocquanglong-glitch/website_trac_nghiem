@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class StudentTrackingExcelParser {
     private static final int MAX_SHEETS = 50;
     private static final int MAX_STUDENTS_PER_SHEET = 200;
-    private static final int MAX_DATA_ROW_SPAN = 1000;
+    private static final int MAX_DATA_ROW_SPAN = 1200;
     private static final Pattern SCHOOL_YEAR_PATTERN = Pattern.compile("(\\d{4}\\s*-\\s*\\d{4})");
 
     public List<ImportedClass> parse(InputStream inputStream) throws IOException {
@@ -74,6 +74,9 @@ public class StudentTrackingExcelParser {
             if (fullName.isEmpty()) {
                 continue;
             }
+            if ("ho va ten".equals(normalize(fullName))) {
+                break;
+            }
             if (fullName.length() > 150) {
                 throw new IllegalArgumentException("Ten hoc sinh qua dai tai sheet " + className);
             }
@@ -93,6 +96,10 @@ public class StudentTrackingExcelParser {
                 throw new IllegalArgumentException("Nhan xet qua dai tai sheet " + className + ", dong " + (rowIndex + 1));
             }
             student.attendanceStatus = AttendanceStatus.fromText(cellText(row.getCell(8), formatter));
+            student.attendanceDates = cellText(row.getCell(9), formatter).trim();
+            if (student.attendanceDates.length() > 500) {
+                throw new IllegalArgumentException("So ngay qua dai tai sheet " + className + ", dong " + (rowIndex + 1));
+            }
             students.add(student);
         }
         return new ImportedClass(className, schoolYear, students);
@@ -193,6 +200,7 @@ public class StudentTrackingExcelParser {
         private BigDecimal averageScore;
         private String progressComment;
         private AttendanceStatus attendanceStatus;
+        private String attendanceDates;
 
         public String getFullName() { return fullName; }
         public BigDecimal getRegularScore1() { return regularScore1; }
@@ -202,5 +210,6 @@ public class StudentTrackingExcelParser {
         public BigDecimal getAverageScore() { return averageScore; }
         public String getProgressComment() { return progressComment; }
         public AttendanceStatus getAttendanceStatus() { return attendanceStatus; }
+        public String getAttendanceDates() { return attendanceDates; }
     }
 }

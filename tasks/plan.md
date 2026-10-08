@@ -1,22 +1,28 @@
-# Plan: Tim kiem va xuat Excel so theo doi
+# Plan: So theo doi theo thang
 
-## Slice 1: Tim kiem hoc sinh
+## Slice 1: Du lieu theo thang
 
-- Them ket qua tim kiem dang DTO, loc khong dau/khong phan biet hoa thuong tai service.
-- Ho tro pham vi tat ca lop hoac mot lop qua query string tren controller.
-- Them form tim kiem, bang ket qua va loi tat tim trong lop dang xem.
-- Kiem thu service, controller va template.
+- Them bang `student_monthly_record` voi khoa duy nhat hoc sinh, hoc ky va thang.
+- Giu `tracked_student` la danh sach hoc sinh cap lop de ten xuat hien trong moi thang cua ca hai hoc ky.
+- Doc du lieu hoc ky cu lam du phong tai thang 9 (HK1) va thang 2 (HK2), khong sua/xoa du lieu cu.
+- Kiem thu quy tac thang, doc/luu theo thang va tuong thich du lieu cu.
 
-## Slice 2: Xuat Excel
+## Slice 2: Giao dien va nhap Excel
 
-- Tao exporter Apache POI doc du lieu qua `StudentTrackingService`.
-- Them endpoint tai `.xlsx` cho mot lop hoac tat ca lop.
-- Them nut xuat tai danh sach va lop dang xem.
-- Kiem thu noi dung workbook, response va template.
+- Them tham so thang vao controller, form luu, chuyen lop va cac redirect.
+- Them tab thang theo tung hoc ky va bo chon thang trong form import Excel.
+- Import hoc sinh vao danh sach cap lop, luu diem/nhan xet/diem danh vao thang da chon.
+- Kiem thu controller va template.
+
+## Slice 3: Xuat Excel
+
+- Giu hai sheet HK1/HK2 cho moi lop.
+- Xuat lien tiep tung bang thang trong moi sheet, moi bang co tieu de DGTX hai tang va dropdown diem danh.
+- Kiem thu vi tri du lieu, vung dropdown va day du 5/4 thang.
 
 ## Verification
 
-- `./mvnw.cmd '-Dtest=StudentTracking*Test' test`
-- `$env:DB_PASSWORD='root'; $env:DB_PORT='3307'; ./mvnw.cmd test`
+- `.\\mvnw.cmd '-Dtest=StudentTracking*Test' test`
+- `$env:DB_PASSWORD='root'; $env:DB_PORT='3307'; .\\mvnw.cmd test`
 - `docker compose up -d --build app`
-- Kiem tra HTTP tren `http://localhost:8095/student-tracking`.
+- Kiem tra HTTP va bang moi tren Docker.

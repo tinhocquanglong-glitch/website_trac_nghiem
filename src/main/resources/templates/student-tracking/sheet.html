@@ -38,18 +38,24 @@
                             <select id="trackingClassSelector" class="form-control"
                                     onchange="if (this.value) window.location.href = this.value;">
                                 <option th:each="classOption : ${trackingClasses}"
-                                        th:value="@{/student-tracking/classes/{id}(id=${classOption.id},semester=${semester})}"
+                                        th:value="@{/student-tracking/classes/{id}(id=${classOption.id},semester=${semester},month=${month})}"
                                         th:text="|${classOption.className} - ${classOption.schoolYear}|"
                                         th:selected="${classOption.id == trackingClass.id}">Tên lớp - Năm học</option>
                             </select>
                         </div>
                         <nav class="semester-tabs" aria-label="Chọn học kỳ">
-                            <a th:classappend="${semester == 1} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=1)}">Học kỳ 1</a>
-                            <a th:classappend="${semester == 2} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=2)}">Học kỳ 2</a>
+                            <a th:classappend="${semester == 1} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=1,month=9)}">Học kỳ 1</a>
+                            <a th:classappend="${semester == 2} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=2,month=2)}">Học kỳ 2</a>
+                        </nav>
+                        <nav class="semester-tabs month-tabs" aria-label="Chọn tháng">
+                            <a th:each="monthOption : ${months}" th:classappend="${monthOption == month} ? 'active'"
+                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${monthOption})}"
+                               th:text="|Tháng ${monthOption}|">Tháng</a>
                         </nav>
                     </div>
                     <form class="tracking-student-form" method="post" th:action="@{/student-tracking/classes/{id}/students(id=${trackingClass.id})}">
                         <input type="hidden" name="semester" th:value="${semester}">
+                        <input type="hidden" name="month" th:value="${month}">
                         <div class="form-group"><label for="fullName">Thêm học sinh</label><input id="fullName" name="fullName" class="form-control" maxlength="150" required></div>
                         <button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Thêm</button>
                     </form>
@@ -67,17 +73,22 @@
 
                 <form method="post" th:action="@{/student-tracking/classes/{id}/records(id=${trackingClass.id})}">
                     <input type="hidden" name="semester" th:value="${semester}">
+                    <input type="hidden" name="month" th:value="${month}">
                     <div class="tracking-table-wrap">
                         <table class="table table-bordered tracking-table" aria-label="Bảng theo dõi học sinh">
-                            <thead><tr>
-                                <th class="cell-order">STT</th><th class="cell-name">Họ và tên</th>
-                                <th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th>
-                                <th class="cell-score">ĐGK</th><th class="cell-score">ĐCK</th><th class="cell-score">ĐTBM</th>
-                                <th class="cell-comment">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
-                                <th class="cell-status">Điểm danh</th><th class="cell-order">Xóa</th>
-                            </tr></thead>
+                            <thead>
+                            <tr>
+                                <th class="cell-order" rowspan="2">STT</th><th class="cell-name" rowspan="2">Họ và tên</th>
+                                <th class="cell-score" colspan="2">ĐGTX</th>
+                                <th class="cell-score" rowspan="2">ĐGK</th><th class="cell-score" rowspan="2">ĐCK</th><th class="cell-score" rowspan="2">ĐTBM</th>
+                                <th class="cell-comment" rowspan="2">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
+                                <th class="cell-status" rowspan="2">Điểm danh</th><th class="cell-days" rowspan="2">Số ngày</th>
+                                <th class="cell-order" rowspan="2">Xóa</th>
+                            </tr>
+                            <tr><th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th></tr>
+                            </thead>
                             <tbody>
-                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td colspan="10" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
+                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td colspan="11" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
                             <tr th:each="row, stat : ${sheetForm.rows}">
                                 <td class="cell-order" th:text="${stat.count}"></td>
                                 <td class="cell-name">
@@ -92,10 +103,13 @@
                                 <td class="cell-comment"><textarea th:name="|rows[${stat.index}].progressComment|" th:text="${row.progressComment}" maxlength="2000" aria-label="Nhận xét sự tiến bộ"></textarea></td>
                                 <td class="cell-status">
                                     <select th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
-                                        <option value="">Không có</option>
                                         <option th:each="status : ${attendanceStatuses}" th:value="${status}" th:text="${status.displayName}"
-                                                th:selected="${status == row.attendanceStatus}"></option>
+                                                th:selected="${status == row.attendanceStatus or (row.attendanceStatus == null and status.name() == 'NONE')}"></option>
                                     </select>
+                                </td>
+                                <td class="cell-days">
+                                    <input th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}"
+                                           maxlength="500" placeholder="V.08/10, V.15/10" aria-label="Số ngày điểm danh">
                                 </td>
                                 <td class="cell-order">
                                     <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa học sinh" name="semester" th:value="${semester}"

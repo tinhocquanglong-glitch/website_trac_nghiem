@@ -19,7 +19,7 @@
 .tracking-form-row { display: flex; align-items: flex-end; gap: 10px; }
 .tracking-form-row .form-group { flex: 1; margin-bottom: 0; }
 .tracking-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #cfd9df; background: #fff; }
-.tracking-table { min-width: 1180px; margin-bottom: 0; }
+.tracking-table { min-width: 1380px; margin-bottom: 0; }
 .tracking-table thead th { position: sticky; top: 0; z-index: 1; vertical-align: middle; border-color: #a9c4cf; background: #d9f3f8; color: #20343f; text-align: center; white-space: nowrap; }
 .tracking-table td { vertical-align: middle; }
 .tracking-table .cell-order { width: 54px; text-align: center; }
@@ -27,13 +27,16 @@
 .tracking-table .cell-score { width: 92px; }
 .tracking-table .cell-comment { min-width: 320px; }
 .tracking-table .cell-status { min-width: 150px; }
+.tracking-table .cell-days { min-width: 190px; }
 .tracking-table input, .tracking-table select, .tracking-table textarea { width: 100%; min-height: 38px; border: 1px solid #c8d3da; border-radius: 4px; background: #fff; padding: 7px 8px; }
+.tracking-table input:disabled { background: #eef2f4; color: #64727a; }
 .tracking-table textarea { min-height: 64px; resize: vertical; }
 .semester-tabs { display: inline-flex; border: 1px solid #167c8c; border-radius: 6px; overflow: hidden; }
 .semester-tabs a { min-width: 104px; padding: 8px 14px; color: #116878; text-align: center; text-decoration: none; }
 .semester-tabs a.active { background: #167c8c; color: #fff; }
 .tracking-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
-.tracking-view-controls { display: flex; align-items: flex-end; gap: 10px; }
+.tracking-view-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; }
+.month-tabs a { min-width: 76px; }
 .tracking-class-switcher { width: 250px; }
 .tracking-class-switcher label { display: block; margin-bottom: 4px; color: #52636d; font-weight: 600; }
 .tracking-student-form { display: flex; align-items: flex-end; gap: 8px; min-width: min(100%, 440px); }

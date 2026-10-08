@@ -19,7 +19,7 @@ class StudentTrackingExcelParserTest {
 
     @Test
     void parsesTrackingSheetsAndIgnoresHelperSheets() throws Exception {
-        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Vang");
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Vang", "V.08/10, V.15/10");
 
         var classes = parser.parse(new ByteArrayInputStream(workbook));
 
@@ -31,11 +31,12 @@ class StudentTrackingExcelParserTest {
         assertThat(student.getFullName()).isEqualTo("Nguyen Van A");
         assertThat(student.getRegularScore1()).isEqualByComparingTo(new BigDecimal("8"));
         assertThat(student.getAttendanceStatus()).isEqualTo(AttendanceStatus.ABSENT);
+        assertThat(student.getAttendanceDates()).isEqualTo("V.08/10, V.15/10");
     }
 
     @Test
     void parsesFullAttendanceStatus() throws Exception {
-        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Đầy đủ");
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Đi học", "");
 
         var classes = parser.parse(new ByteArrayInputStream(workbook));
 
@@ -44,8 +45,28 @@ class StudentTrackingExcelParserTest {
     }
 
     @Test
+    void keepsSupportingTheOldFullAttendanceLabel() throws Exception {
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Đầy đủ", "");
+
+        var classes = parser.parse(new ByteArrayInputStream(workbook));
+
+        assertThat(classes.get(0).getStudents().get(0).getAttendanceStatus())
+                .isEqualTo(AttendanceStatus.FULL);
+    }
+
+    @Test
+    void parsesNoAttendanceStatus() throws Exception {
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Không có", "");
+
+        var classes = parser.parse(new ByteArrayInputStream(workbook));
+
+        assertThat(classes.get(0).getStudents().get(0).getAttendanceStatus())
+                .isEqualTo(AttendanceStatus.NONE);
+    }
+
+    @Test
     void rejectsScoresOutsideZeroToTen() throws Exception {
-        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "");
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "", "");
         try (var editable = new XSSFWorkbook(new ByteArrayInputStream(workbook));
              var output = new ByteArrayOutputStream()) {
             editable.getSheet("6A").getRow(5).getCell(2).setCellValue(11);
@@ -61,7 +82,7 @@ class StudentTrackingExcelParserTest {
 
     @Test
     void rejectsFormulaCellsInsteadOfEvaluatingUntrustedWorkbooks() throws Exception {
-        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "");
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "", "");
         try (var editable = new XSSFWorkbook(new ByteArrayInputStream(workbook));
              var output = new ByteArrayOutputStream()) {
             editable.getSheet("6A").getRow(5).getCell(2).setCellFormula("SUM(4,4)");
@@ -77,10 +98,10 @@ class StudentTrackingExcelParserTest {
 
     @Test
     void rejectsSheetsWithAnExcessiveSparseRowRange() throws Exception {
-        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "");
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "", "");
         try (var editable = new XSSFWorkbook(new ByteArrayInputStream(workbook));
              var output = new ByteArrayOutputStream()) {
-            editable.getSheet("6A").createRow(1005).createCell(0).setCellValue("unexpected tail");
+            editable.getSheet("6A").createRow(1205).createCell(0).setCellValue("unexpected tail");
             editable.write(output);
             workbook = output.toByteArray();
         }
@@ -91,8 +112,30 @@ class StudentTrackingExcelParserTest {
                 .hasMessageContaining("pham vi dong qua lon");
     }
 
+    @Test
+    void stopsAtTheNextMonthlyTableHeader() throws Exception {
+        byte[] workbook = workbookWithTrackingSheet("6A", "2026-2027", "Nguyen Van A", "Vang", "V.08/10");
+        try (var editable = new XSSFWorkbook(new ByteArrayInputStream(workbook));
+             var output = new ByteArrayOutputStream()) {
+            Sheet sheet = editable.getSheet("6A");
+            sheet.createRow(7).createCell(1).setCellValue("HO VA TEN");
+            Row secondMonthStudent = sheet.createRow(8);
+            secondMonthStudent.createCell(1).setCellValue("Tran Thi B");
+            secondMonthStudent.createCell(2).setCellValue(9);
+            editable.write(output);
+            workbook = output.toByteArray();
+        }
+
+        var classes = parser.parse(new ByteArrayInputStream(workbook));
+
+        assertThat(classes.get(0).getStudents())
+                .extracting(StudentTrackingExcelParser.ImportedStudent::getFullName)
+                .containsExactly("Nguyen Van A");
+    }
+
     private byte[] workbookWithTrackingSheet(String className, String schoolYear,
-                                             String studentName, String attendance) throws Exception {
+                                             String studentName, String attendance,
+                                             String attendanceDates) throws Exception {
         try (var workbook = new XSSFWorkbook();
              var output = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet(className);
@@ -107,6 +150,7 @@ class StudentTrackingExcelParserTest {
             header.createCell(6).setCellValue("DTBM HKI");
             header.createCell(7).setCellValue("Nhan xet");
             header.createCell(8).setCellValue("Diem danh");
+            header.createCell(9).setCellValue("So ngay");
 
             Row student = sheet.createRow(5);
             student.createCell(0).setCellValue(1);
@@ -118,6 +162,7 @@ class StudentTrackingExcelParserTest {
             student.createCell(6).setCellValue(8.2);
             student.createCell(7).setCellValue("Co tien bo");
             student.createCell(8).setCellValue(attendance);
+            student.createCell(9).setCellValue(attendanceDates);
 
             Sheet helper = workbook.createSheet("Trang_tinh11");
             helper.createRow(0).createCell(0).setCellValue("HO VA TEN");

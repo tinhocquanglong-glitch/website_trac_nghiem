@@ -43,3 +43,28 @@ hoc sinh hay du lieu dang ky mon hoc.
 - Admin co the tai workbook cua lop dang xem hoac workbook tong hop tat ca lop;
   ten sheet phan biet lop, nam hoc va hoc ky.
 - Test parser, validation va build Maven thanh cong.
+
+## Mo rong diem danh va tieu de Excel
+
+- Trang thai diem danh gom: `Di hoc`, `Vang`, `Bo hoc`, `Chuyen truong`, `Khong co`.
+- Du lieu cu luu ma `FULL` duoc giu tuong thich nhung hien thi thanh `Di hoc`.
+- Moi ban ghi hoc ky co them cot `So ngay` de luu nhieu moc ngay/thang. Vang dung
+  dang `V.dd/MM`, bo hoc dung `BH.dd/MM`, chuyen truong dung `CT.dd/MM`; cac gia
+  tri cach nhau boi dau phay. `Di hoc` va `Khong co` khong co moc ngay.
+- Bang tren web cho phep sua va luu cot `So ngay` canh cot `Diem danh`.
+- File import/export co cot `So ngay`; export giu dropdown trang thai va gia tri da
+  luu. Tieu de `DGTX` duoc gop ngang tren hai cot con `DGTX 1`, `DGTX 2`.
+
+## Theo doi theo thang
+
+- Hoc ky 1 gom thang 9, 10, 11, 12 va 1; hoc ky 2 gom thang 2, 3, 4 va 5.
+- Danh sach hoc sinh thuoc lop. Hoc sinh duoc them tay hoac import mot lan phai hien
+  thi trong tat ca cac thang cua ca hai hoc ky.
+- Diem, nhan xet, diem danh va so ngay duoc luu doc lap theo tung thang.
+- Giao dien giu tab hoc ky va them tab thang; URL phai giu duoc hoc ky va thang dang xem.
+- Import Excel nhan them thang dich hop le trong hoc ky da chon. Ten hoc sinh van duoc
+  them vao danh sach chung cua lop, chi du lieu theo doi trong file thuoc thang dich.
+- Export giu moi hoc ky trong mot sheet va xep lien tiep mot bang cho tung thang cua
+  hoc ky do.
+- Du lieu hoc ky cu khong bi xoa: neu chua co du lieu thang moi, HK1 duoc hien tai
+  thang 9 va HK2 duoc hien tai thang 2 lam du lieu khoi tao tuong thich.

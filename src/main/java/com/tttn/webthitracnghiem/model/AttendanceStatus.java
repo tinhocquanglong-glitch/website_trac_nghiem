@@ -4,10 +4,11 @@ import java.text.Normalizer;
 import java.util.Locale;
 
 public enum AttendanceStatus {
-    FULL("Đầy đủ"),
+    FULL("Đi học"),
     ABSENT("Vắng"),
     DROPPED_OUT("Bỏ học"),
-    TRANSFERRED("Chuyển trường");
+    TRANSFERRED("Chuyển trường"),
+    NONE("Không có");
 
     private final String displayName;
 
@@ -26,6 +27,7 @@ public enum AttendanceStatus {
         }
         switch (normalized) {
             case "day du":
+            case "di hoc":
                 return FULL;
             case "vang":
                 return ABSENT;
@@ -33,6 +35,8 @@ public enum AttendanceStatus {
                 return DROPPED_OUT;
             case "chuyen truong":
                 return TRANSFERRED;
+            case "khong co":
+                return NONE;
             default:
                 throw new IllegalArgumentException("Trang thai diem danh khong hop le: " + value);
         }

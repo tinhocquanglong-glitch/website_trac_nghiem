@@ -34,6 +34,9 @@ public class TrackedStudent {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentSemesterRecord> semesterRecords = new ArrayList<>();
 
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentMonthlyRecord> monthlyRecords = new ArrayList<>();
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public StudentTrackingClass getTrackingClass() { return trackingClass; }
@@ -44,4 +47,6 @@ public class TrackedStudent {
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
     public List<StudentSemesterRecord> getSemesterRecords() { return semesterRecords; }
     public void setSemesterRecords(List<StudentSemesterRecord> semesterRecords) { this.semesterRecords = semesterRecords; }
+    public List<StudentMonthlyRecord> getMonthlyRecords() { return monthlyRecords; }
+    public void setMonthlyRecords(List<StudentMonthlyRecord> monthlyRecords) { this.monthlyRecords = monthlyRecords; }
 }

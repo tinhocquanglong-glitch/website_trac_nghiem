@@ -1,12 +1,15 @@
 package com.tttn.webthitracnghiem.service;
 
 import com.tttn.webthitracnghiem.model.StudentSemesterRecord;
+import com.tttn.webthitracnghiem.model.StudentMonthlyRecord;
+import com.tttn.webthitracnghiem.model.AttendanceStatus;
 import com.tttn.webthitracnghiem.model.StudentSearchResult;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.TrackedStudent;
 import com.tttn.webthitracnghiem.model.TrackingRowForm;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
 import com.tttn.webthitracnghiem.repository.StudentSemesterRecordRepository;
+import com.tttn.webthitracnghiem.repository.StudentMonthlyRecordRepository;
 import com.tttn.webthitracnghiem.repository.StudentTrackingClassRepository;
 import com.tttn.webthitracnghiem.repository.TrackedStudentRepository;
 import org.springframework.stereotype.Service;
@@ -16,6 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.Normalizer;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,19 +39,25 @@ import java.util.stream.Collectors;
 public class StudentTrackingService {
     private static final long MAX_IMPORT_BYTES = 5L * 1024 * 1024;
     private static final Pattern SCHOOL_YEAR_PATTERN = Pattern.compile("\\d{4}-\\d{4}");
+    private static final Pattern ATTENDANCE_DATE_PATTERN = Pattern.compile("(?i)^(V|BH|CT)\\.(\\d{2}/\\d{2})$");
+    private static final DateTimeFormatter DAY_MONTH_FORMATTER = DateTimeFormatter
+            .ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     private final StudentTrackingClassRepository classRepository;
     private final TrackedStudentRepository studentRepository;
     private final StudentSemesterRecordRepository recordRepository;
+    private final StudentMonthlyRecordRepository monthlyRecordRepository;
     private final StudentTrackingExcelParser excelParser;
 
     public StudentTrackingService(StudentTrackingClassRepository classRepository,
                                   TrackedStudentRepository studentRepository,
                                   StudentSemesterRecordRepository recordRepository,
+                                  StudentMonthlyRecordRepository monthlyRecordRepository,
                                   StudentTrackingExcelParser excelParser) {
         this.classRepository = classRepository;
         this.studentRepository = studentRepository;
         this.recordRepository = recordRepository;
+        this.monthlyRecordRepository = monthlyRecordRepository;
         this.excelParser = excelParser;
     }
 
@@ -133,27 +146,44 @@ public class StudentTrackingService {
 
     @Transactional(readOnly = true)
     public TrackingSheetForm getSheet(Integer classId, int semester) {
-        validateSemester(semester);
+        return getSheet(classId, semester, defaultMonth(semester));
+    }
+
+    @Transactional(readOnly = true)
+    public TrackingSheetForm getSheet(Integer classId, int semester, int month) {
+        validateMonth(semester, month);
         findClass(classId);
         List<TrackedStudent> students = studentRepository
                 .findByTrackingClassIdOrderByDisplayOrderAscIdAsc(classId);
         List<Integer> studentIds = students.stream().map(TrackedStudent::getId).collect(Collectors.toList());
-        Map<Integer, StudentSemesterRecord> records = new HashMap<>();
+        Map<Integer, StudentMonthlyRecord> monthlyRecords = new HashMap<>();
+        Map<Integer, StudentSemesterRecord> legacyRecords = new HashMap<>();
         if (!studentIds.isEmpty()) {
-            records = recordRepository.findByStudentIdInAndSemester(studentIds, semester).stream()
+            monthlyRecords = monthlyRecordRepository
+                    .findByStudentIdInAndSemesterAndMonth(studentIds, semester, month).stream()
                     .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
+            if (month == defaultMonth(semester)) {
+                legacyRecords = recordRepository.findByStudentIdInAndSemester(studentIds, semester).stream()
+                        .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
+            }
         }
 
         TrackingSheetForm form = new TrackingSheetForm();
         form.setSemester(semester);
+        form.setMonth(month);
         List<TrackingRowForm> rows = new ArrayList<>();
         for (TrackedStudent student : students) {
             TrackingRowForm row = new TrackingRowForm();
             row.setStudentId(student.getId());
             row.setFullName(student.getFullName());
-            StudentSemesterRecord record = records.get(student.getId());
-            if (record != null) {
-                copyRecordToRow(record, row);
+            StudentMonthlyRecord monthlyRecord = monthlyRecords.get(student.getId());
+            if (monthlyRecord != null) {
+                copyRecordToRow(monthlyRecord, row);
+            } else {
+                StudentSemesterRecord legacyRecord = legacyRecords.get(student.getId());
+                if (legacyRecord != null) {
+                    copyRecordToRow(legacyRecord, row);
+                }
             }
             rows.add(row);
         }
@@ -167,7 +197,8 @@ public class StudentTrackingService {
             throw new IllegalArgumentException("Hoc ky khong hop le");
         }
         int semester = form.getSemester();
-        validateSemester(semester);
+        int month = form.getMonth() == null ? defaultMonth(semester) : form.getMonth();
+        validateMonth(semester, month);
         List<TrackingRowForm> rows = form.getRows() == null ? List.of() : form.getRows();
         Set<String> submittedNames = new HashSet<>();
         Set<Integer> submittedStudentIds = new HashSet<>();
@@ -185,14 +216,14 @@ public class StudentTrackingService {
         Map<Integer, TrackedStudent> students = studentRepository
                 .findByTrackingClassIdOrderByDisplayOrderAscIdAsc(classId).stream()
                 .collect(Collectors.toMap(TrackedStudent::getId, student -> student));
-        Map<Integer, StudentSemesterRecord> records = new HashMap<>();
+        Map<Integer, StudentMonthlyRecord> records = new HashMap<>();
         if (!students.isEmpty()) {
-            records = recordRepository
-                    .findByStudentIdInAndSemester(new ArrayList<>(students.keySet()), semester).stream()
+            records = monthlyRecordRepository
+                    .findByStudentIdInAndSemesterAndMonth(new ArrayList<>(students.keySet()), semester, month).stream()
                     .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
         }
         List<TrackedStudent> changedStudents = new ArrayList<>();
-        List<StudentSemesterRecord> changedRecords = new ArrayList<>();
+        List<StudentMonthlyRecord> changedRecords = new ArrayList<>();
         for (TrackingRowForm row : rows) {
             TrackedStudent student = students.get(row.getStudentId());
             if (student == null) {
@@ -201,19 +232,25 @@ public class StudentTrackingService {
             student.setFullName(cleanRequired(row.getFullName(), 150, "Ho va ten"));
             changedStudents.add(student);
 
-            StudentSemesterRecord record = records.getOrDefault(student.getId(), new StudentSemesterRecord());
+            StudentMonthlyRecord record = records.getOrDefault(student.getId(), new StudentMonthlyRecord());
             record.setStudent(student);
             record.setSemester(semester);
+            record.setMonth(month);
             copyRowToRecord(row, record);
             changedRecords.add(record);
         }
         studentRepository.saveAll(changedStudents);
-        recordRepository.saveAll(changedRecords);
+        monthlyRecordRepository.saveAll(changedRecords);
     }
 
     @Transactional
     public ImportSummary importWorkbook(MultipartFile file, int semester) throws IOException {
-        validateSemester(semester);
+        return importWorkbook(file, semester, defaultMonth(semester));
+    }
+
+    @Transactional
+    public ImportSummary importWorkbook(MultipartFile file, int semester, int month) throws IOException {
+        validateMonth(semester, month);
         validateUpload(file);
         List<StudentTrackingExcelParser.ImportedClass> importedClasses;
         try (var inputStream = file.getInputStream()) {
@@ -255,27 +292,29 @@ public class StudentTrackingService {
                     .map(importedStudent -> studentsByName.get(nameKey(importedStudent.getFullName())).getId())
                     .distinct()
                     .collect(Collectors.toList());
-            Map<Integer, StudentSemesterRecord> records = new LinkedHashMap<>();
+            Map<Integer, StudentMonthlyRecord> records = new LinkedHashMap<>();
             if (!importedStudentIds.isEmpty()) {
-                records = recordRepository
-                        .findByStudentIdInAndSemester(importedStudentIds, semester).stream()
+                records = monthlyRecordRepository
+                        .findByStudentIdInAndSemesterAndMonth(importedStudentIds, semester, month).stream()
                         .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record,
                                 (first, duplicate) -> first, LinkedHashMap::new));
             }
             for (StudentTrackingExcelParser.ImportedStudent importedStudent : importedClass.getStudents()) {
                 TrackedStudent student = studentsByName.get(nameKey(importedStudent.getFullName()));
-                StudentSemesterRecord record = records.computeIfAbsent(student.getId(), ignored -> {
-                    StudentSemesterRecord created = new StudentSemesterRecord();
+                StudentMonthlyRecord record = records.computeIfAbsent(student.getId(), ignored -> {
+                    StudentMonthlyRecord created = new StudentMonthlyRecord();
                     created.setStudent(student);
                     created.setSemester(semester);
+                    created.setMonth(month);
                     return created;
                 });
                 record.setStudent(student);
                 record.setSemester(semester);
+                record.setMonth(month);
                 copyImportedToRecord(importedStudent, record);
                 importedStudentCount++;
             }
-            recordRepository.saveAll(records.values());
+            monthlyRecordRepository.saveAll(records.values());
         }
         return new ImportSummary(importedClasses.size(), importedStudentCount);
     }
@@ -315,6 +354,7 @@ public class StudentTrackingService {
         if (row.getProgressComment() != null && row.getProgressComment().length() > 2000) {
             throw new IllegalArgumentException("Nhan xet toi da 2000 ky tu");
         }
+        row.setAttendanceDates(normalizeAttendanceDates(row.getAttendanceStatus(), row.getAttendanceDates()));
     }
 
     private void validateScore(BigDecimal score) {
@@ -326,6 +366,22 @@ public class StudentTrackingService {
     private void validateSemester(int semester) {
         if (semester != 1 && semester != 2) {
             throw new IllegalArgumentException("Hoc ky chi co the la 1 hoac 2");
+        }
+    }
+
+    public List<Integer> monthsForSemester(int semester) {
+        validateSemester(semester);
+        return semester == 1 ? List.of(9, 10, 11, 12, 1) : List.of(2, 3, 4, 5);
+    }
+
+    public int defaultMonth(int semester) {
+        validateSemester(semester);
+        return semester == 1 ? 9 : 2;
+    }
+
+    private void validateMonth(int semester, int month) {
+        if (!monthsForSemester(semester).contains(month)) {
+            throw new IllegalArgumentException("Thang khong thuoc hoc ky da chon");
         }
     }
 
@@ -364,9 +420,21 @@ public class StudentTrackingService {
         row.setAverageScore(record.getAverageScore());
         row.setProgressComment(record.getProgressComment());
         row.setAttendanceStatus(record.getAttendanceStatus());
+        row.setAttendanceDates(record.getAttendanceDates());
     }
 
-    private void copyRowToRecord(TrackingRowForm row, StudentSemesterRecord record) {
+    private void copyRecordToRow(StudentMonthlyRecord record, TrackingRowForm row) {
+        row.setRegularScore1(record.getRegularScore1());
+        row.setRegularScore2(record.getRegularScore2());
+        row.setMidtermScore(record.getMidtermScore());
+        row.setFinalScore(record.getFinalScore());
+        row.setAverageScore(record.getAverageScore());
+        row.setProgressComment(record.getProgressComment());
+        row.setAttendanceStatus(record.getAttendanceStatus());
+        row.setAttendanceDates(record.getAttendanceDates());
+    }
+
+    private void copyRowToRecord(TrackingRowForm row, StudentMonthlyRecord record) {
         record.setRegularScore1(row.getRegularScore1());
         record.setRegularScore2(row.getRegularScore2());
         record.setMidtermScore(row.getMidtermScore());
@@ -374,10 +442,11 @@ public class StudentTrackingService {
         record.setAverageScore(row.getAverageScore());
         record.setProgressComment(row.getProgressComment() == null ? null : row.getProgressComment().trim());
         record.setAttendanceStatus(row.getAttendanceStatus());
+        record.setAttendanceDates(normalizeAttendanceDates(row.getAttendanceStatus(), row.getAttendanceDates()));
     }
 
     private void copyImportedToRecord(StudentTrackingExcelParser.ImportedStudent imported,
-                                      StudentSemesterRecord record) {
+                                      StudentMonthlyRecord record) {
         record.setRegularScore1(imported.getRegularScore1());
         record.setRegularScore2(imported.getRegularScore2());
         record.setMidtermScore(imported.getMidtermScore());
@@ -385,6 +454,54 @@ public class StudentTrackingService {
         record.setAverageScore(imported.getAverageScore());
         record.setProgressComment(imported.getProgressComment());
         record.setAttendanceStatus(imported.getAttendanceStatus());
+        record.setAttendanceDates(normalizeAttendanceDates(imported.getAttendanceStatus(), imported.getAttendanceDates()));
+    }
+
+    private String normalizeAttendanceDates(AttendanceStatus status, String value) {
+        if (status == null || status == AttendanceStatus.FULL || status == AttendanceStatus.NONE) {
+            return null;
+        }
+        String raw = value == null ? "" : value.trim();
+        if (raw.isEmpty()) {
+            throw new IllegalArgumentException("So ngay khong duoc de trong voi trang thai " + status.getDisplayName());
+        }
+        if (raw.length() > 500) {
+            throw new IllegalArgumentException("So ngay toi da 500 ky tu");
+        }
+        String expectedPrefix = attendanceDatePrefix(status);
+        List<String> normalizedDates = new ArrayList<>();
+        for (String part : raw.split("[;,]")) {
+            String token = part.trim().toUpperCase(Locale.ROOT);
+            var matcher = ATTENDANCE_DATE_PATTERN.matcher(token);
+            if (!matcher.matches() || !expectedPrefix.equals(matcher.group(1).toUpperCase(Locale.ROOT))) {
+                throw invalidAttendanceDate(status);
+            }
+            try {
+                LocalDate.parse(matcher.group(2) + "/2000", DAY_MONTH_FORMATTER);
+            } catch (DateTimeParseException ex) {
+                throw invalidAttendanceDate(status);
+            }
+            normalizedDates.add(expectedPrefix + "." + matcher.group(2));
+        }
+        return String.join(", ", normalizedDates);
+    }
+
+    private String attendanceDatePrefix(AttendanceStatus status) {
+        switch (status) {
+            case ABSENT:
+                return "V";
+            case DROPPED_OUT:
+                return "BH";
+            case TRANSFERRED:
+                return "CT";
+            default:
+                throw new IllegalArgumentException("Trang thai diem danh khong can So ngay");
+        }
+    }
+
+    private IllegalArgumentException invalidAttendanceDate(AttendanceStatus status) {
+        String format = attendanceDatePrefix(status) + ".dd/MM";
+        return new IllegalArgumentException("So ngay phai co dang " + format + ", co the nhap nhieu gia tri cach nhau boi dau phay");
     }
 
     public static class ImportSummary {

@@ -67,7 +67,7 @@ public class StudentTrackingController {
         try {
             var created = trackingService.createClass(className, schoolYear);
             redirectAttributes.addFlashAttribute("message", "Da them lop theo doi thanh cong.");
-            return redirectToSheet(created.getId(), 1);
+            return redirectToSheet(created.getId(), 1, 9);
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
             return "redirect:/student-tracking";
@@ -88,11 +88,15 @@ public class StudentTrackingController {
     @GetMapping("/classes/{classId}")
     public String sheet(@PathVariable Integer classId,
                         @RequestParam(defaultValue = "1") int semester,
+                        @RequestParam(required = false) Integer month,
                         Model model) {
+        int selectedMonth = month == null ? trackingService.defaultMonth(semester) : month;
         model.addAttribute("trackingClass", trackingService.findClass(classId));
         model.addAttribute("trackingClasses", trackingService.listClasses());
-        model.addAttribute("sheetForm", trackingService.getSheet(classId, semester));
+        model.addAttribute("sheetForm", trackingService.getSheet(classId, semester, selectedMonth));
         model.addAttribute("semester", semester);
+        model.addAttribute("month", selectedMonth);
+        model.addAttribute("months", trackingService.monthsForSemester(semester));
         model.addAttribute("attendanceStatuses", AttendanceStatus.values());
         return "student-tracking/sheet";
     }
@@ -101,6 +105,7 @@ public class StudentTrackingController {
     public String addStudent(@PathVariable Integer classId,
                              @RequestParam String fullName,
                              @RequestParam(defaultValue = "1") int semester,
+                             @RequestParam(required = false) Integer month,
                              RedirectAttributes redirectAttributes) {
         try {
             trackingService.addStudent(classId, fullName);
@@ -108,7 +113,7 @@ public class StudentTrackingController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return redirectToSheet(classId, semester);
+        return redirectToSheet(classId, semester, safeMonth(semester, month));
     }
 
     @PostMapping("/classes/{classId}/records")
@@ -116,19 +121,21 @@ public class StudentTrackingController {
                             @ModelAttribute TrackingSheetForm sheetForm,
                             RedirectAttributes redirectAttributes) {
         int semester = sheetForm.getSemester() == null ? 1 : sheetForm.getSemester();
+        int month = safeMonth(semester, sheetForm.getMonth());
         try {
             trackingService.saveSheet(classId, sheetForm);
-            redirectAttributes.addFlashAttribute("message", "Da luu so theo doi hoc ky " + semester + ".");
+            redirectAttributes.addFlashAttribute("message", "Da luu so theo doi thang " + month + ".");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return redirectToSheet(classId, semester);
+        return redirectToSheet(classId, semester, month);
     }
 
     @PostMapping("/classes/{classId}/students/{studentId}/delete")
     public String deleteStudent(@PathVariable Integer classId,
                                 @PathVariable Integer studentId,
                                 @RequestParam(defaultValue = "1") int semester,
+                                @RequestParam(required = false) Integer month,
                                 RedirectAttributes redirectAttributes) {
         try {
             trackingService.deleteStudent(classId, studentId);
@@ -136,17 +143,19 @@ public class StudentTrackingController {
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return redirectToSheet(classId, semester);
+        return redirectToSheet(classId, semester, safeMonth(semester, month));
     }
 
     @PostMapping("/import")
     public String importWorkbook(@RequestParam MultipartFile file,
                                  @RequestParam(defaultValue = "1") int semester,
+                                 @RequestParam(required = false) Integer month,
                                  RedirectAttributes redirectAttributes) {
+        int selectedMonth = safeMonth(semester, month);
         try {
-            StudentTrackingService.ImportSummary summary = trackingService.importWorkbook(file, semester);
+            StudentTrackingService.ImportSummary summary = trackingService.importWorkbook(file, semester, selectedMonth);
             redirectAttributes.addFlashAttribute("message", "Da import " + summary.getClassCount()
-                    + " lop va " + summary.getStudentCount() + " hoc sinh vao hoc ky " + semester + ".");
+                    + " lop va " + summary.getStudentCount() + " hoc sinh vao thang " + selectedMonth + ".");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         } catch (Exception ex) {
@@ -155,8 +164,12 @@ public class StudentTrackingController {
         return "redirect:/student-tracking";
     }
 
-    private String redirectToSheet(Integer classId, int semester) {
+    private String redirectToSheet(Integer classId, int semester, int month) {
         int safeSemester = semester == 2 ? 2 : 1;
-        return "redirect:/student-tracking/classes/" + classId + "?semester=" + safeSemester;
+        return "redirect:/student-tracking/classes/" + classId + "?semester=" + safeSemester + "&month=" + month;
+    }
+
+    private int safeMonth(int semester, Integer month) {
+        return month == null ? trackingService.defaultMonth(semester) : month;
     }
 }

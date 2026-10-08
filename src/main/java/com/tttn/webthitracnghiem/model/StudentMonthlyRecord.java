@@ -15,9 +15,9 @@ import javax.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "student_semester_record", uniqueConstraints =
-        @UniqueConstraint(name = "uk_student_semester", columnNames = {"student_id", "semester"}))
-public class StudentSemesterRecord {
+@Table(name = "student_monthly_record", uniqueConstraints =
+        @UniqueConstraint(name = "uk_student_semester_month", columnNames = {"student_id", "semester", "month"}))
+public class StudentMonthlyRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -28,6 +28,9 @@ public class StudentSemesterRecord {
 
     @Column(nullable = false)
     private Integer semester;
+
+    @Column(nullable = false)
+    private Integer month;
 
     @Column(name = "regular_score_1", precision = 4, scale = 2)
     private BigDecimal regularScore1;
@@ -56,6 +59,8 @@ public class StudentSemesterRecord {
     public void setStudent(TrackedStudent student) { this.student = student; }
     public Integer getSemester() { return semester; }
     public void setSemester(Integer semester) { this.semester = semester; }
+    public Integer getMonth() { return month; }
+    public void setMonth(Integer month) { this.month = month; }
     public BigDecimal getRegularScore1() { return regularScore1; }
     public void setRegularScore1(BigDecimal regularScore1) { this.regularScore1 = regularScore1; }
     public BigDecimal getRegularScore2() { return regularScore2; }

@@ -51,9 +51,23 @@
                             </div>
                             <div class="form-group">
                                 <label for="semester">Học kỳ</label>
-                                <select id="semester" name="semester" class="form-control">
+                                <select id="semester" name="semester" class="form-control" data-import-semester>
                                     <option value="1">Học kỳ 1</option>
                                     <option value="2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="month">Tháng</label>
+                                <select id="month" name="month" class="form-control" data-import-month>
+                                    <option value="9" data-semester="1">Tháng 9</option>
+                                    <option value="10" data-semester="1">Tháng 10</option>
+                                    <option value="11" data-semester="1">Tháng 11</option>
+                                    <option value="12" data-semester="1">Tháng 12</option>
+                                    <option value="1" data-semester="1">Tháng 1</option>
+                                    <option value="2" data-semester="2">Tháng 2</option>
+                                    <option value="3" data-semester="2">Tháng 3</option>
+                                    <option value="4" data-semester="2">Tháng 4</option>
+                                    <option value="5" data-semester="2">Tháng 5</option>
                                 </select>
                             </div>
                             <button class="btn btn-success" type="submit"><i class="fa fa-upload" aria-hidden="true"></i> Tải lên</button>
@@ -103,7 +117,7 @@
                                     <td th:text="${result.schoolYear}"></td>
                                     <td class="text-center">
                                         <a class="btn btn-sm btn-outline-primary"
-                                           th:href="@{/student-tracking/classes/{id}(id=${result.classId},semester=1)}">
+                                           th:href="@{/student-tracking/classes/{id}(id=${result.classId},semester=1,month=9)}">
                                             <i class="fa fa-folder-open" aria-hidden="true"></i> Mở lớp
                                         </a>
                                     </td>
@@ -126,8 +140,8 @@
                             <td th:text="${item.className}"></td>
                             <td th:text="${item.schoolYear}"></td>
                             <td class="text-center">
-                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=1)}">HK1</a>
-                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=2)}">HK2</a>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=1,month=9)}">HK1</a>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=2,month=2)}">HK2</a>
                             </td>
                             <td class="text-center">
                                 <div class="tracking-row-actions">
@@ -156,5 +170,6 @@
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
 <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/student-tracking.js}"></script>
 </body>
 </html>

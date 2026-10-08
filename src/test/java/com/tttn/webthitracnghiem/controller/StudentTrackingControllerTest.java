@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -68,7 +69,9 @@ class StudentTrackingControllerTest {
         TrackingSheetForm form = new TrackingSheetForm();
         form.setSemester(2);
         when(service.findClass(7)).thenReturn(trackingClass);
-        when(service.getSheet(7, 2)).thenReturn(form);
+        when(service.defaultMonth(2)).thenReturn(2);
+        when(service.monthsForSemester(2)).thenReturn(List.of(2, 3, 4, 5));
+        when(service.getSheet(7, 2, 2)).thenReturn(form);
         when(service.listClasses()).thenReturn(List.of(trackingClass));
         MockMvc mvc = MockMvcBuilders.standaloneSetup(
                 new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class))).build();
@@ -79,6 +82,30 @@ class StudentTrackingControllerTest {
                 .andExpect(model().attribute("trackingClass", trackingClass))
                 .andExpect(model().attribute("trackingClasses", List.of(trackingClass)))
                 .andExpect(model().attribute("sheetForm", form))
-                .andExpect(model().attribute("semester", 2));
+                .andExpect(model().attribute("semester", 2))
+                .andExpect(model().attribute("month", 2))
+                .andExpect(model().attribute("months", List.of(2, 3, 4, 5)));
+        verify(service).getSheet(7, 2, 2);
+    }
+
+    @Test
+    void showsExplicitSelectedMonth() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        TrackingSheetForm form = new TrackingSheetForm();
+        form.setSemester(1);
+        form.setMonth(10);
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(service.listClasses()).thenReturn(List.of(trackingClass));
+        when(service.getSheet(7, 1, 10)).thenReturn(form);
+        when(service.monthsForSemester(1)).thenReturn(List.of(9, 10, 11, 12, 1));
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class))).build();
+
+        mvc.perform(get("/student-tracking/classes/7").param("semester", "1").param("month", "10"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("month", 10));
+        verify(service).getSheet(7, 1, 10);
     }
 }
