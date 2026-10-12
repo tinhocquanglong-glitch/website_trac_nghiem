@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chỉnh Sửa Trường Học</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" crossorigin="anonymous">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <div class="right_col" role="main">
+            <div class="container">
+                <div class="h4 text-center mb-4">
+                    Chỉnh Sửa Thông Tin Trường Học
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card p-4 shadow-sm">
+                            <form th:action="@{/school/update}" th:object="${school}" method="post" id="schoolForm">
+                                <input type="hidden" th:field="*{id}">
+                                <input type="hidden" th:field="*{active}">
+
+                                <div class="form-group">
+                                    <label>Tên trường học <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{name}" required>
+                                    <div class="text-danger small" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Mã trường</label>
+                                    <input type="text" class="form-control" th:field="*{schoolCode}">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="provinceSelect" th:field="*{provinceCode}" required>
+                                            <option value="">-- Chọn Tỉnh / TP --</option>
+                                            <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
+                                        </select>
+                                        <input type="hidden" id="provinceNameInput" th:field="*{provinceName}">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Quận / Huyện</label>
+                                        <select class="form-control" id="districtSelect" th:field="*{districtCode}">
+                                            <option value="">-- Chọn Quận / Huyện --</option>
+                                            <option th:each="d : ${districts}" th:value="${d.code}" th:text="${d.name}"></option>
+                                        </select>
+                                        <input type="hidden" id="districtNameInput" th:field="*{districtName}">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Xã / Phường</label>
+                                        <select class="form-control" id="wardSelect" th:field="*{wardCode}">
+                                            <option value="">-- Chọn Xã / Phường --</option>
+                                            <option th:each="w : ${wards}" th:value="${w.code}" th:text="${w.name}"></option>
+                                        </select>
+                                        <input type="hidden" id="wardNameInput" th:field="*{wardName}">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Địa chỉ chi tiết (Thôn / Xóm / Số nhà / Đường)</label>
+                                    <input type="text" class="form-control" th:field="*{addressDetail}">
+                                </div>
+
+                                <div class="form-group text-center mt-4">
+                                    <button type="submit" class="btn btn-primary px-4"><i class="fa fa-save"></i> Cập nhật</button>
+                                    <a th:href="@{/school/list}" class="btn btn-secondary px-4"><i class="fa fa-arrow-left"></i> Quay lại</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+
+<script>
+$(document).ready(function() {
+    $('#provinceSelect').change(function() {
+        var provCode = $(this).val();
+        var provName = $(this).find('option:selected').text();
+        $('#provinceNameInput').val(provCode ? provName : '');
+
+        $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
+        $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
+        $('#districtNameInput').val('');
+        $('#wardNameInput').val('');
+
+        if (provCode) {
+            $.get('/api/location/districts?provinceCode=' + provCode, function(data) {
+                $.each(data, function(index, d) {
+                    $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+                });
+            });
+        }
+    });
+
+    $('#districtSelect').change(function() {
+        var distCode = $(this).val();
+        var distName = $(this).find('option:selected').text();
+        $('#districtNameInput').val(distCode ? distName : '');
+
+        $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
+        $('#wardNameInput').val('');
+
+        if (distCode) {
+            $.get('/api/location/wards?districtCode=' + distCode, function(data) {
+                $.each(data, function(index, w) {
+                    $('#wardSelect').append('<option value="' + w.code + '">' + w.name + '</option>');
+                });
+            });
+        }
+    });
+
+    $('#wardSelect').change(function() {
+        var wardCode = $(this).val();
+        var wardName = $(this).find('option:selected').text();
+        $('#wardNameInput').val(wardCode ? wardName : '');
+    });
+});
+</script>
+</body>
+</html>

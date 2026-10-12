@@ -102,6 +102,39 @@
             </div>
 
             <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label">Tỉnh / Thành phố</label>
+                <div class="col-lg-8 col-sm-8">
+                    <select class="form-control" id="provinceSelect">
+                        <option value="">-- Chọn Tỉnh / TP --</option>
+                        <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label">Quận / Huyện</label>
+                <div class="col-lg-8 col-sm-8">
+                    <select class="form-control" id="districtSelect">
+                        <option value="">-- Chọn Quận / Huyện --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                <label class="col-lg-4 col-sm-4 col-form-label">Trường học</label>
+                <div class="col-lg-8 col-sm-8">
+                    <select class="form-control" name="schoolId" id="schoolSelect">
+                        <option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>
+                        <option th:each="s : ${schools}" th:if="${s.id != 1}" th:value="${s.id}"
+                                th:text="${s.name + (s.districtName != null ? ' (' + s.districtName + ', ' + s.provinceName + ')' : (s.provinceName != null ? ' (' + s.provinceName + ')' : ''))}"
+                                th:selected="${selectedSchoolId != null and selectedSchoolId == s.id}"></option>
+                    </select>
+                    <small class="text-muted">Chọn trường của bạn (hoặc chọn Tỉnh/Huyện ở trên để lọc nhanh danh sách). Nếu chưa có trường của bạn trong hệ thống, hãy chọn "Thí sinh tự do / Khác".</small>
+                </div>
+            </div>
+
+
+            <div class="form-group row">
                 <label class="col-lg-4 col-sm-4 col-form-label">Địa chỉ<span class="text-danger ml-3">*</span></label>
                 <div class="col-lg-8 col-sm-8">
                     <input type="text" class="form-control" th:field="*{address}" autocomplete="off">
@@ -169,5 +202,52 @@
 <script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
 <script th:src="@{/js/slider.js}"></script>
+<script>
+$(document).ready(function() {
+    function loadSchools() {
+        var p = $('#provinceSelect').val();
+        var d = $('#districtSelect').val();
+        var url = '/api/location/schools?';
+        if (d) url += 'districtCode=' + d;
+        else if (p) url += 'provinceCode=' + p;
+
+        $.get(url, function(schools) {
+            var $schoolSelect = $('#schoolSelect');
+            var prevSelected = $schoolSelect.val();
+            $schoolSelect.empty();
+            $schoolSelect.append('<option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>');
+            $.each(schools, function(i, s) {
+                if (s.id !== 1) {
+                    var locationInfo = '';
+                    if (s.districtName && s.provinceName) {
+                        locationInfo = ' (' + s.districtName + ', ' + s.provinceName + ')';
+                    } else if (s.provinceName) {
+                        locationInfo = ' (' + s.provinceName + ')';
+                    }
+                    var isSelected = (prevSelected && parseInt(prevSelected) === s.id) ? ' selected' : '';
+                    $schoolSelect.append('<option value="' + s.id + '"' + isSelected + '>' + s.name + locationInfo + '</option>');
+                }
+            });
+        });
+    }
+
+    $('#provinceSelect').change(function() {
+        var provCode = $(this).val();
+        $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
+        if (provCode) {
+            $.get('/api/location/districts?provinceCode=' + provCode, function(data) {
+                $.each(data, function(index, d) {
+                    $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+                });
+            });
+        }
+        loadSchools();
+    });
+
+    $('#districtSelect').change(function() {
+        loadSchools();
+    });
+});
+</script>
 </body>
 </html>

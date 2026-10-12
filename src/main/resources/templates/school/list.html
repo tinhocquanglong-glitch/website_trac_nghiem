@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Trường học</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" crossorigin="anonymous">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <style>
+        table tbody tr td {
+            vertical-align: middle !important;
+        }
+        .gap-10 {
+            gap: 10px;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <div class="right_col" role="main">
+            <div class="container">
+                <div class="h4 text-center mb-4">
+                    Danh Sách Trường Học
+                </div>
+
+                <div class="alert alert-primary alert-dismissible fade show" role="alert" th:if="${message != null}">
+                    <strong th:text="${message}"></strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="card mb-3 p-3">
+                    <form th:action="@{/school/list}" method="get" class="form-row align-items-center">
+                        <div class="col-md-4 my-1">
+                            <input type="text" name="keyword" class="form-control" placeholder="Tìm theo tên trường, mã trường..."
+                                   th:value="${keyword}">
+                        </div>
+                        <div class="col-md-4 my-1">
+                            <select name="provinceCode" class="form-control">
+                                <option value="">-- Tất cả Tỉnh / Thành phố --</option>
+                                <option th:each="p : ${provinces}"
+                                        th:value="${p.code}"
+                                        th:text="${p.name}"
+                                        th:selected="${selectedProvinceCode != null && selectedProvinceCode == p.code}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 my-1">
+                            <button type="submit" class="btn btn-primary btn-block mb-0"><i class="fa fa-search"></i> Tìm kiếm</button>
+                        </div>
+                        <div class="col-md-2 my-1 text-right">
+                            <a th:href="@{/school/add}" class="btn btn-success btn-block mb-0"><i class="fa fa-plus"></i> Thêm trường</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered text-center">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Mã trường</th>
+                            <th>Tên trường</th>
+                            <th>Tỉnh / Thành phố</th>
+                            <th>Quận / Huyện</th>
+                            <th>Xã / Phường</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:if="${schools.content.empty}">
+                            <td colspan="8" class="text-muted">Không tìm thấy trường học nào.</td>
+                        </tr>
+                        <tr th:each="s, state : ${schools.content}">
+                            <td th:text="${state.count + (schools.number * schools.size)}"></td>
+                            <td><strong th:text="${s.schoolCode != null ? s.schoolCode : '-'}"></strong></td>
+                            <td class="text-left font-weight-bold" th:text="${s.name}"></td>
+                            <td th:text="${s.provinceName != null ? s.provinceName : '-'}"></td>
+                            <td th:text="${s.districtName != null ? s.districtName : '-'}"></td>
+                            <td th:text="${s.wardName != null ? s.wardName : '-'}"></td>
+                            <td>
+                                <span th:if="${s.active}" class="badge badge-success">Hoạt động</span>
+                                <span th:unless="${s.active}" class="badge badge-secondary">Tạm ngưng</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a th:href="@{'/school/edit/' + ${s.id}}" class="btn btn-sm btn-info" title="Sửa"><i class="fa fa-edit"></i></a>
+                                    <a th:href="@{'/school/toggle/' + ${s.id}}" class="btn btn-sm btn-warning"
+                                       th:title="${s.active ? 'Khóa' : 'Kích hoạt'}"
+                                       onclick="return confirm('Bạn có chắc muốn đổi trạng thái trường này?')">
+                                        <i th:class="${s.active ? 'fa fa-ban' : 'fa fa-check'}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                <nav th:if="${schools.totalPages > 1}" class="d-flex justify-content-center mt-3">
+                    <ul class="pagination">
+                        <li class="page-item" th:classappend="${schools.first ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/school/list(page=${schools.number - 1}, keyword=${keyword}, provinceCode=${selectedProvinceCode})}">&laquo;</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, schools.totalPages - 1)}"
+                            th:classappend="${schools.number == i ? 'active' : ''}">
+                            <a class="page-link" th:href="@{/school/list(page=${i}, keyword=${keyword}, provinceCode=${selectedProvinceCode})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${schools.last ? 'disabled' : ''}">
+                            <a class="page-link" th:href="@{/school/list(page=${schools.number + 1}, keyword=${keyword}, provinceCode=${selectedProvinceCode})}">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery and Bootstrap -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+</body>
+</html>

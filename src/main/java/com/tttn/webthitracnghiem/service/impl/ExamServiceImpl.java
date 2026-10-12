@@ -88,4 +88,24 @@ public class ExamServiceImpl implements IExamService {
         return examRepository.findByNameExamContainingAndLesson(id,name,pageable);
     }
 
+    @Override
+    public Page<Exam> findByTeacher(String userId, Pageable pageable) {
+        return examRepository.findByUsersId(userId, pageable);
+    }
+
+    @Override
+    public Page<Exam> findByTeacherAndSubject(String userId, int subjectId, Pageable pageable) {
+        return examRepository.findByUsersIdAndSubject(userId, subjectId, pageable);
+    }
+
+    @Override
+    public Page<Exam> findByTeacherAndNameContaining(String userId, String name, Pageable pageable) {
+        return examRepository.findByUsersIdAndNameExamContaining(userId, name, pageable);
+    }
+
+    @Override
+    public Page<Exam> findByTeacherAndSubjectAndNameContaining(String userId, int subjectId, String name, Pageable pageable) {
+        return examRepository.findByUsersIdAndSubjectAndNameExamContaining(userId, subjectId, name, pageable);
+    }
+
 }

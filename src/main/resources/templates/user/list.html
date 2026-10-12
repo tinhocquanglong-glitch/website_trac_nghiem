@@ -66,33 +66,49 @@
                     </div>
                 </form>
             </div>
+            <div>
+                <a th:href="@{/user/create-teacher}" class="btn btn-success"><i class="fa fa-user-plus"></i> Cấp tài khoản Giáo viên</a>
+                <a th:href="@{/user/create}" class="btn btn-primary"><i class="fa fa-plus"></i> Thêm người dùng</a>
+            </div>
         </div>
         <table class="table table-bordered table-striped " id="tableList">
             <tr style="background-color: #27c9ff;">
                 <th class="text-center">STT</th>
+                <th class="text-center">Tài khoản</th>
                 <th class="text-center">Họ tên</th>
                 <th class="text-center">Hình ảnh</th>
-                <th class="text-center">Địa chỉ nhà</th>
+                <th class="text-center">Trường học</th>
+                <th class="text-center">Vai trò</th>
                 <th class="text-center">Số điện thoại</th>
                 <th class="text-center">Hành động</th>
             </tr>
             <tr th:if="${users.isEmpty()}">
-                <td colspan="6" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ liệu</td>
+                <td colspan="8" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ liệu</td>
             </tr>
             <tr th:each="user, count : ${users}">
-                <td th:text="${count.index + 1}" class="text-center"></td>
+                <td th:text="${count.index + 1 + (users.number * users.size)}" class="text-center"></td>
+                <td class="text-center font-weight-bold" th:text="${user.id}"></td>
                 <td th:text="${user.fullName}" class="text-center"></td>
-                <td><img th:src="@{${user.img}}" alt="Avatar" style="width: 100px;height: 100px;object-fit: cover;border-radius: 5px"></td>
-                <td th:text="${user.address}" class="text-center"></td>
+                <td class="text-center"><img th:src="@{${user.img}}" alt="Avatar" style="width: 50px;height: 50px;object-fit: cover;border-radius: 5px"></td>
+                <td class="text-center">
+                    <span th:if="${user.school != null}" th:text="${user.school.name}" class="badge badge-info"></span>
+                    <span th:unless="${user.school != null}" class="text-muted">-</span>
+                </td>
+                <td class="text-center">
+                    <span th:each="r : ${user.roles}">
+                        <span th:if="${r.roleName == 'ROLE_ADMIN'}" class="badge badge-danger">ADMIN</span>
+                        <span th:if="${r.roleName == 'ROLE_TEACHER'}" class="badge badge-success">GIÁO VIÊN</span>
+                        <span th:if="${r.roleName == 'ROLE_USER'}" class="badge badge-primary">HỌC SINH</span>
+                    </span>
+                </td>
                 <td th:text="${user.phoneNumber}" class="text-center"></td>
-                <td th:if="${admins.contains(user)}" class="text-center">ADMIN</td>
-                <td class="text-center" th:if="${!admins.contains(user)}">
-                    <a th:href="@{/user/editMember/{id}(id=${user.id})}"><i class="fas fa-edit text-primary"></i></a>
+                <td class="text-center">
+                    <a th:href="@{/user/editMember/{id}(id=${user.id})}" title="Chỉnh sửa"><i class="fas fa-edit text-primary"></i></a>
                     <span>&nbsp;&nbsp;</span>
-                    <a th:href="@{/user/delete/{id}(id=${user.id})}" id="deleteButton"><i
-                            class="far fa-trash-alt text-danger"></i></a>
+                    <a th:href="@{/user/delete/{id}(id=${user.id})}" id="deleteButton" title="Xóa"
+                       onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')"><i class="far fa-trash-alt text-danger"></i></a>
                     <span>&nbsp;&nbsp;</span>
-                    <a th:href="@{/user/editPass/{id}(id=${user.id})}"><i class="fas fa-key text-success"></i></a>
+                    <a th:href="@{/user/editPass/{id}(id=${user.id})}" title="Đổi mật khẩu"><i class="fas fa-key text-success"></i></a>
                 </td>
             </tr>
         </table>

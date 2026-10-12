@@ -162,6 +162,29 @@ public class MainController {
         submitted = false;
         // Tăng lượt thi
         Exam exam = examService.findById(id);
+
+        // Kiểm tra quyền vào thi đề Private
+        Boolean isPublic = exam.getIsPublic();
+        if (isPublic == null || !isPublic) {
+            // Đề private: chỉ học sinh cùng trường mới được thi
+            User student = userService.findById(username);
+            if (student == null) {
+                ra.addFlashAttribute("warning", "Bạn cần đăng nhập để thi đề này.");
+                return "redirect:/login";
+            }
+            School studentSchool = student.getSchool();
+            School examSchool = exam.getSchool();
+            boolean sameSchool = (studentSchool != null && examSchool != null
+                    && studentSchool.getId() == examSchool.getId());
+            // Học sinh "tự do" (trường id=1) hoặc khác trường => chặn
+            if (!sameSchool) {
+                String schoolName = (examSchool != null) ? examSchool.getName() : "nội bộ";
+                ra.addFlashAttribute("warning",
+                        "Đề thi này chỉ dành riêng cho học sinh trường " + schoolName + ".");
+                return "redirect:/default";
+            }
+        }
+
         exam.setTurn(exam.getTurn() + 1);
         examService.save(exam);
 
@@ -189,7 +212,6 @@ public class MainController {
     }
 
 
-//    @GetMapping("/quiz11/{id}")
 //    public String beforeQuiz(@PathVariable("id") int id, RedirectAttributes ra) {
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        String username = authentication.getName();

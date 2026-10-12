@@ -77,5 +77,25 @@ public class QuestionServiceImpl implements IQuestionService {
     public List<Question> findBySub(int subId) {
         return questionRepository.findBySubject(subId);
     }
-}
 
+    // School-scoped queries
+    @Override
+    public Page<Question> findAllBySubjectAndSchool(Optional<Integer> subjectId, int schoolId, Pageable pageable) {
+        return questionRepository.findAllBySubjectAndSchool(subjectId, schoolId, pageable);
+    }
+
+    @Override
+    public Page<Question> findAllBySchool(int schoolId, Pageable pageable) {
+        return questionRepository.findAllBySchool(schoolId, pageable);
+    }
+
+    @Override
+    public Page<Question> findAllByTitleContainingAndSchool(String title, int schoolId, Pageable pageable) {
+        return questionRepository.findAllByTitleContainingAndSchool(title, schoolId, pageable);
+    }
+
+    @Override
+    public Page<Question> findBySubjectAndTitleAndSchool(int subjectId, String title, int schoolId, Pageable pageable) {
+        return questionRepository.findAllBySubjectAndTitleContainingAndSchool(subjectId, title, schoolId, pageable);
+    }
+}

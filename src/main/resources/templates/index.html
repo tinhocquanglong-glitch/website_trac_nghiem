@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <!-- Meta, title, CSS, favicons, etc. -->
@@ -62,9 +62,16 @@
                         <ul class="nav side-menu">
                             <li><a th:href="@{/}"><i class="fa fa-home"></i> Trang chủ</a>
                             </li>
-                            <li><a><i class="fa fa-edit"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-users"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/user/list}">Danh sách người dùng</a></li>
+                                    <li><a th:href="@{/user/create-teacher}">Cấp tài khoản giáo viên</a></li>
+                                </ul>
+                            </li>
+                            <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-university"></i> Trường học <span class="fa fa-chevron-down"></span></a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/school/list}">Danh sách trường học</a></li>
+                                    <li><a th:href="@{/school/add}">Thêm trường mới</a></li>
                                 </ul>
                             </li>
                             <li><a><i class="fa fa-clone"></i>Môn học <span class="fa fa-chevron-down"></span></a>
@@ -120,7 +127,12 @@
                     <a id="menu_toggle"><i class="fa fa-bars"></i></a>
                 </div>
                 <nav class="nav navbar-nav">
-                    <ul class=" navbar-right">
+                    <ul class=" navbar-right d-flex align-items-center">
+                        <li class="nav-item" style="margin-right: 15px;">
+                            <a href="/student-tracking" class="btn btn-sm btn-success text-white" style="margin-top: 12px; font-weight: 600; border-radius: 20px; padding: 4px 14px;">
+                                <i class="fa fa-table"></i> Sổ theo dõi học sinh
+                            </a>
+                        </li>
                         <li class="nav-item dropdown open" style="padding-left: 15px;">
                             <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true"
                                id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">

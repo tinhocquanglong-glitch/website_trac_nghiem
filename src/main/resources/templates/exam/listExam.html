@@ -89,6 +89,7 @@
                         <th>Mã đề thi</th>
                         <th>Tên đề thi</th>
                         <th>Môn học</th>
+                        <th>Phạm vi</th>
                         <th>Lượt xem</th>
                         <th>Lượt thi</th>
                         <th>Số câu hỏi</th>
@@ -103,13 +104,21 @@
                     </thead>
                     <tbody>
                     <tr th:if="${exams.isEmpty()}">
-                        <td colspan="10" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ liệu</td>
+                        <td colspan="11" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ liệu</td>
                     </tr>
                     <tr th:each="exam ,i: ${exams}">
                         <td th:text="${i.count}"></td>
                         <td th:text="${exam.idName}"></td>
                         <td th:text="${exam.nameExam}"></td>
                         <td style="text-transform: uppercase" th:text="${exam.lesson.chapter.subjectClasses.subject.name}+' '+${exam.lesson.chapter.subjectClasses.classes.nameClass}+ ': '+${exam.lesson.nameLesson}"></td>
+                        <td>
+                            <span th:if="${exam.isPublic == null or exam.isPublic}" class="badge badge-success">
+                                <i class="fa fa-globe"></i> Công khai
+                            </span>
+                            <span th:unless="${exam.isPublic == null or exam.isPublic}" class="badge badge-warning">
+                                <i class="fa fa-lock"></i> Nội bộ
+                            </span>
+                        </td>
                         <td th:text="${exam.view}"></td>
                         <td th:text="${exam.turn}"></td>
                         <td th:text="${exam.questions.size()} + ' câu'"></td>

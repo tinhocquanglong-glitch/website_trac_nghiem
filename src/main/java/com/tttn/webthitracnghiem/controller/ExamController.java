@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -62,6 +63,20 @@ public class ExamController {
         return questionService.findAll();
     }
 
+    /**
+     * Kiểm tra người dùng hiện tại có phải ROLE_TEACHER (không phải ADMIN)
+     */
+    private boolean isTeacherOnly(Authentication auth) {
+        if (auth == null) return false;
+        boolean isAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isTeacher = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_TEACHER"));
+        return isTeacher && !isAdmin;
+    }
+
+    private User getCurrentUser(Authentication auth) {
+        if (auth == null) return null;
+        return userService.findById(auth.getName());
+    }
 
     @GetMapping("/exam/list")
     public String showList(@RequestParam("subjectId") Optional<Integer> subjectId,
@@ -77,24 +92,51 @@ public class ExamController {
         if (update.isPresent()) {
             model.addAttribute("message", "Chỉnh sửa đề thi thành công!");
         }
-        if (!name.isPresent()) {
-            if (subjectId.isPresent()) {
-                exams = examService.findAllBySubject(subjectId.get(), pageable);
-                model.addAttribute("exams", exams);
-                model.addAttribute("subjectId", subjectId.get());
-                return "exam/listExam";
-            }
-            exams = examService.findAll(pageable);
-        } else {
-            if (subjectId.isPresent()) {
-                exams = examService.findAllByNameExamContainingAndBySubject(subjectId.get(), name.get(), pageable);
-                model.addAttribute("subjectId", subjectId.get());
-                model.addAttribute("keyword", name.get());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean teacherOnly = isTeacherOnly(auth);
+
+        if (teacherOnly) {
+            // Giáo viên chỉ thấy đề thi do mình tạo
+            String userId = auth.getName();
+            if (!name.isPresent()) {
+                if (subjectId.isPresent()) {
+                    exams = examService.findByTeacherAndSubject(userId, subjectId.get(), pageable);
+                    model.addAttribute("subjectId", subjectId.get());
+                } else {
+                    exams = examService.findByTeacher(userId, pageable);
+                }
             } else {
-                exams = examService.findAllByNameExamContaining(name.get(), pageable);
+                if (subjectId.isPresent()) {
+                    exams = examService.findByTeacherAndSubjectAndNameContaining(userId, subjectId.get(), name.get(), pageable);
+                    model.addAttribute("subjectId", subjectId.get());
+                } else {
+                    exams = examService.findByTeacherAndNameContaining(userId, name.get(), pageable);
+                }
                 model.addAttribute("keyword", name.get());
+            }
+        } else {
+            // Admin thấy tất cả
+            if (!name.isPresent()) {
+                if (subjectId.isPresent()) {
+                    exams = examService.findAllBySubject(subjectId.get(), pageable);
+                    model.addAttribute("exams", exams);
+                    model.addAttribute("subjectId", subjectId.get());
+                    return "exam/listExam";
+                }
+                exams = examService.findAll(pageable);
+            } else {
+                if (subjectId.isPresent()) {
+                    exams = examService.findAllByNameExamContainingAndBySubject(subjectId.get(), name.get(), pageable);
+                    model.addAttribute("subjectId", subjectId.get());
+                    model.addAttribute("keyword", name.get());
+                } else {
+                    exams = examService.findAllByNameExamContaining(name.get(), pageable);
+                    model.addAttribute("keyword", name.get());
+                }
             }
         }
+
         model.addAttribute("exams", exams);
         return "exam/listExam";
     }
@@ -107,20 +149,20 @@ public class ExamController {
         return "exam/createExam";
     }
 
-//    @PostMapping("/exam/create")
-//    public String saveExam(@Validated @ModelAttribute("exam") Exam exam, BindingResult bindingResult, RedirectAttributes re) {
-//        if (bindingResult.hasFieldErrors()) {
-//            return "exam/createExam";
-//        } else {
-//            re.addFlashAttribute("message", "Tạo đề thi thành công!");
-//            examService.save(exam);
-//            return "redirect:/exam/list";
-//        }
-//    }
-
     @GetMapping("/exam/editExam/{id}")
-    public String edit(@PathVariable("id") Integer id, Model model) {
+    public String edit(@PathVariable("id") Integer id, Model model, RedirectAttributes ra) {
         Exam exam = examService.findById(id);
+
+        // Giáo viên chỉ edit đề của mình
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (isTeacherOnly(auth)) {
+            User currentUser = getCurrentUser(auth);
+            if (currentUser != null && (exam.getUsers() == null || !exam.getUsers().getId().equals(currentUser.getId()))) {
+                ra = null; // workaround - redirect với flash attribute qua RedirectAttributes ko inject được qua GET
+                return "redirect:/exam/list";
+            }
+        }
+
         Iterable<Subject> subjects = subjectService.findAll();
         List<Chapter> chapters = new ArrayList<>(exam.getLesson().getChapter().getSubjectClasses().getChapters());
         Collections.sort(chapters);
@@ -143,6 +185,17 @@ public class ExamController {
     @GetMapping("/exam/delete/{id}")
     public String delete(@PathVariable("id") Integer id, RedirectAttributes re) {
         Exam exam = examService.findById(id);
+
+        // Giáo viên chỉ xóa đề của mình
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (isTeacherOnly(auth)) {
+            User currentUser = getCurrentUser(auth);
+            if (currentUser != null && (exam.getUsers() == null || !exam.getUsers().getId().equals(currentUser.getId()))) {
+                re.addFlashAttribute("error", "Bạn không có quyền xóa đề thi này!");
+                return "redirect:/exam/list";
+            }
+        }
+
         examService.delete(exam);
         re.addFlashAttribute("message", "Xóa đề thi thành công!");
         return "redirect:/exam/list";

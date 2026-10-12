@@ -33,4 +33,13 @@ public interface  UserRepository  extends JpaRepository<User,String > {
     @Query(nativeQuery = true,value = "SELECT * FROM user JOIN user_role ON user.id = user_role.username ")
     List<User> getMember();
     Optional<User> findById(int id);
+
+    // Lấy học sinh (ROLE_USER) của một trường để đồng bộ vào sổ theo dõi
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.name = 'ROLE_USER' AND u.school_id = :schoolId " +
+                "ORDER BY u.full_name ASC")
+    List<User> findStudentsBySchool(@Param("schoolId") int schoolId);
 }

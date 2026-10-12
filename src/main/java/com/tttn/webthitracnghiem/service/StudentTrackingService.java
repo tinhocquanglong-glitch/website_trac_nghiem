@@ -127,6 +127,57 @@ public class StudentTrackingService {
         return studentRepository.save(newStudent(trackingClass, cleanName, nextOrder));
     }
 
+    /**
+     * Đồng bộ danh sách học sinh đang học trên web (ROLE_USER) của cùng trường
+     * vào lớp theo dõi. Học sinh đã có trong lớp (trùng tên) sẽ bỏ qua.
+     * @return số học sinh được thêm mới
+     */
+    @Transactional
+    public SyncResult syncStudentsFromWeb(Integer classId, int schoolId, java.util.function.Supplier<List<com.tttn.webthitracnghiem.model.User>> studentSupplier) {
+        StudentTrackingClass trackingClass = findClass(classId);
+        List<com.tttn.webthitracnghiem.model.User> webStudents = studentSupplier.get();
+
+        List<TrackedStudent> currentStudents = studentRepository
+                .findByTrackingClassIdOrderByDisplayOrderAscIdAsc(classId);
+        int nextOrder = currentStudents.stream()
+                .map(TrackedStudent::getDisplayOrder)
+                .filter(v -> v != null)
+                .max(Integer::compareTo)
+                .orElse(0) + 1;
+
+        // Tạo set tên đã có (lowercase) để skip trùng
+        Set<String> existingNames = currentStudents.stream()
+                .map(s -> s.getFullName().trim().toLowerCase())
+                .collect(Collectors.toSet());
+
+        int added = 0;
+        for (com.tttn.webthitracnghiem.model.User student : webStudents) {
+            String name = student.getFullName() == null ? "" : student.getFullName().trim();
+            if (name.isEmpty() || existingNames.contains(name.toLowerCase())) {
+                continue;
+            }
+            studentRepository.save(newStudent(trackingClass, name, nextOrder++));
+            existingNames.add(name.toLowerCase());
+            added++;
+        }
+        return new SyncResult(added, webStudents.size());
+    }
+
+    /** Kết quả đồng bộ học sinh */
+    public static class SyncResult {
+        private final int addedCount;
+        private final int totalFromWeb;
+
+        public SyncResult(int addedCount, int totalFromWeb) {
+            this.addedCount = addedCount;
+            this.totalFromWeb = totalFromWeb;
+        }
+
+        public int getAddedCount() { return addedCount; }
+        public int getTotalFromWeb() { return totalFromWeb; }
+    }
+
+
     @Transactional
     public void deleteStudent(Integer classId, Integer studentId) {
         TrackedStudent student = studentRepository.findById(studentId)
@@ -134,6 +185,7 @@ public class StudentTrackingService {
         if (!student.getTrackingClass().getId().equals(classId)) {
             throw new IllegalArgumentException("Hoc sinh khong thuoc lop nay");
         }
+
         studentRepository.delete(student);
     }
 

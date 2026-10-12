@@ -30,6 +30,12 @@ public class UserController {
     @Autowired
     IUserService userService;
 
+    @Autowired
+    private com.tttn.webthitracnghiem.service.IRoleService roleService;
+
+    @Autowired
+    private com.tttn.webthitracnghiem.service.ILocationService locationService;
+
     @ModelAttribute("admin")
     public User admin(){
         return userService.findById(SecurityContextHolder.getContext().getAuthentication().getName());
@@ -37,16 +43,18 @@ public class UserController {
 
     @GetMapping("/user/list")
     public String showList(@RequestParam("keyword") Optional<String> name,
-                           Model model, @PageableDefault(value = 5) Pageable pageable) {
+                           Model model, @PageableDefault(value = 10) Pageable pageable) {
         Page<User> users;
         List<User> admins = new ArrayList<>();
         Iterable<User> all = userService.findAll();
         all.forEach(user -> {
-            user.getRoles().forEach(role -> {
-                if(role.getRoleName().equals("ROLE_ADMIN")){
-                    admins.add(user);
-                }
-            });
+            if (user.getRoles() != null) {
+                user.getRoles().forEach(role -> {
+                    if(role.getRoleName().equals("ROLE_ADMIN")){
+                        admins.add(user);
+                    }
+                });
+            }
         });
         model.addAttribute("admins",admins);
         if(name.isPresent()){
@@ -67,13 +75,91 @@ public class UserController {
     }
 
     @PostMapping("/user/create")
-    public String saveUser(@Validated @ModelAttribute("user") User user, BindingResult bindingResult) throws ParseException {
+    public String saveUser(@Validated @ModelAttribute("user") User user, BindingResult bindingResult, RedirectAttributes redirectAttributes) throws ParseException {
+        if (userService.userExists(user.getId())) {
+            bindingResult.rejectValue("id", "error.user", "Tài khoản '" + user.getId() + "' đã tồn tại.");
+        }
+        if (userService.userExistss(user.getEmail())) {
+            bindingResult.rejectValue("email", "error.user", "Email '" + user.getEmail() + "' đã tồn tại.");
+        }
+        if (user.getPassWord() != null && user.getRePassWord() != null) {
+            if (!user.getPassWord().equals(user.getRePassWord())) {
+                bindingResult.rejectValue("rePassWord", "error.user", "Mật khẩu phải trùng nhau");
+            }
+        }
         if (bindingResult.hasFieldErrors()) {
             return "user/create";
         } else {
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            user.setPassWord(passwordEncoder.encode(user.getPassWord()));
+            user.setRePassWord(user.getPassWord());
+            user.setImg("/img/avatar/default.jpg");
+            user.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
+
+            com.tttn.webthitracnghiem.model.Role role = roleService.findByName("ROLE_USER");
+            if (role != null) {
+                java.util.Set<com.tttn.webthitracnghiem.model.Role> roles = new java.util.HashSet<>();
+                roles.add(role);
+                user.setRoles(roles);
+            }
             userService.save(user);
+            redirectAttributes.addFlashAttribute("message", "Thêm người dùng thành công!");
             return "redirect:/user/list";
         }
+    }
+
+    @GetMapping("/user/create-teacher")
+    public String showCreateTeacherForm(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("provinces", locationService.getAllProvinces());
+        return "user/create-teacher";
+    }
+
+    @PostMapping("/user/create-teacher")
+    public String saveTeacher(@Validated @ModelAttribute("user") User user,
+                              BindingResult bindingResult,
+                              @RequestParam(value = "schoolId", required = false) Integer schoolId,
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
+        if (schoolId == null) {
+            model.addAttribute("schoolError", "Vui lòng chọn trường học cho giáo viên!");
+        }
+        if (userService.userExists(user.getId())) {
+            bindingResult.rejectValue("id", "error.user", "Tên tài khoản '" + user.getId() + "' đã tồn tại.");
+        }
+        if (userService.userExistss(user.getEmail())) {
+            bindingResult.rejectValue("email", "error.user", "Email '" + user.getEmail() + "' đã tồn tại.");
+        }
+        if (user.getPassWord() != null && user.getRePassWord() != null) {
+            if (!user.getPassWord().equals(user.getRePassWord())) {
+                bindingResult.rejectValue("rePassWord", "error.user", "Mật khẩu nhập lại không khớp!");
+            }
+        }
+        if (bindingResult.hasErrors() || schoolId == null) {
+            model.addAttribute("provinces", locationService.getAllProvinces());
+            model.addAttribute("selectedSchoolId", schoolId);
+            return "user/create-teacher";
+        }
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        user.setPassWord(passwordEncoder.encode(user.getPassWord()));
+        user.setRePassWord(user.getPassWord());
+        user.setImg("/img/avatar/default.jpg");
+        user.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
+
+        com.tttn.webthitracnghiem.model.School school = locationService.findSchoolById(schoolId);
+        user.setSchool(school);
+
+        com.tttn.webthitracnghiem.model.Role roleTeacher = roleService.findByName("ROLE_TEACHER");
+        if (roleTeacher != null) {
+            java.util.Set<com.tttn.webthitracnghiem.model.Role> roles = new java.util.HashSet<>();
+            roles.add(roleTeacher);
+            user.setRoles(roles);
+        }
+
+        userService.save(user);
+        redirectAttributes.addFlashAttribute("message", "Cấp tài khoản Giáo viên thành công cho " + user.getFullName() + " (" + (school != null ? school.getName() : "") + ")!");
+        return "redirect:/user/list";
     }
 
     @GetMapping("/user/editMember/{id}")

@@ -51,6 +51,9 @@ public class HomeController {
                 if (role.getAuthority().equals("ROLE_ADMIN")) {
                     return "redirect:/user/list";
                 }
+                if (role.getAuthority().equals("ROLE_TEACHER")) {
+                    return "redirect:/exam/list";
+                }
                 if (role.getAuthority().equals("ROLE_USER")) {
                     return "redirect:/";
                 }

@@ -36,15 +36,21 @@ public class MemberController {
     private IQService iqService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.ILocationService locationService;
 
     @GetMapping("/signup")
     public String showSignUp(Model model) {
         model.addAttribute("user", new User());
+        model.addAttribute("provinces", locationService.getAllProvinces());
+        model.addAttribute("schools", locationService.getSchools(null, null, null));
         return "register";
     }
 
     @PostMapping("/signup")
-    public String signUp(@Valid @ModelAttribute User user, BindingResult bindingResult, Model model) {
+    public String signUp(@Valid @ModelAttribute User user, BindingResult bindingResult,
+                         @RequestParam(value = "schoolId", required = false) Integer schoolId,
+                         Model model) {
         if (userService.userExists(user.getId())) {
             bindingResult.addError(new FieldError("user", "id", "Tài khoản '" + user.getId() + "' đã tồn tại."));
         }
@@ -61,12 +67,23 @@ public class MemberController {
             model.addAttribute("email", user.getEmail());
             model.addAttribute("pass", user.getPassWord());
             model.addAttribute("rePass", user.getRePassWord());
+            model.addAttribute("provinces", locationService.getAllProvinces());
+            model.addAttribute("schools", locationService.getSchools(null, null, null));
+            model.addAttribute("selectedSchoolId", schoolId);
             return "register";
         }
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         user.setPassWord(passwordEncoder.encode(user.getPassWord()));
         user.setRePassWord(user.getPassWord());
         user.setImg("/img/avatar/default.jpg");
+        user.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
+
+        // Gán trường học
+        if (schoolId != null) {
+            user.setSchool(locationService.findSchoolById(schoolId));
+        } else {
+            user.setSchool(locationService.findSchoolById(1)); // Trường tự do mặc định
+        }
 
         // Phân quyền User
         Role role = roleService.findByName("ROLE_USER");

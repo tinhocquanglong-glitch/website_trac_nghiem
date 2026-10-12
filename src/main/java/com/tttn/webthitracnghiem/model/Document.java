@@ -26,6 +26,13 @@ public class Document {
     @JsonBackReference
     private Subject subject;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
+
+    @Column(name = "is_public")
+    private Boolean isPublic = true;
+
     public Document() {
     }
 
@@ -102,5 +109,21 @@ public class Document {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

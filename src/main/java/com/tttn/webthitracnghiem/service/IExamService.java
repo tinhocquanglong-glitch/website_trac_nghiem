@@ -27,4 +27,10 @@ public interface IExamService {
     Page<Exam> findAllByNameExamContaining(String name, Pageable pageable);
     Page<Exam> findAllByNameExamContainingAndBySubject(int id, String name, Pageable pageable);
     Page<Exam> findAllByNameExamContainingAndByLesson(int id, String name, Pageable pageable);
+
+    // Teacher-scoped queries
+    Page<Exam> findByTeacher(String userId, Pageable pageable);
+    Page<Exam> findByTeacherAndSubject(String userId, int subjectId, Pageable pageable);
+    Page<Exam> findByTeacherAndNameContaining(String userId, String name, Pageable pageable);
+    Page<Exam> findByTeacherAndSubjectAndNameContaining(String userId, int subjectId, String name, Pageable pageable);
 }

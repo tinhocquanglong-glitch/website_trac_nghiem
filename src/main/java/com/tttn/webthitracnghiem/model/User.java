@@ -69,6 +69,10 @@ public class User {
     @JsonManagedReference
     private Set<News> news;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
+
 
     public User() {
     }
@@ -210,5 +214,13 @@ public class User {
 
     public void setNews(Set<News> news) {
         this.news = news;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
     }
 }

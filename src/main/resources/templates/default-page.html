@@ -53,8 +53,14 @@
             <div class="item">
                 <a href="/tai-lieu">Tài liệu</a>
             </div>
-            <div class="item" th:if="${session.admin != null}">
+            <div class="item" sec:authorize="hasAnyRole('ROLE_TEACHER', 'ROLE_ADMIN')">
+                <a href="/student-tracking" style="color: #ff9800; font-weight: 600;"><i class="fa-solid fa-table me-1"></i>Sổ theo dõi học sinh</a>
+            </div>
+            <div class="item" sec:authorize="hasRole('ROLE_ADMIN')">
                 <a href="/user/list">Quản lý</a>
+            </div>
+            <div class="item" sec:authorize="hasRole('ROLE_TEACHER')">
+                <a href="/exam/list">Quản trị</a>
             </div>
             <div class="item">
                 <a href="/aboutus">Về chúng tôi</a>
@@ -112,10 +118,27 @@
                         </div>
 
                         <div class="modal-line">
-                            <i class="fa-solid fa-circle-info"></i><a href="/about">Tài liệu</a>
+                            <i class="fa-solid fa-circle-info"></i><a href="/tai-lieu">Tài liệu</a>
                         </div>
 
-                        <a href="/contact" class="navb-button" type="button">Đăng nhập</a>
+                        <div class="modal-line" sec:authorize="hasAnyRole('ROLE_TEACHER', 'ROLE_ADMIN')">
+                            <i class="fa-solid fa-table"></i><a href="/student-tracking">Sổ theo dõi học sinh</a>
+                        </div>
+
+                        <div class="modal-line" sec:authorize="hasRole('ROLE_ADMIN')">
+                            <i class="fa-solid fa-gear"></i><a href="/user/list">Quản lý</a>
+                        </div>
+
+                        <div class="modal-line" sec:authorize="hasRole('ROLE_TEACHER')">
+                            <i class="fa-solid fa-gear"></i><a href="/exam/list">Quản trị</a>
+                        </div>
+
+                        <div sec:authorize="!isAuthenticated()">
+                            <a href="/login" class="navb-button" type="button">Đăng nhập</a>
+                        </div>
+                        <div sec:authorize="isAuthenticated()">
+                            <a href="/logout" class="navb-button" type="button">Đăng xuất</a>
+                        </div>
                     </div>
 
                     <div class="mobile-modal-footer">

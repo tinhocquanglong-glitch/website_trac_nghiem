@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -39,4 +38,22 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     List<Question> findBySubAndClass(@Param("subId") int subId, @Param("classId") int classId);
     @Query(nativeQuery = true,value = "SELECT * FROM question JOIN lesson ON lesson.id = question.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subId")
     List<Question> findBySubject(@Param("subId") int subId);
+
+    // Lọc câu hỏi cho giáo viên: câu hỏi công khai HOẶC của cùng trường
+    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id AND (question.is_public = true OR question.school_id = :schoolId)",
+            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id AND (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    Page<Question> findAllBySubjectAndSchool(@Param("id") Optional<Integer> id, @Param("schoolId") int schoolId, Pageable pageable);
+
+    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where (question.is_public = true OR question.school_id = :schoolId)",
+            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    Page<Question> findAllBySchool(@Param("schoolId") int schoolId, Pageable pageable);
+
+    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
+            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    Page<Question> findAllByTitleContainingAndSchool(@Param("name") String name, @Param("schoolId") int schoolId, Pageable pageable);
+
+    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
+            countQuery = "select COUNT(*) from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
+            nativeQuery = true)
+    Page<Question> findAllBySubjectAndTitleContainingAndSchool(@Param("id") int id, @Param("name") String name, @Param("schoolId") int schoolId, Pageable pageable);
 }

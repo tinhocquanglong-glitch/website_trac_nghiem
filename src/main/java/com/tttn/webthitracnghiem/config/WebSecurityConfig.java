@@ -33,17 +33,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                .formLogin().loginPage("/login").failureUrl("/login?error=true")//
+                .formLogin().loginPage("/login").failureUrl("/login?error=true")
                 .defaultSuccessUrl("/role", true)
                 .and()
-                .authorizeRequests().antMatchers("/role").permitAll()
-                .antMatchers("/user/**", "/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
-                        "/lesson/**", "/chapter/**", "/student-tracking/**").hasRole("ADMIN")
-                .and()
-                .authorizeRequests().antMatchers("/quiz1/**", "/subject/**", "/score/**", "/history/**"
-                        ,"/submit1/**","/view","/editMember","/editPass")
-                .access("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')");
-        ;
+                .authorizeRequests()
+                .antMatchers("/role", "/api/location/**").permitAll()
+                .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
+                .antMatchers("/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
+                        "/lesson/**", "/chapter/**", "/student-tracking/**").hasAnyRole("ADMIN", "TEACHER")
+                .antMatchers("/quiz1/**", "/subject/**", "/score/**", "/history/**",
+                        "/submit1/**", "/view", "/editMember", "/editPass").hasAnyRole("USER", "TEACHER", "ADMIN");
 //                .anyRequest().authenticated();
         http.authorizeRequests().and().rememberMe().tokenRepository(this.persistentTokenRepository()).
                 tokenValiditySeconds(60 * 60 * 24 * 30); // 30 ngày

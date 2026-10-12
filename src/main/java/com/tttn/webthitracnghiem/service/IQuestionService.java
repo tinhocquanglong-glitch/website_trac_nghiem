@@ -28,6 +28,12 @@ public interface IQuestionService {
     Page<Question> findAllBySubject(Optional<Integer> id, Pageable pageable);
     List<Question> findByLessonId(int id);
     List<Question> findByExam(int examId);
-    List<Question> findBySubAndClass(int subId,int classId);
+    List<Question> findBySubAndClass(int subId, int classId);
     List<Question> findBySub(int subId);
+
+    // School-scoped queries for teachers
+    Page<Question> findAllBySubjectAndSchool(Optional<Integer> subjectId, int schoolId, Pageable pageable);
+    Page<Question> findAllBySchool(int schoolId, Pageable pageable);
+    Page<Question> findAllByTitleContainingAndSchool(String title, int schoolId, Pageable pageable);
+    Page<Question> findBySubjectAndTitleAndSchool(int subjectId, String title, int schoolId, Pageable pageable);
 }

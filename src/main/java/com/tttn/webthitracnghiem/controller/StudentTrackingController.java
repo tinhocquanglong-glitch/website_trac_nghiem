@@ -1,13 +1,19 @@
 package com.tttn.webthitracnghiem.controller;
 
 import com.tttn.webthitracnghiem.model.AttendanceStatus;
+import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
+import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.repository.UserRepository;
+import com.tttn.webthitracnghiem.service.IUserService;
 import com.tttn.webthitracnghiem.service.StudentTrackingService;
 import com.tttn.webthitracnghiem.service.StudentTrackingExcelExporter;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,11 +32,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class StudentTrackingController {
     private final StudentTrackingService trackingService;
     private final StudentTrackingExcelExporter excelExporter;
+    private final IUserService userService;
+    private final UserRepository userRepository;
 
     public StudentTrackingController(StudentTrackingService trackingService,
                                      StudentTrackingExcelExporter excelExporter) {
+        this(trackingService, excelExporter, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public StudentTrackingController(StudentTrackingService trackingService,
+                                     StudentTrackingExcelExporter excelExporter,
+                                     IUserService userService,
+                                     UserRepository userRepository) {
         this.trackingService = trackingService;
         this.excelExporter = excelExporter;
+        this.userService = userService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -98,6 +116,16 @@ public class StudentTrackingController {
         model.addAttribute("month", selectedMonth);
         model.addAttribute("months", trackingService.monthsForSemester(semester));
         model.addAttribute("attendanceStatuses", AttendanceStatus.values());
+
+        // Thêm thông tin trường của giáo viên hiện tại để hiển thị nút đồng bộ
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            User currentUser = userService.findById(auth.getName());
+            if (currentUser != null && currentUser.getSchool() != null) {
+                model.addAttribute("currentUserSchool", currentUser.getSchool());
+            }
+        }
+
         return "student-tracking/sheet";
     }
 
@@ -110,6 +138,43 @@ public class StudentTrackingController {
         try {
             trackingService.addStudent(classId, fullName);
             redirectAttributes.addFlashAttribute("message", "Da them hoc sinh.");
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return redirectToSheet(classId, semester, safeMonth(semester, month));
+    }
+
+    /**
+     * Đồng bộ học sinh đang học trên web (cùng trường với giáo viên) vào lớp theo dõi
+     */
+    @PostMapping("/classes/{classId}/sync-students")
+    public String syncStudentsFromWeb(@PathVariable Integer classId,
+                                      @RequestParam(defaultValue = "1") int semester,
+                                      @RequestParam(required = false) Integer month,
+                                      RedirectAttributes redirectAttributes) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn chưa đăng nhập.");
+            return redirectToSheet(classId, semester, safeMonth(semester, month));
+        }
+
+        User currentUser = userService.findById(auth.getName());
+        School school = (currentUser != null) ? currentUser.getSchool() : null;
+        if (school == null) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Tài khoản của bạn chưa được gán trường học. Không thể đồng bộ.");
+            return redirectToSheet(classId, semester, safeMonth(semester, month));
+        }
+
+        try {
+            int schoolId = school.getId();
+            StudentTrackingService.SyncResult result = trackingService.syncStudentsFromWeb(
+                    classId, schoolId, () -> userRepository.findStudentsBySchool(schoolId));
+
+            redirectAttributes.addFlashAttribute("message",
+                    "Đồng bộ thành công! Đã thêm " + result.getAddedCount()
+                    + " học sinh mới (tổng " + result.getTotalFromWeb() + " học sinh trường "
+                    + school.getName() + " trên web).");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }

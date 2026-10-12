@@ -75,6 +75,10 @@
                     <input type="hidden" th:field="*{address}">
                 </div>
                 <div class="form-group row">
+                    <label class="col-lg-3">Trường học:</label>
+                    <label class="col-lg-9 text-primary fw-bold" th:text="${users.school != null ? users.school.name : 'Thí sinh tự do / Chưa gắn trường'}"></label>
+                </div>
+                <div class="form-group row">
                     <label class="col-lg-3">Số Điện Thoại:</label>
                     <label class="col-lg-9" th:text="${users.phoneNumber}"></label>
                     <input type="hidden" th:field="*{phoneNumber}" th:value="*{phoneNumber}" id="phone">

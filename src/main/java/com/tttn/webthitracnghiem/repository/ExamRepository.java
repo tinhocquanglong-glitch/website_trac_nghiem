@@ -28,4 +28,25 @@ public interface ExamRepository extends JpaRepository<Exam, Integer> {
     @Query(nativeQuery = true,value = "SELECT * FROM exam WHERE lesson_id = :lessonId AND name_exam like %:name%",
     countQuery = "SELECT COUNT(*) FROM exam WHERE lesson_id = :lessonId AND name_exam like %:name%")
     Page<Exam> findByNameExamContainingAndLesson(@Param("lessonId") int lessonId,@Param("name") String name, Pageable pageable);
+
+    // Lọc theo giáo viên tạo (teacher ownership)
+    @Query(nativeQuery = true,
+        value = "SELECT * FROM exam WHERE users_id = :userId",
+        countQuery = "SELECT COUNT(*) FROM exam WHERE users_id = :userId")
+    Page<Exam> findByUsersId(@Param("userId") String userId, Pageable pageable);
+
+    @Query(nativeQuery = true,
+        value = "SELECT exam.* FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subjectId AND exam.users_id = :userId",
+        countQuery = "SELECT COUNT(*) FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subjectId AND exam.users_id = :userId")
+    Page<Exam> findByUsersIdAndSubject(@Param("userId") String userId, @Param("subjectId") int subjectId, Pageable pageable);
+
+    @Query(nativeQuery = true,
+        value = "SELECT * FROM exam WHERE users_id = :userId AND name_exam LIKE %:name%",
+        countQuery = "SELECT COUNT(*) FROM exam WHERE users_id = :userId AND name_exam LIKE %:name%")
+    Page<Exam> findByUsersIdAndNameExamContaining(@Param("userId") String userId, @Param("name") String name, Pageable pageable);
+
+    @Query(nativeQuery = true,
+        value = "SELECT exam.* FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subjectId AND exam.users_id = :userId AND exam.name_exam LIKE %:name%",
+        countQuery = "SELECT COUNT(*) FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subjectId AND exam.users_id = :userId AND exam.name_exam LIKE %:name%")
+    Page<Exam> findByUsersIdAndSubjectAndNameExamContaining(@Param("userId") String userId, @Param("subjectId") int subjectId, @Param("name") String name, Pageable pageable);
 }

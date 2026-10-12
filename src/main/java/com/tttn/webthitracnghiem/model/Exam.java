@@ -46,6 +46,13 @@ public class Exam {
     @JsonBackReference
     private List<Question> questions;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
+
+    @Column(name = "is_public")
+    private Boolean isPublic = true;
+
     private long view;
     private long turn;
 
@@ -175,4 +182,19 @@ public class Exam {
         this.turn = turn;
     }
 
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 }

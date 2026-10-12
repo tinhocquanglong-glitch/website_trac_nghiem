@@ -59,6 +59,18 @@
                         <div class="form-group"><label for="fullName">Thêm học sinh</label><input id="fullName" name="fullName" class="form-control" maxlength="150" required></div>
                         <button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Thêm</button>
                     </form>
+                    <!-- Nút đồng bộ học sinh từ web - chỉ hiện khi giáo viên có trường -->
+                    <form th:if="${currentUserSchool != null}" method="post"
+                          th:action="@{/student-tracking/classes/{id}/sync-students(id=${trackingClass.id})}"
+                          style="margin-top: 8px;"
+                          onsubmit="return confirm('Đồng bộ học sinh trường ' + /*[[${currentUserSchool.name}]]*/ '' + ' vào lớp này? Học sinh đã có trong lớp sẽ không bị trùng.');">
+                        <input type="hidden" name="semester" th:value="${semester}">
+                        <input type="hidden" name="month" th:value="${month}">
+                        <button class="btn btn-info" type="submit" title="Lấy danh sách học sinh đang học trên web của trường bạn">
+                            <i class="fa fa-refresh" aria-hidden="true"></i>
+                            Đồng bộ HS trường <span th:text="${currentUserSchool.name}"></span>
+                        </button>
+                    </form>
                 </div>
 
                 <div class="tracking-local-search" role="search">

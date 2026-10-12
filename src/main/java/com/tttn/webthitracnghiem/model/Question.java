@@ -32,6 +32,13 @@ public class Question {
     @JsonManagedReference
     private Set<Exam> exams;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
+
+    @Column(name = "is_public")
+    private Boolean isPublic = true;
+
     public Question() {
         super();
     }
@@ -138,5 +145,20 @@ public class Question {
         this.exams = exams;
     }
 
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 }
 

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Cấp Tài Khoản Giáo Viên</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" crossorigin="anonymous">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <div class="right_col" role="main">
+            <div class="container">
+                <div class="h4 text-center mb-4">
+                    Cấp Tài Khoản Giáo Viên
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-md-9">
+                        <div class="card p-4 shadow-sm">
+                            <div class="alert alert-info py-2 mb-3">
+                                <i class="fa fa-info-circle"></i> Tài khoản giáo viên có quyền quản lý Ngân hàng câu hỏi, Đề thi, Tài liệu, Tin tức và Sổ theo dõi học sinh thuộc trường công tác.
+                            </div>
+
+                            <div class="alert alert-danger" th:if="${schoolError != null}" th:text="${schoolError}"></div>
+
+                            <form th:action="@{/user/create-teacher}" th:object="${user}" method="post">
+                                <h5 class="text-primary border-bottom pb-2 mb-3"><i class="fa fa-university"></i> 1. Đơn vị công tác & Trường học</h5>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="provinceSelect">
+                                            <option value="">-- Chọn Tỉnh / TP --</option>
+                                            <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Quận / Huyện</label>
+                                        <select class="form-control" id="districtSelect">
+                                            <option value="">-- Chọn Quận / Huyện --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Xã / Phường</label>
+                                        <select class="form-control" id="wardSelect">
+                                            <option value="">-- Chọn Xã / Phường --</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Trường học công tác <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <select class="form-control" name="schoolId" id="schoolSelect" required>
+                                            <option value="">-- Vui lòng chọn địa bàn ở trên để xem danh sách trường --</option>
+                                        </select>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-success mb-0" type="button" data-toggle="modal" data-target="#quickAddSchoolModal">
+                                                <i class="fa fa-plus"></i> Thêm trường mới
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5 class="text-primary border-bottom pb-2 mb-3 mt-4"><i class="fa fa-user"></i> 2. Thông tin tài khoản Giáo viên</h5>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Tên đăng nhập (Username) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" th:field="*{id}" placeholder="Ví dụ: gv_nguyenvana" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('id')}" th:errors="*{id}"></div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Họ và tên giáo viên <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" th:field="*{fullName}" placeholder="Ví dụ: Nguyễn Văn A" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Địa chỉ Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" th:field="*{email}" placeholder="teacher@school.edu.vn" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Số điện thoại <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="0912345678" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Địa chỉ thường trú / Nơi ở <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="*{address}" placeholder="Số nhà, đường, phường xã..." required>
+                                    <div class="text-danger small" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" th:field="*{passWord}" placeholder="Ít nhất 6 ký tự" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}"></div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Nhập lại mật khẩu <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" th:field="*{rePassWord}" placeholder="Khớp với mật khẩu trên" required>
+                                        <div class="text-danger small" th:if="${#fields.hasErrors('rePassWord')}" th:errors="*{rePassWord}"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group text-center mt-4">
+                                    <button type="submit" class="btn btn-primary px-4"><i class="fa fa-user-plus"></i> Cấp tài khoản giáo viên</button>
+                                    <a th:href="@{/user/list}" class="btn btn-secondary px-4"><i class="fa fa-arrow-left"></i> Quay lại</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm nhanh trường học -->
+<div class="modal fade" id="quickAddSchoolModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa fa-plus-circle"></i> Thêm trường học nhanh</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tên trường học <span class="text-danger">*</span></label>
+                    <input type="text" id="quickSchoolName" class="form-control" placeholder="Ví dụ: THPT Lê Quý Đôn" required>
+                </div>
+                <div class="form-group">
+                    <label>Mã trường</label>
+                    <input type="text" id="quickSchoolCode" class="form-control" placeholder="Ví dụ: THPT-LQD">
+                </div>
+                <div class="form-group">
+                    <label>Địa chỉ chi tiết</label>
+                    <input type="text" id="quickAddressDetail" class="form-control" placeholder="Số nhà, đường...">
+                </div>
+                <div id="quickSchoolAlert" class="alert alert-danger d-none py-1"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" id="btnSaveQuickSchool">Lưu trường</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+
+<script>
+$(document).ready(function() {
+    function loadSchools() {
+        var p = $('#provinceSelect').val();
+        var d = $('#districtSelect').val();
+        var w = $('#wardSelect').val();
+
+        var url = '/api/location/schools?';
+        if (w) url += 'wardCode=' + w;
+        else if (d) url += 'districtCode=' + d;
+        else if (p) url += 'provinceCode=' + p;
+
+        $.get(url, function(schools) {
+            var $schoolSelect = $('#schoolSelect');
+            $schoolSelect.empty();
+            if (schools.length === 0) {
+                $schoolSelect.append('<option value="">-- Chưa có trường nào ở khu vực này, bấm "Thêm trường mới" --</option>');
+            } else {
+                $schoolSelect.append('<option value="">-- Chọn trường học --</option>');
+                $.each(schools, function(i, s) {
+                    $schoolSelect.append('<option value="' + s.id + '">' + s.name + ' (' + (s.schoolCode ? s.schoolCode + ' - ' : '') + (s.districtName ? s.districtName + ', ' : '') + (s.provinceName ? s.provinceName : '') + ')</option>');
+                });
+            }
+        });
+    }
+
+    // Tải danh sách trường ban đầu
+    loadSchools();
+
+    $('#provinceSelect').change(function() {
+        var provCode = $(this).val();
+        $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
+        $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
+
+        if (provCode) {
+            $.get('/api/location/districts?provinceCode=' + provCode, function(data) {
+                $.each(data, function(index, d) {
+                    $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+                });
+            });
+        }
+        loadSchools();
+    });
+
+    $('#districtSelect').change(function() {
+        var distCode = $(this).val();
+        $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
+
+        if (distCode) {
+            $.get('/api/location/wards?districtCode=' + distCode, function(data) {
+                $.each(data, function(index, w) {
+                    $('#wardSelect').append('<option value="' + w.code + '">' + w.name + '</option>');
+                });
+            });
+        }
+        loadSchools();
+    });
+
+    $('#wardSelect').change(function() {
+        loadSchools();
+    });
+
+    // Xử lý thêm trường nhanh
+    $('#btnSaveQuickSchool').click(function() {
+        var name = $('#quickSchoolName').val().trim();
+        if (!name) {
+            $('#quickSchoolAlert').removeClass('d-none').text('Vui lòng nhập tên trường');
+            return;
+        }
+
+        var provCode = $('#provinceSelect').val() ? parseInt($('#provinceSelect').val()) : null;
+        var distCode = $('#districtSelect').val() ? parseInt($('#districtSelect').val()) : null;
+        var wardCode = $('#wardSelect').val() ? parseInt($('#wardSelect').val()) : null;
+
+        var provName = provCode ? $('#provinceSelect option:selected').text() : null;
+        var distName = distCode ? $('#districtSelect option:selected').text() : null;
+        var wardName = wardCode ? $('#wardSelect option:selected').text() : null;
+
+        var payload = {
+            name: name,
+            schoolCode: $('#quickSchoolCode').val().trim(),
+            provinceCode: provCode,
+            districtCode: distCode,
+            wardCode: wardCode,
+            provinceName: provName,
+            districtName: distName,
+            wardName: wardName,
+            addressDetail: $('#quickAddressDetail').val().trim(),
+            active: true
+        };
+
+        $.ajax({
+            url: '/api/location/schools',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(savedSchool) {
+                $('#quickAddSchoolModal').modal('hide');
+                $('#quickSchoolName').val('');
+                $('#quickSchoolCode').val('');
+                $('#quickAddressDetail').val('');
+                $('#quickSchoolAlert').addClass('d-none');
+
+                // Thêm trường mới vào dropdown và chọn luôn
+                $('#schoolSelect').append('<option value="' + savedSchool.id + '" selected>' + savedSchool.name + '</option>');
+                $('#schoolSelect').val(savedSchool.id);
+            },
+            error: function(xhr) {
+                $('#quickSchoolAlert').removeClass('d-none').text(xhr.responseText || 'Có lỗi xảy ra');
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

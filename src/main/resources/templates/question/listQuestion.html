@@ -124,6 +124,7 @@
                             <th>D</th>
                             <th>Đáp án</th>
                             <th>Độ khó</th>
+                            <th>Phạm vi</th>
                             <th class="text-center">
                                 <i class="far fa-plus-square"></i>
                             </th>
@@ -131,7 +132,7 @@
                         </thead>
                         <tbody>
                         <tr th:if="${questions.isEmpty()}">
-                            <td colspan="10" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ
+                            <td colspan="11" style="text-align: center;color: #ff2222;font-weight: bold;">Không có dữ
                                 liệu
                             </td>
                         </tr>
@@ -151,6 +152,14 @@
                                 <p th:case="'4'">D</p>
                             </td>
                             <td th:text="${question.level}"></td>
+                            <td>
+                                <span th:if="${question.isPublic == null or question.isPublic}" class="badge badge-success">
+                                    <i class="fa fa-globe"></i> CK
+                                </span>
+                                <span th:unless="${question.isPublic == null or question.isPublic}" class="badge badge-warning">
+                                    <i class="fa fa-lock"></i> NB
+                                </span>
+                            </td>
                             <td class="text-center wt-nowrap">
                                 <a th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
                                         class="fas fa-edit text-primary"></i></a>

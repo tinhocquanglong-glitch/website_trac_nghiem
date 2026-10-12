@@ -13,6 +13,8 @@ public class ExamRequest {
     private String usersId;
     private int lessonId;
     private List<QuestionRequest> questions;
+    private Boolean isPublic = true;
+    private Integer schoolId;
 
     public ExamRequest() {
     }
@@ -109,5 +111,21 @@ public class ExamRequest {
 
     public void setQuestions(List<QuestionRequest> questions) {
         this.questions = questions;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Integer getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Integer schoolId) {
+        this.schoolId = schoolId;
     }
 }

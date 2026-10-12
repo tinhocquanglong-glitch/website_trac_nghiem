@@ -23,6 +23,13 @@ public class News {
     @JsonBackReference
     private User users;
 
+    @ManyToOne
+    @JoinColumn(name = "school_id")
+    private School school;
+
+    @Column(name = "is_public")
+    private Boolean isPublic = true;
+
     public News() {
     }
 
@@ -99,5 +106,21 @@ public class News {
 
     public void setUsers(User users) {
         this.users = users;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 }

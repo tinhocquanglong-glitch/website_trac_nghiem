@@ -347,6 +347,26 @@
                                                th:value="${#session.getAttribute('admin').id}" id="author">
                                     </div>
                                 </div>
+                                <!-- Hidden schoolId of current user -->
+                                <input type="hidden" id="schoolId"
+                                       th:value="${#session.getAttribute('admin').school != null ? #session.getAttribute('admin').school.id : 0}">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Phạm vi đề thi</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="isPublicExam" id="isPublicTrue" value="true" checked>
+                                            <label class="form-check-label text-success" for="isPublicTrue">
+                                                <i class="fa fa-globe"></i> Công khai (tất cả có thể thi)
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="isPublicExam" id="isPublicFalse" value="false">
+                                            <label class="form-check-label text-warning" for="isPublicFalse">
+                                                <i class="fa fa-lock"></i> Nội bộ (chỉ học sinh trường mình thi)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div>
                                     <button type="button" class="btn btn-primary" id="saveExam"
                                             name="btn-submit">Thêm đề thi
@@ -879,6 +899,8 @@
                     nameExam: $("#nameExam").val(),
                     lessonId: $("input[name=lesson]:checked").val(),
                     usersId: $("#author").val(),
+                    isPublic: $("input[name=isPublicExam]:checked").val() === 'true',
+                    schoolId: parseInt($("#schoolId").val()) || 0,
                     questions: questionRequest
                 }
                 console.log(JSON.stringify(exam));
@@ -919,6 +941,9 @@
                 exam.append("subject", subjectId);
                 exam.append("lesson", lessonId);
                 exam.append("users", users);
+                exam.append("isPublic", $("input[name=isPublicExam]:checked").val() === 'true');
+                var sId = parseInt($("#schoolId").val()) || 0;
+                if (sId > 0) { exam.append("school", sId); }
                 $.ajax({
                     type: 'POST',
                     url: '/api/exam',
