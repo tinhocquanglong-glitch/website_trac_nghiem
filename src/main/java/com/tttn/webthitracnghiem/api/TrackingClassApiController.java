@@ -3,22 +3,22 @@ package com.tttn.webthitracnghiem.api;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.repository.StudentTrackingClassRepository;
+import com.tttn.webthitracnghiem.repository.UserRepository;
 import com.tttn.webthitracnghiem.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * REST API for tracking classes (used in exam creation form).
+ * REST API for tracking classes (used in exam creation form and GVCN student management modal).
  */
 @RestController
 @RequestMapping("/api/tracking-classes")
@@ -29,6 +29,9 @@ public class TrackingClassApiController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<List<TrackingClassDto>> listClasses() {
@@ -72,6 +75,54 @@ public class TrackingClassApiController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Trả về danh sách học sinh thuộc lớp – dùng cho modal quản lý HS của GVCN / Hiệu trưởng.
+     * Chỉ ROLE_ADMIN, ROLE_SCHOOL_ADMIN và GVCN của chính lớp đó mới được truy cập.
+     */
+    @GetMapping("/{classId}/students")
+    public ResponseEntity<?> getStudentsOfClass(@PathVariable("classId") Integer classId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return ResponseEntity.status(401).build();
+
+        boolean isAdmin      = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin= auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        Optional<StudentTrackingClass> classOpt = trackingClassRepository.findById(classId);
+        if (classOpt.isEmpty()) return ResponseEntity.notFound().build();
+
+        StudentTrackingClass cls = classOpt.get();
+
+        // Kiểm tra quyền: Admin / SchoolAdmin của trường đó / GVCN của lớp này
+        if (!isAdmin && !isSchoolAdmin) {
+            User currentUser = userService.findById(auth.getName());
+            boolean isHomeroom = cls.getHomeroomTeacher() != null
+                    && cls.getHomeroomTeacher().getId().equals(auth.getName());
+            if (!isHomeroom) {
+                return ResponseEntity.status(403).body("Bạn không có quyền xem lớp này.");
+            }
+        }
+
+        // Lấy học sinh từ User có class_id = classId
+        List<User> students = userRepository.findStudentsBySchool(
+                cls.getSchool() != null ? cls.getSchool().getId() : 0);
+        // Lọc đúng lớp
+        List<StudentDto> result = students.stream()
+                .filter(u -> u.getTrackingClass() != null && u.getTrackingClass().getId().equals(classId))
+                .map(u -> new StudentDto(
+                        u.getId(),
+                        u.getFullName(),
+                        u.getEmail(),
+                        u.getPhoneNumber(),
+                        u.getImg()
+                ))
+                .sorted((a, b) -> a.fullName != null ? a.fullName.compareToIgnoreCase(b.fullName != null ? b.fullName : "") : 0)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
+    // ─── DTOs ───
+
     public static class TrackingClassDto {
         public Integer id;
         public String className;
@@ -85,6 +136,22 @@ public class TrackingClassApiController {
             this.schoolYear = schoolYear;
             this.grade = grade;
             this.homeroomTeacher = homeroomTeacher;
+        }
+    }
+
+    public static class StudentDto {
+        public String id;
+        public String fullName;
+        public String email;
+        public String phoneNumber;
+        public String img;
+
+        public StudentDto(String id, String fullName, String email, String phoneNumber, String img) {
+            this.id = id;
+            this.fullName = fullName;
+            this.email = email;
+            this.phoneNumber = phoneNumber;
+            this.img = img;
         }
     }
 }

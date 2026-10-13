@@ -5,6 +5,7 @@ import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
 import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.repository.SchoolRepository;
 import com.tttn.webthitracnghiem.repository.UserRepository;
 import com.tttn.webthitracnghiem.service.IClassAssignmentService;
 import com.tttn.webthitracnghiem.service.ISubjectService;
@@ -31,7 +32,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/student-tracking")
@@ -40,6 +44,7 @@ public class StudentTrackingController {
     private final StudentTrackingExcelExporter excelExporter;
     private final IUserService userService;
     private final UserRepository userRepository;
+    private final SchoolRepository schoolRepository;
 
     @Autowired(required = false)
     private IClassAssignmentService assignmentService;
@@ -49,40 +54,127 @@ public class StudentTrackingController {
 
     public StudentTrackingController(StudentTrackingService trackingService,
                                      StudentTrackingExcelExporter excelExporter) {
-        this(trackingService, excelExporter, null, null);
+        this(trackingService, excelExporter, null, null, null);
     }
 
     @Autowired
     public StudentTrackingController(StudentTrackingService trackingService,
                                      StudentTrackingExcelExporter excelExporter,
                                      IUserService userService,
-                                     UserRepository userRepository) {
+                                     UserRepository userRepository,
+                                     SchoolRepository schoolRepository) {
         this.trackingService = trackingService;
         this.excelExporter = excelExporter;
         this.userService = userService;
         this.userRepository = userRepository;
+        this.schoolRepository = schoolRepository;
     }
 
     @GetMapping
     public String index(@RequestParam(name = "q", defaultValue = "") String query,
                         @RequestParam(required = false) Integer classId,
+                        @RequestParam(required = false) Integer schoolId,
+                        @RequestParam(required = false) Integer grade,
+                        @RequestParam(required = false) Boolean unassigned,
+                        @RequestParam(name = "address", defaultValue = "") String addressKeyword,
                         Model model) {
         String cleanQuery = query == null ? "" : query.trim();
+        addressKeyword = addressKeyword == null ? "" : addressKeyword.trim();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (auth != null && auth.isAuthenticated() && userService != null)
                 ? userService.findById(auth.getName()) : null;
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        boolean isAdminHierarchy = isAdmin && schoolRepository != null;
+        boolean canCreateClasses = isSchoolAdmin && !isAdmin;
 
         List<StudentTrackingClass> classes;
-        if (isAdmin) {
-            classes = trackingService.listClasses();
+        List<School> trackingSchools = new ArrayList<>();
+        Map<Integer, List<Integer>> gradesBySchool = new LinkedHashMap<>();
+        Map<Integer, Integer> classCountBySchool = new LinkedHashMap<>();
+        Map<Integer, Integer> classCountByGrade = new LinkedHashMap<>();
+        List<StudentTrackingClass> unassignedClasses = List.of();
+        School selectedSchool = null;
+        Integer selectedGrade = null;
+        boolean selectedUnassigned = Boolean.TRUE.equals(unassigned);
+
+        if (isAdminHierarchy) {
+            List<School> activeSchools = schoolRepository.findAllByActiveTrueOrderByNameAsc();
+            if (!addressKeyword.isEmpty()) {
+                for (School school : activeSchools) {
+                    if (SchoolAddressMatcher.matches(school, addressKeyword)) {
+                        trackingSchools.add(school);
+                    }
+                }
+            }
+            List<StudentTrackingClass> allClasses = trackingService.listClasses();
+            unassignedClasses = trackingService.listClassesWithoutSchool();
+            for (School school : trackingSchools) {
+                gradesBySchool.put(school.getId(), new ArrayList<>());
+                classCountBySchool.put(school.getId(), 0);
+            }
+            for (StudentTrackingClass trackingClass : allClasses) {
+                if (trackingClass.getSchool() == null) {
+                    continue;
+                }
+                Integer schoolIdForClass = trackingClass.getSchool().getId();
+                if (classCountBySchool.containsKey(schoolIdForClass)) {
+                    classCountBySchool.merge(schoolIdForClass, 1, Integer::sum);
+                }
+                if (trackingClass.getGrade() == null) {
+                    continue;
+                }
+                List<Integer> grades = gradesBySchool.get(schoolIdForClass);
+                if (grades != null && !grades.contains(trackingClass.getGrade())) {
+                    grades.add(trackingClass.getGrade());
+                }
+            }
+            gradesBySchool.values().forEach(grades -> grades.sort(Integer::compareTo));
+
+            if (schoolId != null) {
+                selectedSchool = (addressKeyword.isEmpty() ? activeSchools : trackingSchools).stream()
+                        .filter(school -> school.getId().equals(schoolId))
+                        .findFirst()
+                        .orElse(null);
+            }
+            if (selectedUnassigned) {
+                classes = unassignedClasses;
+            } else if (selectedSchool == null) {
+                classes = List.of();
+            } else {
+                List<StudentTrackingClass> schoolClasses = trackingService.listClassesForSchool(selectedSchool.getId());
+                List<Integer> availableGrades = new ArrayList<>();
+                for (StudentTrackingClass trackingClass : schoolClasses) {
+                    if (trackingClass.getGrade() != null) {
+                        if (!availableGrades.contains(trackingClass.getGrade())) {
+                            availableGrades.add(trackingClass.getGrade());
+                        }
+                    }
+                }
+                availableGrades.sort(Integer::compareTo);
+                gradesBySchool.put(selectedSchool.getId(), availableGrades);
+                for (Integer availableGrade : availableGrades) {
+                    int gradeClassCount = 0;
+                    for (StudentTrackingClass schoolClass : schoolClasses) {
+                        if (availableGrade.equals(schoolClass.getGrade())) {
+                            gradeClassCount++;
+                        }
+                    }
+                    classCountByGrade.put(availableGrade, gradeClassCount);
+                }
+                if (grade != null && availableGrades.contains(grade)) {
+                    selectedGrade = grade;
+                    classes = trackingService.listClassesForSchoolAndGrade(selectedSchool.getId(), grade);
+                } else {
+                    classes = List.of();
+                }
+            }
         } else if (isSchoolAdmin && currentUser != null && currentUser.getSchool() != null) {
             classes = trackingService.listClassesForSchool(currentUser.getSchool().getId());
         } else if (currentUser != null) {
-            Integer schoolId = (currentUser.getSchool() != null) ? currentUser.getSchool().getId() : null;
-            classes = trackingService.listClassesForTeacher(currentUser.getId(), schoolId);
+            Integer userSchoolId = (currentUser.getSchool() != null) ? currentUser.getSchool().getId() : null;
+            classes = trackingService.listClassesForTeacher(currentUser.getId(), userSchoolId);
         } else {
             classes = trackingService.listClasses();
         }
@@ -94,6 +186,22 @@ public class StudentTrackingController {
         model.addAttribute("searchPerformed", !cleanQuery.isEmpty());
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("isAdminOrSchoolAdmin", isAdmin || isSchoolAdmin);
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("isSchoolAdmin", isSchoolAdmin);
+        model.addAttribute("isAdminHierarchy", isAdminHierarchy);
+        model.addAttribute("canCreateClasses", canCreateClasses);
+        model.addAttribute("trackingSchools", trackingSchools);
+        model.addAttribute("gradesBySchool", gradesBySchool);
+        model.addAttribute("classCountBySchool", classCountBySchool);
+        model.addAttribute("classCountByGrade", classCountByGrade);
+        model.addAttribute("unassignedClasses", unassignedClasses);
+        model.addAttribute("unassignedClassCount", unassignedClasses.size());
+        model.addAttribute("selectedSchool", selectedSchool);
+        model.addAttribute("selectedSchoolId", schoolId);
+        model.addAttribute("selectedGrade", selectedGrade);
+        model.addAttribute("selectedUnassigned", selectedUnassigned);
+        model.addAttribute("addressKeyword", addressKeyword);
+        model.addAttribute("hasAddressSearch", !addressKeyword.isEmpty());
 
         if ((isAdmin || isSchoolAdmin) && userRepository != null) {
             if (currentUser != null && currentUser.getSchool() != null) {
@@ -138,9 +246,9 @@ public class StudentTrackingController {
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
 
-        // CHỈ ADMIN HOẶC ADMIN TRƯỜNG MỚI ĐƯỢC TẠO LỚP!
-        if (!isAdmin && !isSchoolAdmin) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên trường mới có quyền tạo lớp mới.");
+        // Cấu trúc lớp thuộc phạm vi từng trường, chỉ admin-hiệu trưởng được tạo.
+        if (!isSchoolAdmin || isAdmin) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ admin-hiệu trưởng mới có quyền tạo lớp mới.");
             return "redirect:/student-tracking";
         }
 
@@ -532,8 +640,8 @@ public class StudentTrackingController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
-        if (!isAdmin && !isSchoolAdmin) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên trường mới có quyền nhập lớp từ Excel.");
+        if (!isSchoolAdmin || isAdmin) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ admin-hiệu trưởng mới có quyền nhập lớp từ Excel.");
             return "redirect:/student-tracking";
         }
         int selectedMonth = safeMonth(semester, month);

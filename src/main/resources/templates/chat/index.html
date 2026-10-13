@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chat nội bộ</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/chat.css}" rel="stylesheet">
+</head>
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <main class="right_col chat-page" role="main">
+            <section class="chat-shell" th:attr="data-current-user=${#authentication.name}">
+                <header class="chat-heading">
+                    <div>
+                        <p class="chat-eyebrow">Trao đổi nội bộ</p>
+                        <h1>Chat theo vai trò và trường</h1>
+                        <p class="chat-caption">Trao đổi nhanh giữa quản trị hệ thống, ban giám hiệu và giáo viên.</p>
+                    </div>
+                    <span id="connectionStatus" class="chat-status is-connecting">Đang kết nối</span>
+                </header>
+
+                <div class="chat-layout">
+                    <aside class="chat-rooms" aria-label="Danh sách nhóm chat">
+                        <div class="chat-panel-heading">
+                            <span>Nhóm chat của bạn</span>
+                            <span id="roomCount" class="room-count">0</span>
+                        </div>
+                        <div id="roomList" class="room-list" aria-live="polite">
+                            <div class="room-placeholder">Đang tải nhóm chat...</div>
+                        </div>
+                    </aside>
+
+                    <section class="chat-conversation" aria-label="Nội dung trò chuyện">
+                        <div id="emptyState" class="chat-empty-state">
+                            <i class="fa fa-comments-o" aria-hidden="true"></i>
+                            <h2>Chọn một nhóm để bắt đầu</h2>
+                            <p>Lịch sử tin nhắn và tin mới sẽ hiển thị ở đây.</p>
+                        </div>
+                        <div id="conversation" class="conversation-content is-hidden">
+                            <div class="conversation-header">
+                                <div>
+                                    <p id="roomType" class="conversation-kicker"></p>
+                                    <h2 id="roomName">-</h2>
+                                </div>
+                                <span id="schoolName" class="conversation-school"></span>
+                            </div>
+                            <div id="messageList" class="message-list" aria-live="polite"></div>
+                            <form id="messageForm" class="message-composer" autocomplete="off">
+                                <label class="sr-only" for="messageInput">Nội dung tin nhắn</label>
+                                <textarea id="messageInput" maxlength="2000" rows="1"
+                                          placeholder="Viết tin nhắn..." required></textarea>
+                                <button class="send-button" type="submit" title="Gửi tin nhắn">
+                                    <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                                    <span>Gửi</span>
+                                </button>
+                            </form>
+                            <p id="chatError" class="chat-error" role="alert"></p>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </main>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/chat.js}"></script>
+</body>
+</html>

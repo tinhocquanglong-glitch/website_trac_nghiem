@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Học sinh lớp chủ nhiệm</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <style>
+        .page-banner {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: #fff;
+            border-radius: 10px;
+            padding: 18px 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .page-banner h4 { margin: 0; font-weight: 700; font-size: 1.25rem; }
+        .page-banner .sub { opacity: 0.9; font-size: 0.88rem; margin-top: 4px; }
+        .drill-section {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .grade-chip {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1565c0;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 4px 14px;
+            border-radius: 16px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #90caf9;
+        }
+        .class-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #cfd8dc;
+            background: #f8fafc;
+            color: #37474f;
+            text-decoration: none !important;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+        }
+        .class-pill:hover {
+            border-color: #1976d2;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .class-pill.active {
+            background: #1976d2;
+            color: #fff;
+            border-color: #1565c0;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+        }
+        .class-pill .gvcn-tag {
+            font-size: 0.75rem;
+            opacity: 0.85;
+            margin-left: 6px;
+        }
+        .tool-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .student-table th {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.84rem;
+            vertical-align: middle;
+        }
+        .student-table td {
+            vertical-align: middle;
+            font-size: 0.88rem;
+        }
+        .avatar-img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="container-fluid" style="max-width: 1350px; padding-top: 15px;">
+
+                <!-- Alert message -->
+                <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle mr-2"></i><strong th:text="${message}"></strong>
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
+                <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle mr-2"></i><strong th:text="${error}"></strong>
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
+
+                <!-- ══════════ BANNER TIÊU ĐỀ ══════════ -->
+                <div class="page-banner">
+                    <div>
+                        <h4>
+                            <i class="fas fa-graduation-cap mr-2"></i>
+                            <span th:if="${isAdmin}">Quản lý Học sinh theo Lớp chủ nhiệm (Toàn hệ thống)</span>
+                            <span th:if="${isSchoolAdmin and !isAdmin}">Quản lý Học sinh các Lớp – <span th:text="${targetSchool != null ? targetSchool.name : ''}"></span></span>
+                            <span th:if="${!isAdmin and !isSchoolAdmin}">Quản lý Học sinh – Lớp chủ nhiệm</span>
+                        </h4>
+                        <div class="sub">
+                            <span th:if="${targetSchool != null}"><i class="fas fa-school mr-1"></i>Trường: <strong th:text="${targetSchool.name}"></strong></span>
+                            <span th:if="${selectedClass != null}" class="ml-3">
+                                | Lớp: <strong th:text="${selectedClass.className}"></strong>
+                                (Khối <span th:text="${selectedClass.grade != null ? selectedClass.grade : '—'}"></span>, Năm <span th:text="${selectedClass.schoolYear}"></span>)
+                            </span>
+                            <span th:if="${selectedClass != null and selectedClass.homeroomTeacher != null}" class="ml-3">
+                                | GVCN: <strong th:text="${selectedClass.homeroomTeacher.fullName}"></strong>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center" style="gap: 8px;">
+                        <a th:if="${isAdmin}" th:href="@{/user/list}" class="btn btn-outline-light btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i> DS Quản lý trường
+                        </a>
+                        <a th:if="${selectedClass != null}" th:href="@{'/student-tracking/classes/' + ${selectedClass.id}}" class="btn btn-light btn-sm">
+                            <i class="fas fa-table mr-1"></i> Sổ theo dõi lớp
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ══════════ KHỐI 1: CHỌN TRƯỜNG (DÀNH CHO ADMIN TOÀN QUYỀN) ══════════ -->
+                <div th:if="${isAdmin}" class="drill-section mb-3">
+                    <form method="get" th:action="@{/teacher/homeroom}" class="mb-3">
+                        <label for="homeroomAddressKeyword" class="font-weight-bold text-muted">
+                            <i class="fas fa-search-location mr-1"></i>Tìm trường theo địa chỉ
+                        </label>
+                        <div class="input-group">
+                            <input id="homeroomAddressKeyword" type="text" name="address" class="form-control"
+                                   th:value="${addressKeyword}"
+                                   placeholder="Nhập một phần tỉnh, huyện hoặc xã/phường...">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i>Tìm trường</button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Có thể nhập không dấu hoặc chỉ một trong ba cấp địa chỉ.</small>
+                    </form>
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 12px;">
+                        <span class="font-weight-bold text-muted" style="font-size: 0.9rem;">
+                            <i class="fas fa-university mr-1"></i>Bước 1: Chọn Trường học:
+                        </span>
+                        <div class="d-flex flex-wrap" style="gap: 6px;" th:if="${!allSchools.isEmpty()}">
+                            <a th:each="sch : ${allSchools}"
+                               th:href="@{/teacher/homeroom(schoolId=${sch.id},address=${addressKeyword})}"
+                               th:class="'btn btn-sm ' + (${targetSchool != null and targetSchool.id == sch.id} ? 'btn-primary font-weight-bold' : 'btn-outline-secondary')">
+                                <span th:text="${sch.name}"></span>
+                            </a>
+                        </div>
+                        <span class="text-muted" th:if="${allSchools.isEmpty()}">
+                            Nhập địa chỉ để hiển thị các trường phù hợp.
+                        </span>
+                    </div>
+                </div>
+
+                <!-- ══════════ KHỐI 2: PHÂN CẤP THEO KHỐI VÀ LỚP (ADMIN HOẶC HIỆU TRƯỞNG) ══════════ -->
+                <div th:if="${(isAdmin or isSchoolAdmin) and classesByGrade != null and !classesByGrade.isEmpty()}" class="drill-section mb-3">
+                    <div class="font-weight-bold text-muted mb-2" style="font-size: 0.9rem;">
+                        <i class="fas fa-layer-group mr-1"></i>
+                        <span th:if="${isAdmin}">Bước 2: Chọn Khối và Lớp học (kèm GVCN):</span>
+                        <span th:if="${!isAdmin}">Danh sách Khối và Lớp học trong trường:</span>
+                    </div>
+
+                    <!-- Lặp qua từng khối -->
+                    <div th:each="gradeEntry : ${classesByGrade}" class="mb-2 p-2 rounded" style="background: #fafafa; border: 1px dashed #cfd8dc;">
+                        <div class="d-flex align-items-center flex-wrap">
+                            <span class="grade-chip">
+                                <i class="fas fa-award mr-1"></i>
+                                <span th:if="${gradeEntry.key != 0}">Khối <span th:text="${gradeEntry.key}"></span></span>
+                                <span th:unless="${gradeEntry.key != 0}">Lớp tự do</span>
+                            </span>
+                            <div class="d-flex flex-wrap" style="gap: 6px;">
+                                <a th:each="cls : ${gradeEntry.value}"
+                                   th:href="@{/teacher/homeroom(schoolId=${targetSchool != null ? targetSchool.id : ''}, classId=${cls.id})}"
+                                   th:class="'class-pill ' + (${selectedClass != null and selectedClass.id == cls.id} ? 'active' : '')">
+                                    <i class="fas fa-door-open mr-1"></i>
+                                    <strong th:text="${cls.className}"></strong>
+                                    <span class="gvcn-tag" th:if="${cls.homeroomTeacher != null}">
+                                        · GVCN: <span th:text="${cls.homeroomTeacher.fullName}"></span>
+                                    </span>
+                                    <span class="gvcn-tag text-warning" th:if="${cls.homeroomTeacher == null}">
+                                        · Chưa có GVCN
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ KHỐI 3: DANH SÁCH LỚP DÀNH CHO GIÁO VIÊN BÌNH THƯỜNG ══════════ -->
+                <div th:if="${!isAdmin and !isSchoolAdmin and availableClasses != null and !availableClasses.isEmpty()}" class="drill-section mb-3">
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+                        <span class="font-weight-bold text-muted mr-2" style="font-size: 0.9rem;">Lớp chủ nhiệm của bạn:</span>
+                        <a th:each="c : ${availableClasses}"
+                           th:href="@{/teacher/homeroom(classId=${c.id})}"
+                           th:class="'class-pill ' + (${selectedClass != null and selectedClass.id == c.id} ? 'active' : '')">
+                            <i class="fas fa-door-open mr-1"></i>
+                            <strong th:text="${c.className}"></strong>
+                            <span class="badge badge-light ml-2" th:text="${c.schoolYear}"></span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Nếu không tìm thấy lớp nào -->
+                <div th:if="${availableClasses == null or availableClasses.isEmpty()}" class="card shadow-sm border-0 mb-4">
+                    <div class="card-body text-center py-5 text-muted">
+                        <i class="fas fa-chalkboard fa-3x mb-3 text-secondary"></i>
+                        <h5>Chưa có lớp học nào</h5>
+                        <p th:if="${isAdmin or isSchoolAdmin}">Trường học này hiện chưa có lớp học nào được tạo.</p>
+                        <p th:if="${!isAdmin and !isSchoolAdmin}">Bạn hiện chưa được phân công làm giáo viên chủ nhiệm lớp nào.</p>
+                    </div>
+                </div>
+
+                <!-- ══════════ KHỐI 4: BẢNG HỌC SINH CỦA LỚP ĐƯỢC CHỌN ══════════ -->
+                <div th:if="${selectedClass != null}">
+
+                    <!-- Toolbar tìm kiếm & chức năng -->
+                    <div class="tool-panel">
+                        <!-- Form tìm kiếm học sinh -->
+                        <form method="get" th:action="@{/teacher/homeroom}" class="d-flex align-items-center" style="gap: 8px; max-width: 420px; flex: 1;">
+                            <input type="hidden" name="schoolId" th:value="${targetSchool != null ? targetSchool.id : ''}">
+                            <input type="hidden" name="classId" th:value="${selectedClass.id}">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-sm" name="keyword" th:value="${keyword}"
+                                       placeholder="Tìm tên, tài khoản, SĐT học sinh...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary btn-sm" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <a th:if="${keyword != null and !keyword.isEmpty()}"
+                               th:href="@{/teacher/homeroom(schoolId=${targetSchool != null ? targetSchool.id : ''}, classId=${selectedClass.id})}"
+                               class="btn btn-outline-secondary btn-sm" title="Đặt lại">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </form>
+
+                        <!-- Các nút thêm / tiếp nhận học sinh -->
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                            <button type="button" class="btn btn-warning btn-sm text-dark font-weight-bold"
+                                    data-toggle="modal" data-target="#addExistingStudentModal">
+                                <i class="fas fa-user-check mr-1"></i>
+                                Tiếp nhận HS tự do
+                                <span class="badge badge-dark ml-1"
+                                      th:text="${unassignedStudents != null ? unassignedStudents.size() : 0}"></span>
+                            </button>
+
+                            <button type="button" class="btn btn-success btn-sm font-weight-bold"
+                                    data-toggle="modal" data-target="#createStudentModal">
+                                <i class="fas fa-user-plus mr-1"></i> Cấp tài khoản HS mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Thông tin sĩ số -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted" style="font-size: 0.88rem;">
+                            Sĩ số lớp <strong class="text-primary" th:text="${selectedClass.className}"></strong>:
+                            <strong class="text-dark" th:text="${totalStudents}">0</strong> học sinh
+                            <span th:if="${keyword != null and !keyword.isEmpty()}"
+                                  th:text="'(lọc theo: &quot;' + ${keyword} + '&quot;)'"></span>
+                        </span>
+                        <span class="text-muted" style="font-size: 0.85rem;" th:if="${selectedClass.homeroomTeacher != null}">
+                            GVCN: <strong class="text-dark" th:text="${selectedClass.homeroomTeacher.fullName}"></strong>
+                            <span class="text-muted" th:text="'(@' + ${selectedClass.homeroomTeacher.id} + ')'"></span>
+                        </span>
+                    </div>
+
+                    <!-- Bảng học sinh -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover student-table mb-0">
+                                <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 50px;">STT</th>
+                                    <th>Học sinh</th>
+                                    <th>Tài khoản</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Địa chỉ</th>
+                                    <th class="text-center" style="width: 120px;">Hành động</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${students.isEmpty()}">
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fas fa-users-slash fa-2x mb-2 d-block text-secondary"></i>
+                                        <span th:if="${keyword != null and !keyword.isEmpty()}">
+                                            Không tìm thấy học sinh nào phù hợp với từ khóa "<strong><span th:text="${keyword}"></span></strong>".
+                                        </span>
+                                        <span th:unless="${keyword != null and !keyword.isEmpty()}">
+                                            Lớp hiện tại chưa có học sinh nào.
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:each="student, stat : ${students}">
+                                    <td class="text-center font-weight-bold text-muted" th:text="${stat.count}"></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img th:src="@{${student.img != null ? student.img : '/img/avatar/default.jpg'}}"
+                                                 alt="Avatar" class="avatar-img">
+                                            <div>
+                                                <div class="font-weight-bold text-dark" th:text="${student.fullName}"></div>
+                                                <small class="text-muted" th:text="${student.createDate != null ? 'Tham gia: ' + student.createDate : ''}"></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light border font-weight-bold text-primary" th:text="${student.id}"></span>
+                                    </td>
+                                    <td><span th:text="${student.email != null ? student.email : '—'}"></span></td>
+                                    <td><span th:text="${student.phoneNumber != null ? student.phoneNumber : '—'}"></span></td>
+                                    <td><small class="text-muted" th:text="${student.address != null ? student.address : '—'}"></small></td>
+                                    <td class="text-center">
+                                        <a th:href="@{'/user/editMember/' + ${student.id}}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Chỉnh sửa thông tin">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <!-- Form Rút học sinh khỏi lớp: an toàn không dùng th:onsubmit chuỗi -->
+                                        <form th:action="@{/teacher/homeroom/remove-student}" method="post" class="d-inline ml-1"
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn rút học sinh này khỏi lớp?');">
+                                            <input type="hidden" name="classId" th:value="${selectedClass.id}">
+                                            <input type="hidden" name="studentUsername" th:value="${student.id}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Rút học sinh khỏi lớp">
+                                                <i class="fas fa-user-minus"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- end if selectedClass != null -->
+
+            </div>
+        </div>
+        <!-- /page content -->
+
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+
+<!-- Modal 1: Cấp tài khoản học sinh mới -->
+<div th:if="${selectedClass != null}" class="modal fade" id="createStudentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 10px; overflow: hidden;">
+            <form th:action="@{/teacher/homeroom/create-student}" method="post">
+                <input type="hidden" name="classId" th:value="${selectedClass.id}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-user-plus mr-2"></i>Cấp tài khoản học sinh mới
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body" style="padding: 22px;">
+                    <div class="alert alert-light border mb-3">
+                        Lớp tiếp nhận: <strong class="text-success" th:text="${selectedClass.className}"></strong>
+                        (Khối <span th:text="${selectedClass.grade}"></span>, Năm <span th:text="${selectedClass.schoolYear}"></span>)
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Tên đăng nhập (Tài khoản) <span class="text-danger">*</span></label>
+                        <input type="text" name="username" class="form-control" placeholder="Ví dụ: hs_nguyenvana" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Họ và tên học sinh <span class="text-danger">*</span></label>
+                        <input type="text" name="fullName" class="form-control" placeholder="Ví dụ: Nguyễn Văn A" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                        <input type="text" name="password" class="form-control" value="123456" required>
+                        <small class="form-text text-muted">Mật khẩu mặc định khuyến nghị: 123456</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Email (tùy chọn)</label>
+                        <input type="email" name="email" class="form-control" placeholder="nguyenvana@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Số điện thoại (tùy chọn)</label>
+                        <input type="text" name="phoneNumber" class="form-control" placeholder="0912345678">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-success font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Tạo tài khoản &amp; Thêm vào lớp
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Tiếp nhận học sinh tự do -->
+<div th:if="${selectedClass != null}" class="modal fade" id="addExistingStudentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 10px; overflow: hidden;">
+            <form th:action="@{/teacher/homeroom/add-student}" method="post">
+                <input type="hidden" name="classId" th:value="${selectedClass.id}">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-user-check mr-2"></i>Tiếp nhận học sinh tự do vào lớp
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body" style="padding: 22px;">
+                    <div class="alert alert-light border mb-3">
+                        Lớp tiếp nhận: <strong class="text-warning text-dark" th:text="${selectedClass.className}"></strong>
+                    </div>
+
+                    <div th:if="${unassignedStudents == null or unassignedStudents.isEmpty()}" class="text-center py-4 text-muted">
+                        <i class="fas fa-info-circle fa-2x mb-2 d-block text-secondary"></i>
+                        Không có học sinh tự do nào đang chờ vào lớp.
+                    </div>
+
+                    <div th:if="${unassignedStudents != null and !unassignedStudents.isEmpty()}" class="form-group">
+                        <label class="font-weight-bold">Chọn học sinh chưa có lớp:</label>
+                        <select name="studentUsername" class="form-control" required size="6" style="height: auto;">
+                            <option th:each="s : ${unassignedStudents}"
+                                    th:value="${s.id}"
+                                    th:text="${s.fullName} + ' (@' + ${s.id} + ') - Cấp ' + (${s.schoolLevel != null ? s.schoolLevel : '—'})">
+                            </option>
+                        </select>
+                        <small class="form-text text-muted mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>Học sinh sau khi tiếp nhận sẽ chính thức thuộc sĩ số lớp <span th:text="${selectedClass.className}"></span>.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                    <button th:if="${unassignedStudents != null and !unassignedStudents.isEmpty()}"
+                            type="submit" class="btn btn-warning text-dark font-weight-bold">
+                        <i class="fas fa-check mr-1"></i> Xác nhận tiếp nhận
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+</body>
+</html>

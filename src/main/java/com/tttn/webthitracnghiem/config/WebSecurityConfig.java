@@ -38,11 +38,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/role", "/api/location/**").permitAll()
+                .antMatchers("/chat/**", "/api/chat/**", "/ws", "/ws/**")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/school-admin/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/create-teacher").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
                 .antMatchers("/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
-                        "/lesson/**", "/chapter/**", "/student-tracking/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
+                        "/lesson/**", "/chapter/**", "/student-tracking/**", "/teacher/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/quiz1/**", "/subject/**", "/score/**", "/history/**",
                         "/submit1/**", "/view", "/editMember", "/editPass").hasAnyRole("USER", "TEACHER", "SCHOOL_ADMIN", "ADMIN");
 //                .anyRequest().authenticated();

@@ -25,7 +25,81 @@
                 <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
                 <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
 
-                <div class="tracking-actions" th:if="${isAdminOrSchoolAdmin == true}">
+                <section class="tracking-hierarchy" th:if="${isAdminHierarchy == true}" aria-labelledby="tracking-hierarchy-title">
+                    <form method="get" th:if="${selectedSchool == null and selectedUnassigned != true}"
+                          th:action="@{/student-tracking}" class="tracking-address-search mb-3">
+                        <label for="trackingAddressKeyword">Tìm trường theo địa chỉ</label>
+                        <div class="input-group">
+                            <input id="trackingAddressKeyword" name="address" class="form-control"
+                                   th:value="${addressKeyword}"
+                                   placeholder="Nhập một phần tỉnh, huyện hoặc xã/phường...">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i> Tìm trường</button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Có thể nhập không dấu hoặc chỉ một trong ba cấp địa chỉ.</small>
+                    </form>
+                    <div class="tracking-section-heading">
+                        <h2 id="tracking-hierarchy-title" th:if="${selectedSchool == null and selectedUnassigned != true}">Chọn trường để xem sổ theo dõi</h2>
+                        <h2 th:if="${selectedUnassigned == true}">Lớp chưa gán trường</h2>
+                        <h2 th:if="${selectedSchool != null and selectedGrade == null}"
+                            th:text="|${selectedSchool.name} - Chọn khối|"></h2>
+                        <h2 th:if="${selectedSchool != null and selectedGrade != null}"
+                            th:text="|${selectedSchool.name} - Khối ${selectedGrade}|"></h2>
+                        <p th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch != true}">Nhập địa chỉ để tìm trường, sau đó chọn trường để tiếp tục đến danh sách khối.</p>
+                        <p th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true}">Chọn một trường trong kết quả tìm kiếm để tiếp tục đến danh sách khối.</p>
+                        <p th:if="${selectedUnassigned == true}">Các lớp này chưa được gắn với trường nên được tách riêng khỏi thống kê từng trường.</p>
+                        <p th:if="${selectedSchool != null and selectedGrade == null}">Chọn khối để mở sổ theo dõi các lớp thuộc trường này.</p>
+                    </div>
+
+                    <div class="tracking-hierarchy-grid" th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true and !#lists.isEmpty(trackingSchools)}">
+                        <a class="tracking-hierarchy-item" th:each="school : ${trackingSchools}"
+                           th:href="@{/student-tracking(schoolId=${school.id},address=${addressKeyword})}">
+                            <span class="tracking-hierarchy-item-title" th:text="${school.name}"></span>
+                            <span class="tracking-hierarchy-item-meta" th:text="${school.fullLocationString}"></span>
+                            <span class="tracking-hierarchy-item-meta"
+                                  th:text="|${classCountBySchool.get(school.id) != null ? classCountBySchool.get(school.id) : 0} lớp theo dõi|">
+                                0 lớp theo dõi
+                            </span>
+                        </a>
+                    </div>
+                    <p class="tracking-empty" th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true and #lists.isEmpty(trackingSchools)}" role="status">
+                        Không tìm thấy trường phù hợp với địa chỉ đã nhập.
+                    </p>
+
+                    <a class="tracking-hierarchy-item tracking-hierarchy-item-warning"
+                       th:if="${selectedSchool == null and selectedUnassigned != true and unassignedClassCount > 0}"
+                       th:href="@{/student-tracking(unassigned=true)}">
+                        <span class="tracking-hierarchy-item-title">Chưa gán trường</span>
+                        <span class="tracking-hierarchy-item-meta"
+                              th:text="|${unassignedClassCount} lớp cần rà soát|">0 lớp cần rà soát</span>
+                    </a>
+
+                    <div class="tracking-hierarchy-grid" th:if="${selectedSchool != null and selectedGrade == null and !#lists.isEmpty(gradesBySchool[selectedSchool.id])}">
+                        <a class="tracking-hierarchy-item" th:each="gradeItem : ${gradesBySchool[selectedSchool.id]}"
+                           th:href="@{/student-tracking(schoolId=${selectedSchool.id},grade=${gradeItem})}">
+                            <span class="tracking-hierarchy-item-title" th:text="|Khối ${gradeItem}|"></span>
+                            <span class="tracking-hierarchy-item-meta"
+                                   th:text="|${classCountByGrade.get(gradeItem) != null ? classCountByGrade.get(gradeItem) : 0} lớp|">
+                            </span>
+                        </a>
+                    </div>
+                    <p class="tracking-empty" th:if="${selectedSchool != null and selectedGrade == null and #lists.isEmpty(gradesBySchool[selectedSchool.id])}" role="status">
+                        Trường này chưa có dữ liệu khối.
+                    </p>
+
+                    <div class="tracking-hierarchy-breadcrumb" th:if="${selectedSchool != null or selectedUnassigned == true}">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/student-tracking}">
+                            <i class="fa fa-arrow-left" aria-hidden="true"></i> Danh sách trường
+                        </a>
+                        <a class="btn btn-sm btn-outline-secondary" th:if="${selectedGrade != null}"
+                           th:href="@{/student-tracking(schoolId=${selectedSchool.id})}">
+                            <i class="fa fa-level-up" aria-hidden="true"></i> Danh sách khối
+                        </a>
+                    </div>
+                </section>
+
+                <div class="tracking-actions" th:if="${canCreateClasses == true}">
                     <section class="tracking-panel" aria-labelledby="create-class-title">
                         <h2 id="create-class-title">Thêm lớp</h2>
                         <form method="post" th:action="@{/student-tracking/classes}" class="tracking-form-row">
@@ -113,7 +187,7 @@
                     </section>
                 </div>
 
-                <section class="tracking-search" aria-labelledby="student-search-title">
+                <section class="tracking-search" th:if="${isAdminHierarchy != true or selectedGrade != null or selectedUnassigned == true}" aria-labelledby="student-search-title">
                     <div class="tracking-section-heading">
                         <div>
                             <h2 id="student-search-title">Tìm học sinh</h2>
@@ -121,6 +195,8 @@
                         </div>
                     </div>
                     <form method="get" th:action="@{/student-tracking}" class="tracking-search-form" role="search">
+                        <input type="hidden" name="schoolId" th:if="${isAdminHierarchy == true and selectedSchool != null}" th:value="${selectedSchool.id}">
+                        <input type="hidden" name="grade" th:if="${isAdminHierarchy == true and selectedGrade != null}" th:value="${selectedGrade}">
                         <div class="form-group tracking-search-query">
                             <label for="studentQuery">Họ và tên học sinh</label>
                             <input id="studentQuery" type="search" name="q" class="form-control"
@@ -138,9 +214,17 @@
                         <button class="btn btn-primary" type="submit">
                             <i class="fa fa-search" aria-hidden="true"></i> Tìm kiếm
                         </button>
-                        <a class="btn btn-outline-secondary" th:if="${searchPerformed}" th:href="@{/student-tracking}">
+                        <a class="btn btn-outline-secondary" th:if="${searchPerformed and isAdminHierarchy != true}" th:href="@{/student-tracking}">
                             Xóa lọc
                         </a>
+                         <a class="btn btn-outline-secondary" th:if="${searchPerformed and isAdminHierarchy == true and selectedUnassigned != true}"
+                           th:href="@{/student-tracking(schoolId=${selectedSchool.id},grade=${selectedGrade})}">
+                            Xóa lọc
+                        </a>
+                         <a class="btn btn-outline-secondary" th:if="${searchPerformed and selectedUnassigned == true}"
+                            th:href="@{/student-tracking(unassigned=true)}">
+                             Xóa lọc
+                         </a>
                     </form>
 
                     <div class="tracking-search-results" th:if="${searchPerformed}">
@@ -168,7 +252,7 @@
                     </div>
                 </section>
 
-                <div class="tracking-table-wrap">
+                <div class="tracking-table-wrap" th:if="${isAdminHierarchy != true or selectedGrade != null or selectedUnassigned == true}">
                     <table class="table table-bordered table-hover tracking-table" aria-label="Danh sách lớp theo dõi">
                         <thead><tr><th class="cell-order">STT</th><th>Tên lớp</th><th>Khối</th><th>GVCN</th><th>Năm học</th><th>Học kỳ</th><th>Thao tác</th></tr></thead>
                         <tbody>

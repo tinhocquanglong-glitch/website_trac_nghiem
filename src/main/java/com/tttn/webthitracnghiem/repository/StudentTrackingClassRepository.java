@@ -19,6 +19,12 @@ public interface StudentTrackingClassRepository extends JpaRepository<StudentTra
 
     List<StudentTrackingClass> findBySchoolIdAndGradeOrderByClassNameAsc(Integer schoolId, Integer grade);
 
+    List<StudentTrackingClass> findBySchoolIdIsNullOrderBySchoolYearDescClassNameAsc();
+
+    long countBySchoolId(Integer schoolId);
+
+    long countBySchoolIdAndGrade(Integer schoolId, Integer grade);
+
     List<StudentTrackingClass> findByHomeroomTeacherIdOrderBySchoolYearDescClassNameAsc(String teacherId);
 
     @Query("SELECT DISTINCT c FROM StudentTrackingClass c " +

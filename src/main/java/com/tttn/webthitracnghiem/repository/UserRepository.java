@@ -88,4 +88,63 @@ public interface UserRepository extends JpaRepository<User, String> {
                 "WHERE r.role_name = 'ROLE_TEACHER' " +
                 "ORDER BY u.full_name ASC")
     List<User> findAllTeachers();
+
+    // Lấy danh sách Quản trị viên trường / Hiệu trưởng (ROLE_SCHOOL_ADMIN)
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.role_name = 'ROLE_SCHOOL_ADMIN' " +
+                "ORDER BY u.school_id ASC, u.full_name ASC")
+    List<User> findAllSchoolAdmins();
+
+    // Lấy Quản trị viên trường / Hiệu trưởng của một trường cụ thể
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.role_name = 'ROLE_SCHOOL_ADMIN' AND u.school_id = :schoolId " +
+                "ORDER BY u.full_name ASC")
+    List<User> findSchoolAdminsBySchool(@Param("schoolId") int schoolId);
+
+    // Tìm kiếm giáo viên theo tên trong trường
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.role_name = 'ROLE_TEACHER' AND u.school_id = :schoolId " +
+                "AND (:keyword IS NULL OR :keyword = '' OR u.full_name LIKE CONCAT('%', :keyword, '%') OR u.id LIKE CONCAT('%', :keyword, '%')) " +
+                "ORDER BY u.full_name ASC")
+    List<User> searchTeachersBySchool(@Param("schoolId") int schoolId, @Param("keyword") String keyword);
+
+    // Lấy học sinh theo khối trong trường
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.role_name = 'ROLE_USER' AND u.school_id = :schoolId " +
+                "AND u.school_level = :schoolLevel " +
+                "ORDER BY u.full_name ASC")
+    List<User> findStudentsBySchoolAndLevel(@Param("schoolId") int schoolId, @Param("schoolLevel") int schoolLevel);
+
+    // Tìm kiếm học sinh theo tên/lớp trong trường
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "LEFT JOIN student_tracking_class stc ON u.class_id = stc.id " +
+                "WHERE r.role_name = 'ROLE_USER' AND u.school_id = :schoolId " +
+                "AND (:keyword IS NULL OR :keyword = '' OR u.full_name LIKE CONCAT('%', :keyword, '%') OR u.id LIKE CONCAT('%', :keyword, '%') OR stc.class_name LIKE CONCAT('%', :keyword, '%')) " +
+                "ORDER BY u.school_level ASC, stc.grade ASC, stc.class_name ASC, u.full_name ASC")
+    List<User> searchStudentsBySchool(@Param("schoolId") int schoolId, @Param("keyword") String keyword);
+
+    // Lấy và tìm kiếm học sinh của một lớp cụ thể
+    @Query(nativeQuery = true,
+        value = "SELECT u.* FROM user u " +
+                "JOIN user_role ur ON u.id = ur.username " +
+                "JOIN role r ON ur.role_id = r.id " +
+                "WHERE r.role_name = 'ROLE_USER' AND u.class_id = :classId " +
+                "AND (:keyword IS NULL OR :keyword = '' OR u.full_name LIKE CONCAT('%', :keyword, '%') OR u.id LIKE CONCAT('%', :keyword, '%') OR u.phone_number LIKE CONCAT('%', :keyword, '%')) " +
+                "ORDER BY u.full_name ASC")
+    List<User> findStudentsByClassIdAndKeyword(@Param("classId") int classId, @Param("keyword") String keyword);
 }

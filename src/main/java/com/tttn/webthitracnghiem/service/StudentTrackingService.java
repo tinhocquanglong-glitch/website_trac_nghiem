@@ -74,6 +74,34 @@ public class StudentTrackingService {
     }
 
     @Transactional(readOnly = true)
+    public List<StudentTrackingClass> listClassesForSchoolAndGrade(Integer schoolId, Integer grade) {
+        if (schoolId == null) {
+            return listClasses();
+        }
+        if (grade == null) {
+            return listClassesForSchool(schoolId);
+        }
+        return classRepository.findBySchoolIdAndGradeOrderByClassNameAsc(schoolId, grade);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentTrackingClass> listClassesWithoutSchool() {
+        return classRepository.findBySchoolIdIsNullOrderBySchoolYearDescClassNameAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public long countClassesForSchool(Integer schoolId) {
+        return schoolId == null ? 0L : classRepository.countBySchoolId(schoolId);
+    }
+
+    @Transactional(readOnly = true)
+    public long countClassesForSchoolAndGrade(Integer schoolId, Integer grade) {
+        return schoolId == null || grade == null
+                ? 0L
+                : classRepository.countBySchoolIdAndGrade(schoolId, grade);
+    }
+
+    @Transactional(readOnly = true)
     public List<StudentTrackingClass> listClassesForTeacher(String teacherId, Integer schoolId) {
         if (teacherId == null) {
             return listClassesForSchool(schoolId);

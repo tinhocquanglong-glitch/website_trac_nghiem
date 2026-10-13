@@ -2,19 +2,27 @@ package com.tttn.webthitracnghiem.controller;
 
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.StudentSearchResult;
+import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
+import com.tttn.webthitracnghiem.repository.SchoolRepository;
 import com.tttn.webthitracnghiem.service.StudentTrackingService;
 import com.tttn.webthitracnghiem.service.StudentTrackingExcelExporter;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
-
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -22,6 +30,125 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 class StudentTrackingControllerTest {
+
+    @Test
+    void adminSeesSchoolsBeforeTrackingClasses() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        SchoolRepository schoolRepository = mock(SchoolRepository.class);
+        School school = new School();
+        school.setId(3);
+        school.setName("THPT Nguyễn Du");
+        school.setProvinceName("Thanh pho");
+        when(schoolRepository.findAllByActiveTrueOrderByNameAsc()).thenReturn(List.of(school));
+        when(service.listClasses()).thenReturn(List.of());
+        when(service.searchStudents("", null)).thenReturn(List.of());
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class),
+                        null, null, schoolRepository)).build();
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+        try {
+            mvc.perform(get("/student-tracking").param("address", "thanh"))
+                    .andExpect(status().isOk())
+                    .andExpect(model().attribute("isAdminHierarchy", true))
+                    .andExpect(model().attribute("trackingSchools", List.of(school)))
+                    .andExpect(model().attribute("addressKeyword", "thanh"))
+                    .andExpect(model().attribute("trackingClasses", List.of()))
+                    .andExpect(model().attribute("selectedSchoolId", (Object) null));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void adminUsesExactClassCountsForSchoolAndGradeCards() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        SchoolRepository schoolRepository = mock(SchoolRepository.class);
+        School school = new School();
+        school.setId(3);
+        school.setName("THPT Nguyen Du");
+        school.setProvinceName("Thanh pho");
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setGrade(10);
+        trackingClass.setSchool(school);
+
+        when(schoolRepository.findAllByActiveTrueOrderByNameAsc()).thenReturn(List.of(school));
+        when(service.listClasses()).thenReturn(List.of(trackingClass));
+        when(service.listClassesForSchool(3)).thenReturn(List.of(trackingClass));
+        // Deliberately disagree with the list data to protect against the old stale-count bug.
+        when(service.countClassesForSchool(3)).thenReturn(4L);
+        when(service.countClassesForSchoolAndGrade(3, 10)).thenReturn(0L);
+        when(service.searchStudents("", null)).thenReturn(List.of());
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class),
+                        null, null, schoolRepository)).build();
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+        try {
+            mvc.perform(get("/student-tracking").param("schoolId", "3").param("address", "thanh"))
+                    .andExpect(status().isOk())
+                    .andExpect(model().attribute("classCountBySchool", java.util.Map.of(3, 1)))
+                    .andExpect(model().attribute("classCountByGrade", java.util.Map.of(10, 1)))
+                    .andExpect(model().attribute("selectedSchool", school));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void adminCanOpenClassesWithoutSchoolAssignment() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        SchoolRepository schoolRepository = mock(SchoolRepository.class);
+        StudentTrackingClass legacyClass = new StudentTrackingClass();
+        legacyClass.setId(1);
+        legacyClass.setClassName("6A");
+        when(schoolRepository.findAllByActiveTrueOrderByNameAsc()).thenReturn(List.of());
+        when(service.listClasses()).thenReturn(List.of());
+        when(service.listClassesWithoutSchool()).thenReturn(List.of(legacyClass));
+        when(service.searchStudents("", null)).thenReturn(List.of());
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class),
+                        null, null, schoolRepository)).build();
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+        try {
+            mvc.perform(get("/student-tracking").param("unassigned", "true"))
+                    .andExpect(status().isOk())
+                    .andExpect(model().attribute("selectedUnassigned", true))
+                    .andExpect(model().attribute("trackingClasses", List.of(legacyClass)))
+                    .andExpect(model().attribute("unassignedClassCount", 1));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    void fullAdminCannotCreateTrackingClass() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                new StudentTrackingController(service, mock(StudentTrackingExcelExporter.class))).build();
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
+        try {
+            mvc.perform(post("/student-tracking/classes")
+                        .param("className", "10A1")
+                        .param("schoolYear", "2026-2027")
+                        .param("grade", "10"))
+                    .andExpect(status().is3xxRedirection());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+
+        verify(service, never()).createClass(any(String.class), any(String.class), anyInt(), anyInt(), any(String.class));
+    }
 
     @Test
     void searchesStudentsInSelectedClass() throws Exception {

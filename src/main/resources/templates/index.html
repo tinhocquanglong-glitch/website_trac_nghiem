@@ -64,27 +64,29 @@
                             </li>
                             <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')"><a><i class="fa fa-users"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
-                                    <li sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/user/list}">Danh sách người dùng</a></li>
+                                    <li sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/user/list}"><i class="fa fa-building-o mr-1"></i>Quản lý người dùng trường</a></li>
+                                    <li sec:authorize="hasRole('ROLE_SCHOOL_ADMIN')"><a th:href="@{/school-admin/users}"><i class="fa fa-building-o mr-1"></i>Người dùng trong trường</a></li>
                                     <li><a th:href="@{/user/create-teacher}">Cấp tài khoản GV / Admin</a></li>
                                 </ul>
                             </li>
+
                             <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-university"></i> Trường học <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/school/list}">Danh sách trường học</a></li>
                                     <li><a th:href="@{/school/add}">Thêm trường mới</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-clone"></i>Môn học <span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-clone"></i>Môn học <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/subject/list}">Danh sách môn học</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-desktop"></i> Đề thi <span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-desktop"></i> Đề thi <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/exam/list}">Danh sách đề thi</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-bar-chart-o"></i> Câu hỏi <span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-bar-chart-o"></i> Câu hỏi <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/question/list}">Danh sách câu hỏi</a></li>
                                 </ul>
@@ -94,18 +96,21 @@
                                     <li><a th:href="@{/news/list}">Danh sách tin tức</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-clone"></i>Tài liệu<span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-clone"></i>Tài liệu<span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/document/list}">Danh sách tài liệu</a></li>
                                 </ul>
                             </li>
-                            <li><a><i class="fa fa-list"></i>Chương trình học<span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/class/list}">Danh sách lớp học</a></li>
-                                </ul>
-                            </li>
                             <li><a th:href="@{/student-tracking}"><i class="fa fa-table"></i>Sổ theo dõi học sinh</a></li>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/chat}"><i class="fa fa-comments"></i> Chat nội bộ</a>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ROLE_TEACHER', 'ROLE_SCHOOL_ADMIN', 'ROLE_ADMIN')">
+                                <a th:href="@{/teacher/homeroom}"><i class="fa fa-graduation-cap"></i> Học sinh lớp chủ nhiệm</a>
+                            </li>
                         </ul>
+
+
                     </div>
                 </div>
                 <!-- /sidebar menu -->
