@@ -53,6 +53,25 @@ public class Exam {
     @Column(name = "is_public")
     private Boolean isPublic = true;
 
+    @Column(name = "target_type", length = 20)
+    private String targetType = "PUBLIC"; // PUBLIC, SCHOOL, GRADE, CLASS
+
+    @Column(name = "target_grade")
+    private Integer targetGrade; // 1 to 12
+
+    @ManyToOne
+    @JoinColumn(name = "target_class_id")
+    private StudentTrackingClass targetClass;
+
+    @Column(name = "start_time")
+    private java.sql.Timestamp startTime;
+
+    @Column(name = "end_time")
+    private java.sql.Timestamp endTime;
+
+    @Column(name = "score_type", length = 30)
+    private String scoreType; // REGULAR_1, REGULAR_2, MIDTERM, FINAL
+
     private long view;
     private long turn;
 
@@ -197,4 +216,53 @@ public class Exam {
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public Integer getTargetGrade() {
+        return targetGrade;
+    }
+
+    public void setTargetGrade(Integer targetGrade) {
+        this.targetGrade = targetGrade;
+    }
+
+    public StudentTrackingClass getTargetClass() {
+        return targetClass;
+    }
+
+    public void setTargetClass(StudentTrackingClass targetClass) {
+        this.targetClass = targetClass;
+    }
+
+    public java.sql.Timestamp getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(java.sql.Timestamp startTime) {
+        this.startTime = startTime;
+    }
+
+    public java.sql.Timestamp getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(java.sql.Timestamp endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getScoreType() {
+        return scoreType;
+    }
+
+    public void setScoreType(String scoreType) {
+        this.scoreType = scoreType;
+    }
 }
+

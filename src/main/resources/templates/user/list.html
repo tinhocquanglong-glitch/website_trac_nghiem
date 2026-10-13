@@ -67,7 +67,7 @@
                 </form>
             </div>
             <div>
-                <a th:href="@{/user/create-teacher}" class="btn btn-success"><i class="fa fa-user-plus"></i> Cấp tài khoản Giáo viên</a>
+                <a th:href="@{/user/create-teacher}" class="btn btn-success"><i class="fa fa-user-plus"></i> Cấp tài khoản GV / Admin</a>
                 <a th:href="@{/user/create}" class="btn btn-primary"><i class="fa fa-plus"></i> Thêm người dùng</a>
             </div>
         </div>
@@ -97,6 +97,7 @@
                 <td class="text-center">
                     <span th:each="r : ${user.roles}">
                         <span th:if="${r.roleName == 'ROLE_ADMIN'}" class="badge badge-danger">ADMIN</span>
+                        <span th:if="${r.roleName == 'ROLE_SCHOOL_ADMIN'}" class="badge badge-warning">ADMIN TRƯỜNG</span>
                         <span th:if="${r.roleName == 'ROLE_TEACHER'}" class="badge badge-success">GIÁO VIÊN</span>
                         <span th:if="${r.roleName == 'ROLE_USER'}" class="badge badge-primary">HỌC SINH</span>
                     </span>

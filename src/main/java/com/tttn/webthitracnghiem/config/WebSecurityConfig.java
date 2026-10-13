@@ -38,11 +38,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/role", "/api/location/**").permitAll()
+                .antMatchers("/school-admin/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/user/create-teacher").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
                 .antMatchers("/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
-                        "/lesson/**", "/chapter/**", "/student-tracking/**").hasAnyRole("ADMIN", "TEACHER")
+                        "/lesson/**", "/chapter/**", "/student-tracking/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/quiz1/**", "/subject/**", "/score/**", "/history/**",
-                        "/submit1/**", "/view", "/editMember", "/editPass").hasAnyRole("USER", "TEACHER", "ADMIN");
+                        "/submit1/**", "/view", "/editMember", "/editPass").hasAnyRole("USER", "TEACHER", "SCHOOL_ADMIN", "ADMIN");
 //                .anyRequest().authenticated();
         http.authorizeRequests().and().rememberMe().tokenRepository(this.persistentTokenRepository()).
                 tokenValiditySeconds(60 * 60 * 24 * 30); // 30 ngày

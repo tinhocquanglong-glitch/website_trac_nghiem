@@ -25,18 +25,56 @@
                 <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
                 <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
 
-                <div class="tracking-actions">
+                <div class="tracking-actions" th:if="${isAdminOrSchoolAdmin == true}">
                     <section class="tracking-panel" aria-labelledby="create-class-title">
                         <h2 id="create-class-title">Thêm lớp</h2>
                         <form method="post" th:action="@{/student-tracking/classes}" class="tracking-form-row">
                             <div class="form-group">
                                 <label for="className">Tên lớp</label>
-                                <input id="className" name="className" class="form-control" maxlength="50" required>
+                                <input id="className" name="className" class="form-control" maxlength="50" placeholder="10A1, 6A..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="grade">Khối</label>
+                                <select id="grade" name="grade" class="form-control" required>
+                                    <option value="">-- Chọn Khối --</option>
+                                    <optgroup label="Tiểu học (Cấp 1)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 1}">
+                                        <option value="1">Khối 1</option>
+                                        <option value="2">Khối 2</option>
+                                        <option value="3">Khối 3</option>
+                                        <option value="4">Khối 4</option>
+                                        <option value="5">Khối 5</option>
+                                    </optgroup>
+                                    <optgroup label="THCS (Cấp 2)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 2}">
+                                        <option value="6">Khối 6</option>
+                                        <option value="7">Khối 7</option>
+                                        <option value="8">Khối 8</option>
+                                        <option value="9">Khối 9</option>
+                                    </optgroup>
+                                    <optgroup label="THPT (Cấp 3)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 3}">
+                                        <option value="10">Khối 10</option>
+                                        <option value="11">Khối 11</option>
+                                        <option value="12">Khối 12</option>
+                                    </optgroup>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="schoolYear">Năm học</label>
                                 <input id="schoolYear" name="schoolYear" class="form-control" placeholder="2026-2027"
-                                       pattern="[0-9]{4}-[0-9]{4}" maxlength="9" required>
+                                       pattern="[0-9]{4}-[0-9]{4}" maxlength="9" value="2026-2027" required>
+                            </div>
+                            <!-- Nếu là Admin hoặc School Admin: được phân công giáo viên làm GVCN -->
+                            <div class="form-group" th:if="${isAdminOrSchoolAdmin == true and schoolTeachers != null and !schoolTeachers.isEmpty()}">
+                                <label for="homeroomTeacherId">Giáo viên chủ nhiệm (GVCN)</label>
+                                <select id="homeroomTeacherId" name="homeroomTeacherId" class="form-control">
+                                    <option value="">-- Chọn GVCN --</option>
+                                    <option th:each="t : ${schoolTeachers}" th:value="${t.id}" th:text="|${t.fullName} (${t.id})|"></option>
+                                </select>
+                            </div>
+                            <!-- Nếu là Giáo viên tạo lớp: người làm GVCN cố định là chính giáo viên đó -->
+                            <div class="form-group" th:if="${isAdminOrSchoolAdmin != true and currentUser != null}">
+                                <label>Giáo viên chủ nhiệm (GVCN)</label>
+                                <input type="text" class="form-control" th:value="|Bạn (${currentUser.fullName})|" readonly>
+                                <small class="text-muted">Bạn là GVCN của lớp này.</small>
                             </div>
                             <button class="btn btn-primary" type="submit"><i class="fa fa-plus" aria-hidden="true"></i> Thêm</button>
                         </form>
@@ -132,12 +170,20 @@
 
                 <div class="tracking-table-wrap">
                     <table class="table table-bordered table-hover tracking-table" aria-label="Danh sách lớp theo dõi">
-                        <thead><tr><th class="cell-order">STT</th><th>Tên lớp</th><th>Năm học</th><th>Học kỳ</th><th>Thao tác</th></tr></thead>
+                        <thead><tr><th class="cell-order">STT</th><th>Tên lớp</th><th>Khối</th><th>GVCN</th><th>Năm học</th><th>Học kỳ</th><th>Thao tác</th></tr></thead>
                         <tbody>
-                        <tr th:if="${#lists.isEmpty(trackingClasses)}"><td colspan="5" class="tracking-empty">Chưa có lớp theo dõi</td></tr>
+                        <tr th:if="${#lists.isEmpty(trackingClasses)}"><td colspan="7" class="tracking-empty">Chưa có lớp theo dõi</td></tr>
                         <tr th:each="item, stat : ${trackingClasses}">
                             <td class="cell-order" th:text="${stat.count}"></td>
                             <td th:text="${item.className}"></td>
+                            <td>
+                                <span class="badge badge-info" th:if="${item.grade != null}" th:text="|Khối ${item.grade}|"></span>
+                                <span class="text-muted" th:if="${item.grade == null}">-</span>
+                            </td>
+                            <td>
+                                <span th:if="${item.homeroomTeacher != null}" th:text="${item.homeroomTeacher.fullName}"></span>
+                                <span class="text-muted font-italic" th:if="${item.homeroomTeacher == null}">Chưa phân công</span>
+                            </td>
                             <td th:text="${item.schoolYear}"></td>
                             <td class="text-center">
                                 <a class="btn btn-sm btn-outline-primary" th:href="@{/student-tracking/classes/{id}(id=${item.id},semester=1,month=9)}">HK1</a>
@@ -148,14 +194,71 @@
                                     <a class="btn btn-sm btn-outline-success"
                                        th:href="@{/student-tracking/export(classId=${item.id})}"
                                        title="Xuất Excel lớp" download>
-                                        <i class="fa fa-file-excel-o" aria-hidden="true"></i><span class="sr-only">Xuất Excel lớp</span>
+                                       <i class="fa fa-file-excel-o" aria-hidden="true"></i><span class="sr-only">Xuất Excel lớp</span>
                                     </a>
-                                    <form method="post" th:action="@{/student-tracking/classes/{id}/delete(id=${item.id})}"
+                                    <!-- Nút đổi GVCN nhanh cho Admin ngay tại danh sách lớp -->
+                                    <button th:if="${isAdminOrSchoolAdmin == true}"
+                                            type="button" class="btn btn-sm btn-outline-warning"
+                                            data-toggle="modal"
+                                            th:data-target="|#editHomeroomModal-${item.id}|"
+                                            title="Đổi hoặc rút GVCN">
+                                        <i class="fa fa-user-circle"></i>
+                                    </button>
+                                    <!-- Chỉ Admin hoặc School Admin mới được xóa lớp -->
+                                    <form th:if="${isAdminOrSchoolAdmin == true}"
+                                          method="post" th:action="@{/student-tracking/classes/{id}/delete(id=${item.id})}"
                                           onsubmit="return confirm('Xóa lớp và toàn bộ sổ theo dõi?');">
                                         <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa lớp">
                                             <i class="fa fa-trash" aria-hidden="true"></i><span class="sr-only">Xóa lớp</span>
                                         </button>
                                     </form>
+                                </div>
+
+                                <!-- Modal đổi GVCN cho lớp này (chỉ khi là Admin) -->
+                                <div th:if="${isAdminOrSchoolAdmin == true}"
+                                     class="modal fade text-left"
+                                     th:id="|editHomeroomModal-${item.id}|"
+                                     tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-warning text-white">
+                                                <h5 class="modal-title font-weight-bold" style="color: #212529 !important;">
+                                                    <i class="fa fa-user-circle"></i> Phân công / Bãi bỏ GVCN - Lớp <span th:text="${item.className}"></span>
+                                                </h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <form method="post" th:action="@{/student-tracking/classes/{id}/homeroom(id=${item.id})}">
+                                                <input type="hidden" name="redirectUrl" value="/student-tracking">
+                                                <div class="modal-body">
+                                                    <p class="mb-2">
+                                                        <strong>GVCN hiện tại:</strong>
+                                                        <span class="badge badge-info" th:if="${item.homeroomTeacher != null}" th:text="|${item.homeroomTeacher.fullName} (${item.homeroomTeacher.id})|"></span>
+                                                        <span class="badge badge-secondary" th:if="${item.homeroomTeacher == null}">Chưa phân công</span>
+                                                    </p>
+                                                    <div class="form-group">
+                                                        <label for="homeroomTeacherSelect">Chọn Giáo viên chủ nhiệm mới:</label>
+                                                        <select name="homeroomTeacherId" class="form-control">
+                                                            <option value="">-- Bỏ trống (Bãi bỏ / Rút GVCN) --</option>
+                                                            <option th:each="t : ${schoolTeachers}"
+                                                                    th:value="${t.id}"
+                                                                    th:text="|${t.fullName} (${t.id})|"
+                                                                    th:selected="${item.homeroomTeacher != null and item.homeroomTeacher.id == t.id}">
+                                                            </option>
+                                                        </select>
+                                                        <small class="form-text text-muted">
+                                                            Nếu chọn "-- Bỏ trống --", giáo viên hiện tại sẽ bị bãi bỏ nhiệm vụ GVCN của lớp này.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                                                    <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Cập nhật</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

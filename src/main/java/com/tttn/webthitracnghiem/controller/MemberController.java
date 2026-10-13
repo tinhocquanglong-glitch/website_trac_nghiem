@@ -50,6 +50,8 @@ public class MemberController {
     @PostMapping("/signup")
     public String signUp(@Valid @ModelAttribute User user, BindingResult bindingResult,
                          @RequestParam(value = "schoolId", required = false) Integer schoolId,
+                         @RequestParam(value = "schoolLevel", required = false) Integer schoolLevel,
+                         @RequestParam(value = "grade", required = false) Integer grade,
                          Model model) {
         if (userService.userExists(user.getId())) {
             bindingResult.addError(new FieldError("user", "id", "Tài khoản '" + user.getId() + "' đã tồn tại."));
@@ -78,12 +80,24 @@ public class MemberController {
         user.setImg("/img/avatar/default.jpg");
         user.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
 
+        // Gán cấp học (schoolLevel)
+        if (schoolLevel != null) {
+            user.setSchoolLevel(schoolLevel);
+        } else if (grade != null) {
+            if (grade <= 5) user.setSchoolLevel(1);
+            else if (grade <= 9) user.setSchoolLevel(2);
+            else user.setSchoolLevel(3);
+        }
+
         // Gán trường học
         if (schoolId != null) {
             user.setSchool(locationService.findSchoolById(schoolId));
         } else {
             user.setSchool(locationService.findSchoolById(1)); // Trường tự do mặc định
         }
+
+        // Học sinh tự do ban đầu chưa có lớp (class_id = null)
+        user.setTrackingClass(null);
 
         // Phân quyền User
         Role role = roleService.findByName("ROLE_USER");

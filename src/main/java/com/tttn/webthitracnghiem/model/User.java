@@ -73,6 +73,30 @@ public class User {
     @JoinColumn(name = "school_id")
     private School school;
 
+    @ManyToOne
+    @JoinColumn(name = "class_id")
+    private StudentTrackingClass trackingClass;
+
+    @Column(name = "school_level")
+    private Integer schoolLevel; // 1: Cấp 1 (Khối 1-5), 2: Cấp 2 (Khối 6-9), 3: Cấp 3 (Khối 10-12)
+
+    public Integer getSchoolLevel() {
+        return schoolLevel;
+    }
+
+    public void setSchoolLevel(Integer schoolLevel) {
+        this.schoolLevel = schoolLevel;
+    }
+
+    public String getSchoolLevelName() {
+        if (schoolLevel == null) return "Toàn cấp / Liên cấp";
+        switch (schoolLevel) {
+            case 1: return "Tiểu học (Cấp 1: Khối 1-5)";
+            case 2: return "THCS (Cấp 2: Khối 6-9)";
+            case 3: return "THPT (Cấp 3: Khối 10-12)";
+            default: return "Toàn cấp";
+        }
+    }
 
     public User() {
     }
@@ -223,4 +247,13 @@ public class User {
     public void setSchool(School school) {
         this.school = school;
     }
+
+    public StudentTrackingClass getTrackingClass() {
+        return trackingClass;
+    }
+
+    public void setTrackingClass(StudentTrackingClass trackingClass) {
+        this.trackingClass = trackingClass;
+    }
 }
+

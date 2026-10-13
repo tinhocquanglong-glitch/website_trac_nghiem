@@ -146,6 +146,14 @@ public class ExamController {
         model.addAttribute("subjects", subjectService.findAll());
         model.addAttribute("exam", new Exam());
         model.addAttribute("questions", questionService.findAll());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        User currentUser = getCurrentUser(auth);
+
+        model.addAttribute("isAdminOrSchoolAdmin", isAdmin || isSchoolAdmin);
+        model.addAttribute("currentUser", currentUser);
         return "exam/createExam";
     }
 

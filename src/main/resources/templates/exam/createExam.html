@@ -350,20 +350,99 @@
                                 <!-- Hidden schoolId of current user -->
                                 <input type="hidden" id="schoolId"
                                        th:value="${#session.getAttribute('admin').school != null ? #session.getAttribute('admin').school.id : 0}">
+                                <!-- Phạm vi giao đề (TARGET TYPE) -->
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Phạm vi đề thi</label>
+                                    <label class="col-sm-3 col-form-label">Phạm vi giao đề</label>
+                                        <!-- Toàn quốc: chỉ Admin -->
+                                        <div class="form-check form-check-inline" th:if="${isAdminOrSchoolAdmin == true}">
+                                            <input class="form-check-input" type="radio" name="targetTypeRadio" id="ttPublic" value="PUBLIC" checked onchange="handleTargetTypeChange()">
+                                            <label class="form-check-label text-success" for="ttPublic"><i class="fa fa-globe"></i> Toàn quốc</label>
+                                        </div>
+                                        <!-- Toàn trường: chỉ Admin / School Admin -->
+                                        <div class="form-check form-check-inline" th:if="${isAdminOrSchoolAdmin == true}">
+                                            <input class="form-check-input" type="radio" name="targetTypeRadio" id="ttSchool" value="SCHOOL" onchange="handleTargetTypeChange()">
+                                            <label class="form-check-label text-info" for="ttSchool"><i class="fa fa-university"></i> Toàn trường</label>
+                                        </div>
+                                        <!-- Theo khối: Admin hoặc Giáo viên -->
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="targetTypeRadio" id="ttGrade" value="GRADE"
+                                                   th:checked="${isAdminOrSchoolAdmin != true}" onchange="handleTargetTypeChange()">
+                                            <label class="form-check-label text-warning" for="ttGrade"><i class="fa fa-users"></i> Theo khối</label>
+                                        </div>
+                                        <!-- Theo lớp: Phổ biến nhất cho Giáo viên bộ môn / GVCN -->
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="targetTypeRadio" id="ttClass" value="CLASS" onchange="handleTargetTypeChange()">
+                                            <label class="form-check-label text-danger" for="ttClass"><i class="fa fa-home"></i> Theo lớp được phụ trách</label>
+                                        </div>
+                                        <input type="hidden" id="isPublicTrue" name="isPublicExam" value="true">
+                                    </div>
+                                </div>
+                                <!-- Chọn khối -->
+                                <div class="form-group row" id="gradeRow" style="display:none;">
+                                    <label class="col-sm-3 col-form-label">Khối</label>
+                                    <div class="col-sm-8">
+                                        <select id="targetGradeSelect" class="form-control" style="max-width:220px;">
+                                            <option value="">-- Chọn Khối --</option>
+                                            <optgroup label="Tiểu học (Cấp 1)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 1}">
+                                                <option value="1">Khối 1</option><option value="2">Khối 2</option><option value="3">Khối 3</option><option value="4">Khối 4</option><option value="5">Khối 5</option>
+                                            </optgroup>
+                                            <optgroup label="THCS (Cấp 2)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 2}">
+                                                <option value="6">Khối 6</option><option value="7">Khối 7</option><option value="8">Khối 8</option><option value="9">Khối 9</option>
+                                            </optgroup>
+                                            <optgroup label="THPT (Cấp 3)" th:if="${currentUser == null or currentUser.schoolLevel == null or currentUser.schoolLevel == 3}">
+                                                <option value="10">Khối 10</option><option value="11">Khối 11</option><option value="12">Khối 12</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Chọn lớp theo dõi -->
+                                <div class="form-group row" id="classRow" style="display:none;">
+                                    <label class="col-sm-3 col-form-label">Lớp cụ thể</label>
+                                    <div class="col-sm-8">
+                                        <select id="targetClassSelect" class="form-control" style="max-width:280px;">
+                                            <option value="">-- Chọn Lớp --</option>
+                                        </select>
+                                        <small class="text-muted" id="classLoadStatus"></small>
+                                    </div>
+                                </div>
+                                <!-- Thời gian thi -->
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Thời gian bắt đầu thi</label>
+                                    <div class="col-sm-8">
+                                        <input type="datetime-local" id="startTimeInput" class="form-control" style="max-width:260px;">
+                                        <small class="text-muted">Để trống = không giới hạn</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Thời gian kết thúc thi</label>
+                                    <div class="col-sm-8">
+                                        <input type="datetime-local" id="endTimeInput" class="form-control" style="max-width:260px;">
+                                        <small class="text-muted">Để trống = không giới hạn</small>
+                                    </div>
+                                </div>
+                                <!-- Loại điểm -->
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Loại điểm (sổ theo dõi)</label>
                                     <div class="col-sm-8 pt-2">
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="isPublicExam" id="isPublicTrue" value="true" checked>
-                                            <label class="form-check-label text-success" for="isPublicTrue">
-                                                <i class="fa fa-globe"></i> Công khai (tất cả có thể thi)
-                                            </label>
+                                            <input class="form-check-input" type="radio" name="scoreTypeRadio" id="stNone" value="" checked>
+                                            <label class="form-check-label" for="stNone">Không tự động ghi điểm</label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" name="isPublicExam" id="isPublicFalse" value="false">
-                                            <label class="form-check-label text-warning" for="isPublicFalse">
-                                                <i class="fa fa-lock"></i> Nội bộ (chỉ học sinh trường mình thi)
-                                            </label>
+                                            <input class="form-check-input" type="radio" name="scoreTypeRadio" id="stReg1" value="REGULAR_1">
+                                            <label class="form-check-label text-primary" for="stReg1">ĐGTX 1</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="scoreTypeRadio" id="stReg2" value="REGULAR_2">
+                                            <label class="form-check-label text-primary" for="stReg2">ĐGTX 2</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="scoreTypeRadio" id="stMid" value="MIDTERM">
+                                            <label class="form-check-label text-warning" for="stMid">Giữa kỳ (ĐGK)</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="scoreTypeRadio" id="stFinal" value="FINAL">
+                                            <label class="form-check-label text-danger" for="stFinal">Cuối kỳ (ĐCK)</label>
                                         </div>
                                     </div>
                                 </div>
@@ -891,6 +970,22 @@
                     }
                     questionRequest.push(question);
                 }
+                var targetTypeVal = $("input[name=targetTypeRadio]:checked").val() || "PUBLIC";
+                var targetGradeVal = $("#targetGradeSelect").val();
+                var targetClassIdVal = $("#targetClassSelect").val();
+                var scoreTypeVal = $("input[name=scoreTypeRadio]:checked").val() || "";
+                var startTimeVal = $("#startTimeInput").val() || "";
+                var endTimeVal = $("#endTimeInput").val() || "";
+
+                if (targetTypeVal === 'CLASS' && (!targetClassIdVal || targetClassIdVal === "")) {
+                    alert("Vui lòng chọn Lớp cụ thể mà bạn được phân công phụ trách!");
+                    return false;
+                }
+                if (targetTypeVal === 'GRADE' && (!targetGradeVal || targetGradeVal === "")) {
+                    alert("Vui lòng chọn Khối cần giao đề!");
+                    return false;
+                }
+
                 var exam = {
                     idName: $('#idName').val(),
                     free: $('#free').val(),
@@ -899,7 +994,13 @@
                     nameExam: $("#nameExam").val(),
                     lessonId: $("input[name=lesson]:checked").val(),
                     usersId: $("#author").val(),
-                    isPublic: $("input[name=isPublicExam]:checked").val() === 'true',
+                    isPublic: targetTypeVal === 'PUBLIC',
+                    targetType: targetTypeVal,
+                    targetGrade: targetGradeVal ? parseInt(targetGradeVal) : null,
+                    targetClassId: targetClassIdVal ? parseInt(targetClassIdVal) : null,
+                    scoreType: scoreTypeVal,
+                    startTime: startTimeVal,
+                    endTime: endTimeVal,
                     schoolId: parseInt($("#schoolId").val()) || 0,
                     questions: questionRequest
                 }
@@ -913,10 +1014,27 @@
                     success: function () {
                         window.location.replace("/exam/list?create=" + true);
                     },
-                    failure: function (response) {
+                    error: function (xhr) {
+                        alert(xhr.responseText || "Không thể tạo đề thi. Vui lòng kiểm tra quyền hạn của bạn!");
                     }
                 });
             } else {
+                var targetTypeVal = $("input[name=targetTypeRadio]:checked").val() || "PUBLIC";
+                var targetGradeVal = $("#targetGradeSelect").val();
+                var targetClassIdVal = $("#targetClassSelect").val();
+                var scoreTypeVal = $("input[name=scoreTypeRadio]:checked").val() || "";
+                var startTimeVal = $("#startTimeInput").val() || "";
+                var endTimeVal = $("#endTimeInput").val() || "";
+
+                if (targetTypeVal === 'CLASS' && (!targetClassIdVal || targetClassIdVal === "")) {
+                    alert("Vui lòng chọn Lớp cụ thể mà bạn được phân công phụ trách!");
+                    return false;
+                }
+                if (targetTypeVal === 'GRADE' && (!targetGradeVal || targetGradeVal === "")) {
+                    alert("Vui lòng chọn Khối cần giao đề!");
+                    return false;
+                }
+
                 var exam = new FormData();
                 var data = table.$("input[name=questions]:checked");
                 for (let i = 0; i < data.length; i++) {
@@ -941,7 +1059,14 @@
                 exam.append("subject", subjectId);
                 exam.append("lesson", lessonId);
                 exam.append("users", users);
-                exam.append("isPublic", $("input[name=isPublicExam]:checked").val() === 'true');
+                exam.append("isPublic", targetTypeVal === 'PUBLIC');
+                exam.append("targetType", targetTypeVal);
+                if (targetGradeVal) { exam.append("targetGrade", targetGradeVal); }
+                if (targetClassIdVal) { exam.append("targetClassId", targetClassIdVal); }
+                if (scoreTypeVal) { exam.append("scoreType", scoreTypeVal); }
+                if (startTimeVal) { exam.append("startTimeStr", startTimeVal); }
+                if (endTimeVal) { exam.append("endTimeStr", endTimeVal); }
+
                 var sId = parseInt($("#schoolId").val()) || 0;
                 if (sId > 0) { exam.append("school", sId); }
                 $.ajax({
@@ -952,8 +1077,9 @@
                     processData: false,
                     cache: false,
                     contentType: false,
-                    error: function (error) {
-                        console.log(error);
+                    error: function (xhr) {
+                        console.log(xhr);
+                        alert(xhr.responseText || "Không thể tạo đề thi. Vui lòng kiểm tra quyền hạn của bạn!");
                     },
                     success: function () {
                         window.location.replace('/exam/list?create=' + true);
@@ -1022,6 +1148,39 @@
         if (day < 10)
             day = "0" + day;
         document.getElementById('createDate').value = year + "-" + month + "-" + day;
+    }
+
+    // ---- Phạm vi giao đề ----
+    function handleTargetTypeChange() {
+        var tt = $("input[name=targetTypeRadio]:checked").val();
+        $("#gradeRow").toggle(tt === 'GRADE');
+        $("#classRow").toggle(tt === 'CLASS');
+        if (tt === 'CLASS' && $("#targetClassSelect option").length <= 1) {
+            loadTrackingClasses();
+        }
+    }
+
+    function loadTrackingClasses() {
+        $("#classLoadStatus").text("Đang tải danh sách lớp...");
+        $.ajax({
+            url: '/api/tracking-classes',
+            type: 'GET',
+            success: function(data) {
+                var sel = $("#targetClassSelect");
+                sel.find('option:not(:first)').remove();
+                if (data && data.length > 0) {
+                    $.each(data, function(i, cls) {
+                        sel.append($('<option>').val(cls.id).text(cls.className + ' - ' + cls.schoolYear + (cls.grade ? ' (Khối ' + cls.grade + ')' : '')));
+                    });
+                    $("#classLoadStatus").text("Đã tải " + data.length + " lớp");
+                } else {
+                    $("#classLoadStatus").text("Chưa có lớp nào");
+                }
+            },
+            error: function() {
+                $("#classLoadStatus").text("Không thể tải danh sách lớp");
+            }
+        });
     }
 
     createDate();

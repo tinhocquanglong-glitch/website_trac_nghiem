@@ -45,6 +45,7 @@ class StudentTrackingTemplateTest {
         context.setVariable("searchResults", List.of());
         context.setVariable("query", "");
         context.setVariable("searchPerformed", false);
+        context.setVariable("isAdminOrSchoolAdmin", true);
 
         String html = templateEngine.process("student-tracking/list", context);
 

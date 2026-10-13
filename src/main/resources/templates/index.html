@@ -62,10 +62,10 @@
                         <ul class="nav side-menu">
                             <li><a th:href="@{/}"><i class="fa fa-home"></i> Trang chủ</a>
                             </li>
-                            <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-users"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')"><a><i class="fa fa-users"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
-                                    <li><a th:href="@{/user/list}">Danh sách người dùng</a></li>
-                                    <li><a th:href="@{/user/create-teacher}">Cấp tài khoản giáo viên</a></li>
+                                    <li sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/user/list}">Danh sách người dùng</a></li>
+                                    <li><a th:href="@{/user/create-teacher}">Cấp tài khoản GV / Admin</a></li>
                                 </ul>
                             </li>
                             <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-university"></i> Trường học <span class="fa fa-chevron-down"></span></a>

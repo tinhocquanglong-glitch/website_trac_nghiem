@@ -110,6 +110,14 @@ public class UserController {
 
     @GetMapping("/user/create-teacher")
     public String showCreateTeacherForm(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        User currentUser = (auth != null) ? userService.findById(auth.getName()) : null;
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("isSchoolAdmin", isSchoolAdmin);
+        model.addAttribute("currentUser", currentUser);
         model.addAttribute("user", new User());
         model.addAttribute("provinces", locationService.getAllProvinces());
         return "user/create-teacher";
@@ -119,10 +127,25 @@ public class UserController {
     public String saveTeacher(@Validated @ModelAttribute("user") User user,
                               BindingResult bindingResult,
                               @RequestParam(value = "schoolId", required = false) Integer schoolId,
+                              @RequestParam(value = "roleType", defaultValue = "ROLE_TEACHER") String roleType,
+                              @RequestParam(value = "schoolLevel", required = false) Integer schoolLevel,
                               Model model,
                               RedirectAttributes redirectAttributes) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        User currentUser = (auth != null) ? userService.findById(auth.getName()) : null;
+
+        if (isSchoolAdmin && currentUser != null) {
+            if (currentUser.getSchool() != null) {
+                schoolId = currentUser.getSchool().getId();
+            }
+            roleType = "ROLE_TEACHER";
+            schoolLevel = currentUser.getSchoolLevel(); // Giáo viên kế thừa cấp học từ Admin Trường
+        }
+
         if (schoolId == null) {
-            model.addAttribute("schoolError", "Vui lòng chọn trường học cho giáo viên!");
+            model.addAttribute("schoolError", "Vui lòng chọn trường học!");
         }
         if (userService.userExists(user.getId())) {
             bindingResult.rejectValue("id", "error.user", "Tên tài khoản '" + user.getId() + "' đã tồn tại.");
@@ -136,8 +159,13 @@ public class UserController {
             }
         }
         if (bindingResult.hasErrors() || schoolId == null) {
+            model.addAttribute("isAdmin", isAdmin);
+            model.addAttribute("isSchoolAdmin", isSchoolAdmin);
+            model.addAttribute("currentUser", currentUser);
             model.addAttribute("provinces", locationService.getAllProvinces());
             model.addAttribute("selectedSchoolId", schoolId);
+            model.addAttribute("selectedRoleType", roleType);
+            model.addAttribute("selectedSchoolLevel", schoolLevel);
             return "user/create-teacher";
         }
 
@@ -149,16 +177,25 @@ public class UserController {
 
         com.tttn.webthitracnghiem.model.School school = locationService.findSchoolById(schoolId);
         user.setSchool(school);
+        user.setSchoolLevel(schoolLevel);
 
-        com.tttn.webthitracnghiem.model.Role roleTeacher = roleService.findByName("ROLE_TEACHER");
-        if (roleTeacher != null) {
+        com.tttn.webthitracnghiem.model.Role role = roleService.findByName(roleType);
+        if (role == null) {
+            role = roleService.findByName("ROLE_TEACHER");
+        }
+        if (role != null) {
             java.util.Set<com.tttn.webthitracnghiem.model.Role> roles = new java.util.HashSet<>();
-            roles.add(roleTeacher);
+            roles.add(role);
             user.setRoles(roles);
         }
 
         userService.save(user);
-        redirectAttributes.addFlashAttribute("message", "Cấp tài khoản Giáo viên thành công cho " + user.getFullName() + " (" + (school != null ? school.getName() : "") + ")!");
+        String label = "ROLE_SCHOOL_ADMIN".equals(roleType) ? "Admin Trường" : "Giáo viên";
+        String levelTxt = schoolLevel != null ? " (" + user.getSchoolLevelName() + ")" : "";
+        redirectAttributes.addFlashAttribute("message", "Cấp tài khoản " + label + levelTxt + " thành công cho " + user.getFullName() + " (" + (school != null ? school.getName() : "") + ")!");
+        if (isSchoolAdmin) {
+            return "redirect:/student-tracking";
+        }
         return "redirect:/user/list";
     }
 

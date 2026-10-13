@@ -38,43 +38,79 @@
                             <form th:action="@{/user/create-teacher}" th:object="${user}" method="post">
                                 <h5 class="text-primary border-bottom pb-2 mb-3"><i class="fa fa-university"></i> 1. Đơn vị công tác & Trường học</h5>
 
-                                <div class="form-row">
-                                    <div class="form-group col-md-4">
-                                        <label>Tỉnh / Thành phố <span class="text-danger">*</span></label>
-                                        <select class="form-control" id="provinceSelect">
-                                            <option value="">-- Chọn Tỉnh / TP --</option>
-                                            <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <label>Quận / Huyện</label>
-                                        <select class="form-control" id="districtSelect">
-                                            <option value="">-- Chọn Quận / Huyện --</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group col-md-4">
-                                        <label>Xã / Phường</label>
-                                        <select class="form-control" id="wardSelect">
-                                            <option value="">-- Chọn Xã / Phường --</option>
-                                        </select>
-                                    </div>
+                                <!-- Nếu là School Admin, cố định trường -->
+                                <div th:if="${isSchoolAdmin and currentUser != null and currentUser.school != null}" class="form-group">
+                                    <label>Trường học công tác</label>
+                                    <input type="hidden" name="schoolId" th:value="${currentUser.school.id}">
+                                    <input type="text" class="form-control" th:value="${currentUser.school.name}" readonly>
                                 </div>
 
-                                <div class="form-group">
-                                    <label>Trường học công tác <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <select class="form-control" name="schoolId" id="schoolSelect" required>
-                                            <option value="">-- Vui lòng chọn địa bàn ở trên để xem danh sách trường --</option>
-                                        </select>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-success mb-0" type="button" data-toggle="modal" data-target="#quickAddSchoolModal">
-                                                <i class="fa fa-plus"></i> Thêm trường mới
-                                            </button>
+                                <!-- Nếu là Super Admin, chọn địa bàn và trường -->
+                                <th:block th:if="${isAdmin or !isSchoolAdmin}">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label>Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                            <select class="form-control" id="provinceSelect">
+                                                <option value="">-- Chọn Tỉnh / TP --</option>
+                                                <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>Quận / Huyện</label>
+                                            <select class="form-control" id="districtSelect">
+                                                <option value="">-- Chọn Quận / Huyện --</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label>Xã / Phường</label>
+                                            <select class="form-control" id="wardSelect">
+                                                <option value="">-- Chọn Xã / Phường --</option>
+                                            </select>
                                         </div>
                                     </div>
+
+                                    <div class="form-group">
+                                        <label>Trường học công tác <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <select class="form-control" name="schoolId" id="schoolSelect" required>
+                                                <option value="">-- Vui lòng chọn địa bàn ở trên để xem danh sách trường --</option>
+                                            </select>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-success mb-0" type="button" data-toggle="modal" data-target="#quickAddSchoolModal">
+                                                    <i class="fa fa-plus"></i> Thêm trường mới
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </th:block>
+
+                                <h5 class="text-primary border-bottom pb-2 mb-3 mt-4"><i class="fa fa-user"></i> 2. Thông tin tài khoản</h5>
+
+                                <div class="form-group" th:if="${isAdmin}">
+                                    <label>Vai trò tài khoản <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="roleType" id="roleTypeSelect">
+                                        <option value="ROLE_TEACHER" th:selected="${selectedRoleType == null or selectedRoleType == 'ROLE_TEACHER'}">Giáo viên (ROLE_TEACHER)</option>
+                                        <option value="ROLE_SCHOOL_ADMIN" th:selected="${selectedRoleType == 'ROLE_SCHOOL_ADMIN'}">Admin Trường (ROLE_SCHOOL_ADMIN) - Quản trị trường</option>
+                                    </select>
+                                    <small class="text-muted">Admin Trường có quyền quản lý giáo viên, học sinh và các lớp thuộc trường của mình.</small>
                                 </div>
 
-                                <h5 class="text-primary border-bottom pb-2 mb-3 mt-4"><i class="fa fa-user"></i> 2. Thông tin tài khoản Giáo viên</h5>
+                                <div class="form-group" th:if="${isAdmin}">
+                                    <label>Khoanh vùng Cấp học <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="schoolLevel" id="schoolLevelSelect">
+                                        <option value="">-- Toàn cấp / Liên cấp (Khối 1 đến 12) --</option>
+                                        <option value="1" th:selected="${selectedSchoolLevel == 1}">Cấp 1: Tiểu học (Khối 1 đến 5)</option>
+                                        <option value="2" th:selected="${selectedSchoolLevel == 2}">Cấp 2: THCS (Khối 6 đến 9)</option>
+                                        <option value="3" th:selected="${selectedSchoolLevel == 3}">Cấp 3: THPT (Khối 10 đến 12)</option>
+                                    </select>
+                                    <small class="text-muted">Khoanh vùng phạm vi: Tài khoản được tạo chỉ có tác dụng quản lý và tạo lớp trong các khối của cấp học này.</small>
+                                </div>
+
+                                <div class="form-group" th:if="${isSchoolAdmin and currentUser != null}">
+                                    <label>Cấp học công tác</label>
+                                    <input type="text" class="form-control" th:value="${currentUser.schoolLevelName}" readonly>
+                                    <small class="text-muted">Giáo viên sẽ tự động hoạt động trong cấp học của trường bạn.</small>
+                                </div>
 
                                 <div class="form-row">
                                     <div class="form-group col-md-6">

@@ -1,5 +1,6 @@
 package com.tttn.webthitracnghiem.model;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 public class ExamRequest {
@@ -15,6 +16,13 @@ public class ExamRequest {
     private List<QuestionRequest> questions;
     private Boolean isPublic = true;
     private Integer schoolId;
+
+    private String targetType = "PUBLIC"; // PUBLIC, SCHOOL, GRADE, CLASS
+    private Integer targetGrade;
+    private Integer targetClassId;
+    private Timestamp startTime;
+    private Timestamp endTime;
+    private String scoreType;
 
     public ExamRequest() {
     }
@@ -127,5 +135,53 @@ public class ExamRequest {
 
     public void setSchoolId(Integer schoolId) {
         this.schoolId = schoolId;
+    }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public Integer getTargetGrade() {
+        return targetGrade;
+    }
+
+    public void setTargetGrade(Integer targetGrade) {
+        this.targetGrade = targetGrade;
+    }
+
+    public Integer getTargetClassId() {
+        return targetClassId;
+    }
+
+    public void setTargetClassId(Integer targetClassId) {
+        this.targetClassId = targetClassId;
+    }
+
+    public Timestamp getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Timestamp startTime) {
+        this.startTime = startTime;
+    }
+
+    public Timestamp getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Timestamp endTime) {
+        this.endTime = endTime;
+    }
+
+    public String getScoreType() {
+        return scoreType;
+    }
+
+    public void setScoreType(String scoreType) {
+        this.scoreType = scoreType;
     }
 }

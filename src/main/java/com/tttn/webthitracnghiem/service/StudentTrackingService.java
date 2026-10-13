@@ -42,6 +42,12 @@ public class StudentTrackingService {
     private final StudentMonthlyRecordRepository monthlyRecordRepository;
     private final StudentTrackingExcelParser excelParser;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.tttn.webthitracnghiem.repository.SchoolRepository schoolRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.tttn.webthitracnghiem.repository.UserRepository userRepository;
+
     public StudentTrackingService(StudentTrackingClassRepository classRepository,
                                   TrackedStudentRepository studentRepository,
                                   StudentSemesterRecordRepository recordRepository,
@@ -57,6 +63,28 @@ public class StudentTrackingService {
     @Transactional(readOnly = true)
     public List<StudentTrackingClass> listClasses() {
         return classRepository.findAllByOrderBySchoolYearDescClassNameAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentTrackingClass> listClassesForSchool(Integer schoolId) {
+        if (schoolId == null) {
+            return listClasses();
+        }
+        return classRepository.findBySchoolIdOrderBySchoolYearDescClassNameAsc(schoolId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentTrackingClass> listClassesForTeacher(String teacherId, Integer schoolId) {
+        if (teacherId == null) {
+            return listClassesForSchool(schoolId);
+        }
+        List<StudentTrackingClass> classes = classRepository.findClassesByTeacherInvolved(teacherId);
+        if (schoolId != null) {
+            return classes.stream()
+                    .filter(c -> c.getSchool() != null && c.getSchool().getId().equals(schoolId))
+                    .collect(Collectors.toList());
+        }
+        return classes;
     }
 
     @Transactional(readOnly = true)
@@ -91,6 +119,11 @@ public class StudentTrackingService {
 
     @Transactional
     public StudentTrackingClass createClass(String className, String schoolYear) {
+        return createClass(className, schoolYear, null, null, null);
+    }
+
+    @Transactional
+    public StudentTrackingClass createClass(String className, String schoolYear, Integer grade, Integer schoolId, String homeroomTeacherId) {
         String cleanName = cleanRequired(className, 50, "Ten lop");
         String cleanYear = cleanRequired(schoolYear, 9, "Nam hoc");
         if (!SCHOOL_YEAR_PATTERN.matcher(cleanYear).matches()) {
@@ -102,8 +135,48 @@ public class StudentTrackingService {
         StudentTrackingClass trackingClass = new StudentTrackingClass();
         trackingClass.setClassName(cleanName);
         trackingClass.setSchoolYear(cleanYear);
+        trackingClass.setGrade(grade);
+        if (schoolId != null && schoolRepository != null) {
+            schoolRepository.findById(schoolId).ifPresent(trackingClass::setSchool);
+        }
+        if (homeroomTeacherId != null && !homeroomTeacherId.trim().isEmpty() && userRepository != null) {
+            userRepository.findById(homeroomTeacherId).ifPresent(trackingClass::setHomeroomTeacher);
+        }
         return classRepository.save(trackingClass);
     }
+
+    @Transactional
+    public void updateClass(Integer classId, Integer grade, String homeroomTeacherId) {
+        StudentTrackingClass trackingClass = findClass(classId);
+        if (grade != null) {
+            trackingClass.setGrade(grade);
+        }
+        if (homeroomTeacherId != null && userRepository != null) {
+            if (homeroomTeacherId.trim().isEmpty()) {
+                trackingClass.setHomeroomTeacher(null);
+            } else {
+                userRepository.findById(homeroomTeacherId).ifPresent(trackingClass::setHomeroomTeacher);
+            }
+        }
+        classRepository.save(trackingClass);
+    }
+
+    /**
+     * Cập nhật GVCN cho lớp. teacherId == null nghĩa là RÚT GVCN (chưa phân công).
+     */
+    @Transactional
+    public void updateHomeroomTeacher(Integer classId, String teacherId) {
+        StudentTrackingClass trackingClass = findClass(classId);
+        if (teacherId == null || teacherId.trim().isEmpty()) {
+            trackingClass.setHomeroomTeacher(null);
+        } else {
+            if (userRepository != null) {
+                userRepository.findById(teacherId.trim()).ifPresent(trackingClass::setHomeroomTeacher);
+            }
+        }
+        classRepository.save(trackingClass);
+    }
+
 
     @Transactional
     public void deleteClass(Integer classId) {
@@ -159,6 +232,12 @@ public class StudentTrackingService {
             studentRepository.save(newStudent(trackingClass, name, nextOrder++));
             existingNames.add(name.toLowerCase());
             added++;
+
+            // Gán học sinh vào lớp trên website
+            if (student.getTrackingClass() == null && userRepository != null) {
+                student.setTrackingClass(trackingClass);
+                userRepository.save(student);
+            }
         }
         return new SyncResult(added, webStudents.size());
     }
@@ -524,5 +603,62 @@ public class StudentTrackingService {
 
         public int getClassCount() { return classCount; }
         public int getStudentCount() { return studentCount; }
+    }
+
+    @Transactional
+    public void recordExamScore(Integer classId, String studentFullName, String scoreType, BigDecimal score) {
+        if (classId == null || studentFullName == null || scoreType == null || score == null) return;
+        TrackedStudent student = studentRepository
+                .findFirstByTrackingClassIdAndFullNameIgnoreCase(classId, studentFullName.trim())
+                .orElse(null);
+        if (student == null) return;
+
+        java.time.LocalDate now = java.time.LocalDate.now();
+        int currentMonth = now.getMonthValue();
+        int semester = (currentMonth >= 9 || currentMonth == 1) ? 1 : 2;
+
+        List<StudentMonthlyRecord> records = monthlyRecordRepository
+                .findByStudentIdInAndSemesterAndMonth(List.of(student.getId()), semester, currentMonth);
+        StudentMonthlyRecord record = records.isEmpty() ? null : records.get(0);
+        if (record == null) {
+            record = new StudentMonthlyRecord();
+            record.setStudent(student);
+            record.setSemester(semester);
+            record.setMonth(currentMonth);
+        }
+
+        switch (scoreType.toUpperCase()) {
+            case "REGULAR_1":
+                record.setRegularScore1(score);
+                break;
+            case "REGULAR_2":
+                record.setRegularScore2(score);
+                break;
+            case "MIDTERM":
+                record.setMidtermScore(score);
+                break;
+            case "FINAL":
+                record.setFinalScore(score);
+                break;
+            default:
+                break;
+        }
+
+        BigDecimal reg1 = record.getRegularScore1();
+        BigDecimal reg2 = record.getRegularScore2();
+        BigDecimal mid = record.getMidtermScore();
+        BigDecimal fin = record.getFinalScore();
+        double totalWeighted = 0;
+        double totalCoeff = 0;
+        if (reg1 != null) { totalWeighted += reg1.doubleValue(); totalCoeff += 1; }
+        if (reg2 != null) { totalWeighted += reg2.doubleValue(); totalCoeff += 1; }
+        if (mid != null) { totalWeighted += mid.doubleValue() * 2; totalCoeff += 2; }
+        if (fin != null) { totalWeighted += fin.doubleValue() * 3; totalCoeff += 3; }
+        if (totalCoeff > 0) {
+            double avg = Math.round((totalWeighted / totalCoeff) * 100.0) / 100.0;
+            record.setAverageScore(BigDecimal.valueOf(avg));
+        }
+
+        monthlyRecordRepository.save(record);
     }
 }

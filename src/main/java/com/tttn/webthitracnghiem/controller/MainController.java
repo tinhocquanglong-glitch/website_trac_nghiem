@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -55,6 +56,9 @@ public class MainController {
     ISubjectService subjectService;
     @Autowired
     IQuestionService questionService;
+
+    @Autowired(required = false)
+    StudentTrackingService trackingService;
 
     @ModelAttribute("result")
     public Result getResult() {
@@ -135,7 +139,8 @@ public class MainController {
     public String submit1(@PathVariable(name = "id") int idExam, @ModelAttribute QuestionForm qForm, Model m) {
         this.status = true;
         if (!submitted) {
-            result.setMark(qService.getResult(qForm));
+            double score = qService.getResult(qForm);
+            result.setMark(score);
             result.setEndTime(new Timestamp(System.currentTimeMillis()));
             qService.saveScore(result);
             long millis = result.getEndTime().getTime() - result.getStartTime().getTime();
@@ -143,6 +148,29 @@ public class MainController {
                     TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
                     TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
             m.addAttribute("time", hms);
+
+            // Tự động đồng bộ điểm vào sổ theo dõi học sinh nếu đề có cấu hình scoreType
+            try {
+                Exam currentExam = examService.findById(idExam);
+                if (currentExam != null && currentExam.getScoreType() != null
+                        && !currentExam.getScoreType().trim().isEmpty() && trackingService != null) {
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    String username = (authentication != null) ? authentication.getName() : null;
+                    User student = (username != null) ? userService.findById(username) : null;
+                    if (student != null) {
+                        Integer classId = (student.getTrackingClass() != null) ? student.getTrackingClass().getId()
+                                : (currentExam.getTargetClass() != null ? currentExam.getTargetClass().getId() : null);
+                        if (classId != null) {
+                            int totalQuestions = (qForm.getQuestions() != null && !qForm.getQuestions().isEmpty())
+                                    ? qForm.getQuestions().size() : (currentExam.getQuestions() != null ? currentExam.getQuestions().size() : 10);
+                            double scaled = totalQuestions > 0 ? ((double) score / totalQuestions) * 10.0 : 0.0;
+                            BigDecimal score10 = BigDecimal.valueOf(Math.round(scaled * 100.0) / 100.0);
+                            trackingService.recordExamScore(classId, student.getFullName(), currentExam.getScoreType(), score10);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
             result = new Result();
             m.addAttribute("qForm", qForm);
             m.addAttribute("idExam", idExam);
@@ -154,37 +182,90 @@ public class MainController {
     @GetMapping("/quiz1/{id}")
     public String quiz13(@PathVariable("id") int id, Model m, RedirectAttributes ra) throws ParseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        if (username == null) {
-            ra.addFlashAttribute("warning", "Bạn Phải Nhập Tên ");
+        String username = authentication != null ? authentication.getName() : null;
+        if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
+            ra.addFlashAttribute("warning", "Bạn phải đăng nhập để làm bài.");
             return "redirect:/";
         }
         submitted = false;
-        // Tăng lượt thi
         Exam exam = examService.findById(id);
+        if (exam == null) {
+            ra.addFlashAttribute("warning", "Không tìm thấy đề thi.");
+            return "redirect:/default";
+        }
 
-        // Kiểm tra quyền vào thi đề Private
-        Boolean isPublic = exam.getIsPublic();
-        if (isPublic == null || !isPublic) {
-            // Đề private: chỉ học sinh cùng trường mới được thi
-            User student = userService.findById(username);
-            if (student == null) {
-                ra.addFlashAttribute("warning", "Bạn cần đăng nhập để thi đề này.");
-                return "redirect:/login";
-            }
+        // 1. Kiểm tra khung giờ thi (startTime, endTime)
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        if (exam.getStartTime() != null && now.before(exam.getStartTime())) {
+            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            ra.addFlashAttribute("warning", "Kỳ thi chưa bắt đầu. Thời gian mở đề: " + df.format(exam.getStartTime()));
+            return "redirect:/default";
+        }
+        if (exam.getEndTime() != null && now.after(exam.getEndTime())) {
+            SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+            ra.addFlashAttribute("warning", "Kỳ thi đã kết thúc vào lúc: " + df.format(exam.getEndTime()));
+            return "redirect:/default";
+        }
+
+        // 2. Kiểm tra phạm vi giao đề (targetType: PUBLIC, SCHOOL, GRADE, CLASS)
+        User student = userService.findById(username);
+        if (student == null) {
+            ra.addFlashAttribute("warning", "Bạn cần đăng nhập để làm bài.");
+            return "redirect:/login";
+        }
+
+        String targetType = exam.getTargetType();
+        if (targetType == null || targetType.trim().isEmpty()) {
+            targetType = (exam.getIsPublic() == null || exam.getIsPublic()) ? "PUBLIC" : "SCHOOL";
+        }
+
+        if ("SCHOOL".equalsIgnoreCase(targetType)) {
             School studentSchool = student.getSchool();
             School examSchool = exam.getSchool();
-            boolean sameSchool = (studentSchool != null && examSchool != null
-                    && studentSchool.getId() == examSchool.getId());
-            // Học sinh "tự do" (trường id=1) hoặc khác trường => chặn
+            boolean sameSchool = (studentSchool != null && examSchool != null && studentSchool.getId() == examSchool.getId());
             if (!sameSchool) {
                 String schoolName = (examSchool != null) ? examSchool.getName() : "nội bộ";
-                ra.addFlashAttribute("warning",
-                        "Đề thi này chỉ dành riêng cho học sinh trường " + schoolName + ".");
+                ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho học sinh trường " + schoolName + ".");
                 return "redirect:/default";
+            }
+        } else if ("GRADE".equalsIgnoreCase(targetType)) {
+            School studentSchool = student.getSchool();
+            School examSchool = exam.getSchool();
+            boolean sameSchool = (studentSchool != null && examSchool != null && studentSchool.getId() == examSchool.getId());
+            if (!sameSchool && examSchool != null) {
+                ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho trường " + examSchool.getName() + ".");
+                return "redirect:/default";
+            }
+            Integer targetGrade = exam.getTargetGrade();
+            Integer studentGrade = (student.getTrackingClass() != null) ? student.getTrackingClass().getGrade() : null;
+            if (targetGrade != null && (studentGrade == null || !targetGrade.equals(studentGrade))) {
+                ra.addFlashAttribute("warning", "Đề thi này dành riêng cho học sinh Khối " + targetGrade + ".");
+                return "redirect:/default";
+            }
+        } else if ("CLASS".equalsIgnoreCase(targetType)) {
+            StudentTrackingClass targetClass = exam.getTargetClass();
+            StudentTrackingClass studentClass = student.getTrackingClass();
+            if (targetClass != null && (studentClass == null || !targetClass.getId().equals(studentClass.getId()))) {
+                String className = targetClass.getClassName();
+                ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho học sinh lớp " + className + ".");
+                return "redirect:/default";
+            }
+        } else {
+            // PUBLIC nhưng isPublic = false
+            Boolean isPublic = exam.getIsPublic();
+            if (isPublic != null && !isPublic) {
+                School studentSchool = student.getSchool();
+                School examSchool = exam.getSchool();
+                boolean sameSchool = (studentSchool != null && examSchool != null && studentSchool.getId() == examSchool.getId());
+                if (!sameSchool) {
+                    String schoolName = (examSchool != null) ? examSchool.getName() : "nội bộ";
+                    ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho học sinh trường " + schoolName + ".");
+                    return "redirect:/default";
+                }
             }
         }
 
+        // Tăng lượt thi
         exam.setTurn(exam.getTurn() + 1);
         examService.save(exam);
 

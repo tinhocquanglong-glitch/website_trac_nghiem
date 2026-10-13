@@ -19,7 +19,15 @@
                 <div class="tracking-page-header">
                     <div>
                         <h1 th:text="|Sổ theo dõi lớp ${trackingClass.className}|">Sổ theo dõi lớp</h1>
-                        <div class="text-muted" th:text="|Năm học ${trackingClass.schoolYear}|">Năm học</div>
+                        <div class="text-muted" style="margin-top: 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span th:text="|Năm học ${trackingClass.schoolYear}|">Năm học</span>
+                            <span class="badge badge-primary" th:if="${trackingClass.grade != null}" th:text="|Khối ${trackingClass.grade}|"></span>
+                            <span class="badge badge-info" th:if="${trackingClass.homeroomTeacher != null}" th:text="|GVCN: ${trackingClass.homeroomTeacher.fullName}|"></span>
+                            <span class="badge badge-secondary font-italic" th:if="${trackingClass.homeroomTeacher == null}">Chưa có GVCN</span>
+                            <span class="badge badge-success" th:if="${isHomeroom == true}">Vai trò: GVCN</span>
+                            <span class="badge badge-warning" th:if="${isHomeroom != true and canManage == true}">Vai trò: Quản trị</span>
+                            <span class="badge badge-secondary" th:if="${canManage == false}">Vai trò: GVBM</span>
+                        </div>
                     </div>
                     <div class="tracking-header-actions">
                         <a class="btn btn-success" th:href="@{/student-tracking/export(classId=${trackingClass.id})}" download>
@@ -28,15 +36,137 @@
                         <a class="btn btn-outline-secondary" th:href="@{/student-tracking}"><i class="fa fa-arrow-left" aria-hidden="true"></i> Danh sách lớp</a>
                     </div>
                 </div>
+
+                <!-- Khung thông tin quản lý lớp & vai trò người ghi sổ -->
+                <div class="card mb-3" style="border-left: 5px solid #17a2b8; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px;">
+                    <div class="card-body p-3" style="background: #f8fafc;">
+                        <div class="row align-items-center">
+                            <div class="col-md-7">
+                                <div style="font-size: 14px; color: #334155; line-height: 1.6;">
+                                    <div><i class="fa fa-university text-muted"></i> <strong>Đơn vị:</strong> <span th:text="${trackingClass.school != null ? trackingClass.school.name : 'Chưa phân trường'}">Trường</span></div>
+                                    <div><i class="fa fa-user-circle text-primary"></i> <strong>Quản lý lớp (GVCN):</strong>
+                                        <span th:if="${trackingClass.homeroomTeacher != null}" class="text-primary font-weight-bold" th:text="|${trackingClass.homeroomTeacher.fullName} (${trackingClass.homeroomTeacher.id})|">Thầy A</span>
+                                        <span th:if="${trackingClass.homeroomTeacher == null}" class="text-danger font-italic">Chưa chỉ định Giáo viên chủ nhiệm</span>
+                                    </div>
+                                    <div><i class="fa fa-calendar text-muted"></i> <strong>Năm học:</strong> <span th:text="${trackingClass.schoolYear}"></span> | <strong>Khối:</strong> <span th:text="${trackingClass.grade != null ? 'Khối ' + trackingClass.grade : 'Chưa xác định'}"></span></div>
+                                </div>
+                            </div>
+                            <div class="col-md-5 text-md-right mt-2 mt-md-0">
+                                <!-- Tư cách GVCN -->
+                                <div th:if="${isHomeroom == true}" class="alert alert-success d-inline-block py-2 px-3 mb-0 text-left" style="font-size: 13px;">
+                                    <i class="fa fa-check-circle"></i> <strong>Bạn là: GIÁO VIÊN CHỦ NHIỆM</strong><br>
+                                    <span class="small">Thầy/Cô: <strong th:text="${currentUser != null ? currentUser.fullName : ''}"></strong></span><br>
+                                    <span class="small text-muted">Quyền: Quản lý sĩ số, điểm danh, phân công môn & duyệt sổ.</span>
+                                </div>
+                                <!-- Tư cách Ban giám hiệu / Admin -->
+                                <div th:if="${isHomeroom != true and canManage == true}" class="alert alert-warning d-inline-block py-2 px-3 mb-0 text-left" style="font-size: 13px;">
+                                    <i class="fa fa-shield"></i> <strong>Bạn là: BAN GIÁM HIỆU / ADMIN</strong><br>
+                                    <span class="small">Cán bộ: <strong th:text="${currentUser != null ? currentUser.fullName : ''}"></strong></span><br>
+                                    <span class="small text-muted">Quyền: Toàn quyền kiểm tra và quản trị sổ lớp.</span>
+                                </div>
+                                <!-- Tư cách GVBM -->
+                                <div th:if="${canManage == false}" class="alert alert-info d-inline-block py-2 px-3 mb-0 text-left" style="font-size: 13px;">
+                                    <i class="fa fa-book"></i> <strong>Bạn đang ghi sổ với tư cách: GIÁO VIÊN BỘ MÔN</strong><br>
+                                    <span>Giáo viên: <strong th:text="${currentUser != null ? currentUser.fullName : ''}"></strong></span><br>
+                                    <span>Môn phụ trách: <strong class="text-danger" th:text="${myAssignedSubjects != null ? myAssignedSubjects : 'Chưa được phân công môn'}"></strong> - Lớp: <strong th:text="${trackingClass.className}"></strong></span><br>
+                                    <span class="small text-muted">(Chỉ nhập điểm & nhận xét tiến bộ của học sinh)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
                 <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+
+                <!-- Form đổi / rút GVCN – CHỈ Admin / School Admin mới thấy -->
+                <div class="card mb-3" th:if="${isAdminOrSchoolAdmin == true}"
+                     style="border-left: 5px solid #ffc107; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px;">
+                    <div class="card-body p-3" style="background: #fffdf0;">
+                        <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
+                            <span style="font-size: 14px; font-weight: 600; color: #856404;">
+                                <i class="fa fa-user-circle text-warning"></i> Đổi / Rút GVCN:
+                            </span>
+                            <form method="post"
+                                  th:action="@{/student-tracking/classes/{id}/homeroom(id=${trackingClass.id})}"
+                                  class="d-flex align-items-center flex-wrap" style="gap: 8px; margin: 0;"
+                                  onsubmit="return confirm('Xác nhận thay đổi Giáo viên chủ nhiệm lớp này?');">
+                                <select name="homeroomTeacherId" class="form-control form-control-sm" style="min-width: 220px;">
+                                    <option value="">-- Bỏ trống (Rút GVCN) --</option>
+                                    <option th:each="t : ${schoolTeachers}"
+                                            th:value="${t.id}"
+                                            th:text="|${t.fullName} (${t.id})|"
+                                            th:selected="${trackingClass.homeroomTeacher != null and trackingClass.homeroomTeacher.id == t.id}">
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                    <i class="fa fa-save"></i> Lưu GVCN
+                                </button>
+                            </form>
+                            <span class="small text-muted">
+                                <i class="fa fa-info-circle"></i>
+                                Chọn "Bỏ trống" để rút nhiệm vụ GVCN khỏi giáo viên hiện tại.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phân công Giáo viên bộ môn (GVBM) -->
+                <div class="card mb-3" style="border: 1px solid #d2d6de; border-radius: 4px; margin-bottom: 20px;">
+                    <div class="card-header bg-light" style="padding: 10px 15px; border-bottom: 1px solid #e5e5e5; display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="margin: 0; font-size: 15px; font-weight: 600;">
+                            <i class="fa fa-users text-primary"></i> Phân công Giáo viên bộ môn (GVBM)
+                        </h4>
+                        <span class="badge badge-secondary" th:text="|${assignments != null ? assignments.size() : 0} môn được phân công|"></span>
+                    </div>
+                    <div class="card-body" style="padding: 15px;">
+                        <!-- Form phân công (chỉ hiện với GVCN hoặc Admin) -->
+                        <div th:if="${canManage == true and schoolTeachers != null and !schoolTeachers.isEmpty() and allSubjects != null and !allSubjects.isEmpty()}" style="margin-bottom: 15px;">
+                            <form method="post" th:action="@{/student-tracking/classes/{id}/assignments(id=${trackingClass.id})}" class="form-inline" style="gap: 10px; display: flex; flex-wrap: wrap;">
+                                <div class="form-group mb-0">
+                                    <label for="assignSubject" class="sr-only">Môn học</label>
+                                    <select id="assignSubject" name="subjectId" class="form-control form-control-sm" required>
+                                        <option value="">-- Chọn Môn học --</option>
+                                        <option th:each="sub : ${allSubjects}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="assignTeacher" class="sr-only">Giáo viên</label>
+                                    <select id="assignTeacher" name="teacherId" class="form-control form-control-sm" required>
+                                        <option value="">-- Chọn Giáo viên bộ môn --</option>
+                                        <option th:each="t : ${schoolTeachers}" th:value="${t.id}" th:text="|${t.fullName} (${t.id})|"></option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-user-plus"></i> Phân công môn</button>
+                            </form>
+                        </div>
+
+                        <!-- Danh sách GVBM đã phân công -->
+                        <div th:if="${assignments != null and !assignments.isEmpty()}">
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <div th:each="asg : ${assignments}" class="badge badge-light" style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; display: inline-flex; align-items: center; gap: 8px;">
+                                    <strong th:text="${asg.subject != null ? asg.subject.name : 'Môn học'}"></strong>:
+                                    <span th:text="${asg.teacher != null ? asg.teacher.fullName : 'Chưa rõ'}"></span>
+                                    <form th:if="${canManage == true}" method="post" th:action="@{/student-tracking/classes/{classId}/assignments/{aid}/delete(classId=${trackingClass.id},aid=${asg.id})}" style="display:inline; margin:0;" onsubmit="return confirm('Hủy phân công môn này?');">
+                                        <button type="submit" class="btn btn-link text-danger p-0 m-0" style="font-size: 12px; line-height: 1;" title="Hủy phân công">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-muted font-italic mb-0" th:if="${assignments == null or assignments.isEmpty()}">
+                            Chưa có giáo viên bộ môn nào được phân công cho lớp này.
+                        </p>
+                    </div>
+                </div>
 
                 <div class="tracking-toolbar">
                     <div class="tracking-view-controls">
                         <div class="tracking-class-switcher">
                             <label for="trackingClassSelector">Lớp đang xem</label>
                             <select id="trackingClassSelector" class="form-control"
-                                    onchange="if (this.value) window.location.href = this.value;">
+                                     onchange="if (this.value) window.location.href = this.value;">
                                 <option th:each="classOption : ${trackingClasses}"
                                         th:value="@{/student-tracking/classes/{id}(id=${classOption.id},semester=${semester},month=${month})}"
                                         th:text="|${classOption.className} - ${classOption.schoolYear}|"
@@ -53,14 +183,23 @@
                                th:text="|Tháng ${monthOption}|">Tháng</a>
                         </nav>
                     </div>
-                    <form class="tracking-student-form" method="post" th:action="@{/student-tracking/classes/{id}/students(id=${trackingClass.id})}">
-                        <input type="hidden" name="semester" th:value="${semester}">
-                        <input type="hidden" name="month" th:value="${month}">
-                        <div class="form-group"><label for="fullName">Thêm học sinh</label><input id="fullName" name="fullName" class="form-control" maxlength="150" required></div>
-                        <button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Thêm</button>
-                    </form>
-                    <!-- Nút đồng bộ học sinh từ web - chỉ hiện khi giáo viên có trường -->
-                    <form th:if="${currentUserSchool != null}" method="post"
+                    <div th:if="${canManage != false}" style="display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+                        <form class="tracking-student-form" method="post" th:action="@{/student-tracking/classes/{id}/students(id=${trackingClass.id})}">
+                            <input type="hidden" name="semester" th:value="${semester}">
+                            <input type="hidden" name="month" th:value="${month}">
+                            <div class="form-group"><label for="fullName">Thêm học sinh</label><input id="fullName" name="fullName" class="form-control" maxlength="150" required></div>
+                            <button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Thêm</button>
+                        </form>
+                        <button type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#createStudentAccountModal" style="margin-bottom: 0; white-space: nowrap;">
+                            <i class="fa fa-id-card-o" aria-hidden="true"></i> Cấp tài khoản học sinh
+                        </button>
+                        <!-- Nút tiếp nhận học sinh tự do (chưa có lớp) -->
+                        <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addExistingStudentModal" style="margin-bottom: 0; white-space: nowrap;">
+                            <i class="fa fa-user-plus" aria-hidden="true"></i> Tiếp nhận HS tự do (<span th:text="${unassignedStudents != null ? unassignedStudents.size() : 0}">0</span>)
+                        </button>
+                    </div>
+                    <!-- Nút đồng bộ học sinh từ web - chỉ hiện khi GVCN/Admin và có trường -->
+                    <form th:if="${canManage != false and currentUserSchool != null}" method="post"
                           th:action="@{/student-tracking/classes/{id}/sync-students(id=${trackingClass.id})}"
                           style="margin-top: 8px;"
                           onsubmit="return confirm('Đồng bộ học sinh trường ' + /*[[${currentUserSchool.name}]]*/ '' + ' vào lớp này? Học sinh đã có trong lớp sẽ không bị trùng.');">
@@ -95,17 +234,21 @@
                                 <th class="cell-score" rowspan="2">ĐGK</th><th class="cell-score" rowspan="2">ĐCK</th><th class="cell-score" rowspan="2">ĐTBM</th>
                                 <th class="cell-comment" rowspan="2">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
                                 <th class="cell-status" rowspan="2">Điểm danh</th><th class="cell-days" rowspan="2">Số ngày</th>
-                                <th class="cell-order" rowspan="2">Xóa</th>
+                                <th th:if="${canManage != false}" class="cell-order" rowspan="2">Xóa</th>
                             </tr>
                             <tr><th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th></tr>
                             </thead>
                             <tbody>
-                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td colspan="11" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
+                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td th:colspan="${canManage == false ? 10 : 11}" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
                             <tr th:each="row, stat : ${sheetForm.rows}">
                                 <td class="cell-order" th:text="${stat.count}"></td>
                                 <td class="cell-name">
                                     <input type="hidden" th:name="|rows[${stat.index}].studentId|" th:value="${row.studentId}">
-                                    <input th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}" maxlength="150" required aria-label="Họ và tên">
+                                    <input th:if="${canManage != false}" th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}" maxlength="150" required aria-label="Họ và tên">
+                                    <th:block th:if="${canManage == false}">
+                                        <input type="hidden" th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}">
+                                        <strong th:text="${row.fullName}"></strong>
+                                    </th:block>
                                 </td>
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].regularScore1|" th:value="${row.regularScore1}" aria-label="ĐGTX 1"></td>
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].regularScore2|" th:value="${row.regularScore2}" aria-label="ĐGTX 2"></td>
@@ -114,16 +257,24 @@
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].averageScore|" th:value="${row.averageScore}" aria-label="Điểm trung bình môn"></td>
                                 <td class="cell-comment"><textarea th:name="|rows[${stat.index}].progressComment|" th:text="${row.progressComment}" maxlength="2000" aria-label="Nhận xét sự tiến bộ"></textarea></td>
                                 <td class="cell-status">
-                                    <select th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
+                                    <select th:if="${canManage != false}" th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
                                         <option th:each="status : ${attendanceStatuses}" th:value="${status}" th:text="${status.displayName}"
                                                 th:selected="${status == row.attendanceStatus or (row.attendanceStatus == null and status.name() == 'NONE')}"></option>
                                     </select>
+                                    <th:block th:if="${canManage == false}">
+                                        <input type="hidden" th:name="|rows[${stat.index}].attendanceStatus|" th:value="${row.attendanceStatus != null ? row.attendanceStatus : 'NONE'}">
+                                        <span class="badge badge-light" th:text="${row.attendanceStatus != null ? row.attendanceStatus.displayName : 'Chưa điểm danh'}"></span>
+                                    </th:block>
                                 </td>
                                 <td class="cell-days">
-                                    <input th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}"
+                                    <input th:if="${canManage != false}" th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}"
                                            maxlength="500" placeholder="Ghi chú tùy ý" aria-label="Ghi chú số ngày">
+                                    <th:block th:if="${canManage == false}">
+                                        <input type="hidden" th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}">
+                                        <span class="text-muted" th:text="${row.attendanceDates}"></span>
+                                    </th:block>
                                 </td>
-                                <td class="cell-order">
+                                <td th:if="${canManage != false}" class="cell-order">
                                     <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa học sinh" name="semester" th:value="${semester}"
                                             th:formaction="@{/student-tracking/classes/{classId}/students/{studentId}/delete(classId=${trackingClass.id},studentId=${row.studentId})}"
                                             onclick="return confirm('Xóa học sinh này khỏi lớp?');">
@@ -136,6 +287,99 @@
                     </div>
                     <div class="tracking-save-bar"><button class="btn btn-success" type="submit"><i class="fa fa-save" aria-hidden="true"></i> Lưu sổ theo dõi</button></div>
                 </form>
+
+                <!-- Modal Cấp tài khoản Học sinh cho GVCN / Admin -->
+                <div class="modal fade" id="createStudentAccountModal" tabindex="-1" role="dialog" aria-labelledby="createStudentAccountModalLabel" aria-hidden="true" th:if="${canManage != false}">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title text-white" id="createStudentAccountModalLabel" style="color: white !important;">
+                                    <i class="fa fa-id-card"></i> Cấp tài khoản Học sinh mới cho lớp <span th:text="${trackingClass.className}"></span>
+                                </h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="color: white !important;">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form method="post" th:action="@{/student-tracking/classes/{id}/create-student-account(id=${trackingClass.id})}">
+                                <div class="modal-body">
+                                    <p class="text-muted small">
+                                        Học sinh sau khi được cấp tài khoản có thể đăng nhập vào hệ thống để làm bài thi trực tuyến và tự động có tên trong sổ theo dõi lớp này.
+                                    </p>
+                                    <div class="form-group">
+                                        <label for="newUsername">Tên đăng nhập (Username / Mã học sinh) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="newUsername" name="username" placeholder="Ví dụ: hs_nguyenvana hoặc mã định danh" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newFullName">Họ và tên học sinh <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="newFullName" name="fullName" placeholder="Ví dụ: Nguyễn Văn A" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPassword">Mật khẩu khởi tạo <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" id="newPassword" name="password" placeholder="Ít nhất 6 ký tự" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newEmail">Email liên hệ (tuỳ chọn)</label>
+                                        <input type="email" class="form-control" id="newEmail" name="email" placeholder="Để trống nếu không có (hệ thống tự sinh)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="newPhoneNumber">Số điện thoại liên hệ (tuỳ chọn)</label>
+                                        <input type="text" class="form-control" id="newPhoneNumber" name="phoneNumber" placeholder="Số điện thoại học sinh / phụ huynh">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-check"></i> Tạo tài khoản & Thêm vào lớp</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Tiếp nhận Học sinh tự do (đã có tài khoản web, chưa có lớp) -->
+                <div class="modal fade" id="addExistingStudentModal" tabindex="-1" role="dialog" aria-labelledby="addExistingStudentModalLabel" aria-hidden="true" th:if="${canManage != false}">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title text-white font-weight-bold" id="addExistingStudentModalLabel" style="color: white !important;">
+                                    <i class="fa fa-user-plus"></i> Tiếp nhận Học sinh tự do vào lớp <span th:text="${trackingClass.className}"></span>
+                                </h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="color: white !important;">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form method="post" th:action="@{/student-tracking/classes/{id}/add-existing-student(id=${trackingClass.id})}">
+                                <input type="hidden" name="semester" th:value="${semester}">
+                                <input type="hidden" name="month" th:value="${month}">
+                                <div class="modal-body">
+                                    <p class="text-muted small">
+                                        Đây là danh sách học sinh đã tự đăng ký tài khoản trên hệ thống nhưng <strong>chưa được xếp vào lớp nào</strong>.
+                                        Khi tiếp nhận, học sinh sẽ chính thức thuộc lớp của bạn và tự động xuất hiện trong sổ theo dõi này.
+                                    </p>
+                                    <div class="form-group" th:if="${unassignedStudents != null and !unassignedStudents.isEmpty()}">
+                                        <label for="studentUsernameSelect">Chọn học sinh cần tiếp nhận: <span class="text-danger">*</span></label>
+                                        <select class="form-control" id="studentUsernameSelect" name="studentUsername" required>
+                                            <option value="">-- Chọn học sinh tự do --</option>
+                                            <option th:each="st : ${unassignedStudents}"
+                                                    th:value="${st.id}"
+                                                    th:text="|${st.fullName} (${st.id}) - ${st.school != null ? st.school.name : 'Tự do'}${st.schoolLevel != null ? ' - ' + st.getSchoolLevelName() : ''}|">
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="alert alert-info py-2" th:if="${unassignedStudents == null or unassignedStudents.isEmpty()}">
+                                        <i class="fa fa-info-circle"></i> Hiện không có học sinh tự do nào chưa có lớp trong trường/khối của bạn.
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                    <button th:if="${unassignedStudents != null and !unassignedStudents.isEmpty()}"
+                                            type="submit" class="btn btn-primary">
+                                        <i class="fa fa-check"></i> Xác nhận thêm vào lớp
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
         <div th:insert="~{index.html :: footerAdmin}"></div>

@@ -108,6 +108,10 @@ public class AdministrativeDataSeeder implements CommandLineRunner {
             roleRepository.insertRoleNative(3, "ROLE_TEACHER");
             logger.info("Initialized ROLE_TEACHER in database with id 3.");
         }
+        if (!roleRepository.findByRoleName("ROLE_SCHOOL_ADMIN").isPresent()) {
+            roleRepository.insertRoleNative(4, "ROLE_SCHOOL_ADMIN");
+            logger.info("Initialized ROLE_SCHOOL_ADMIN in database with id 4.");
+        }
     }
 
     private void seedAdministrativeUnits() {
