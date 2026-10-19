@@ -105,6 +105,18 @@
                                     </select>
                                 </div>
                             </form>
+                            <form class="d-inline-flex ml-2" action="/question/list" method="get">
+                                <input type="hidden" name="keyword" th:value="${keyword}">
+                                <input type="hidden" name="subjectId" th:value="${subjectId}">
+                                <select class="btn dropdown-toggle" style="background-color:#b8f0ff" name="classId" onchange="this.form.submit()">
+                                    <option value="">--Chọn khối--</option>
+                                    <option th:each="item : ${classes}" th:value="${item.id}" th:selected="${selectedClassId == item.id}" th:text="${item.displayName}"></option>
+                                </select>
+                                <select class="btn dropdown-toggle" style="background-color:#d7f7e5" name="chapterId" onchange="this.form.submit()">
+                                    <option value="">--Chọn chủ đề--</option>
+                                    <option th:each="item : ${chapters}" th:value="${item.id}" th:selected="${selectedChapterId == item.id}" th:text="${item.serial + '. ' + item.chapterName}"></option>
+                                </select>
+                            </form>
                         </div>
                         <div style="display: flex;gap: 15px;">
                             <a href="/question/create" class="btn btn-primary">
@@ -139,7 +151,7 @@
                         <tr th:each="question: ${questions}">
                             <td th:text="${question.quesId}"></td>
                             <td style="text-transform: uppercase"
-                                th:text="${question.lesson.chapter.subjectClasses.subject.name} + ' '+${question.lesson.chapter.subjectClasses.classes.nameClass}+': '+${question.lesson.nameLesson}"></td>
+                                th:text="${question.lesson.chapter.subjectClasses.subject.name} + ' '+${question.lesson.chapter.subjectClasses.classes.displayName}+': '+${question.lesson.nameLesson}"></td>
                             <td th:utext="${question.title}"></td>
                             <td th:text="${question.optionA}"></td>
                             <td th:text="${question.optionB}"></td>

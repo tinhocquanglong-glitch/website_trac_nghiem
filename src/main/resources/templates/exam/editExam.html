@@ -144,7 +144,7 @@
                                                     th:each="chapter,i : ${exam.lesson.chapter.subjectClasses.chapters}">
                                                 <button type="button" class="btn btn-info" data-toggle="collapse"
                                                         th:data-target="'#collapse'+${chapter.id}"
-                                                        th:text="'CHƯƠNG '+${i.count}+'. '+${chapter.chapterName}"></button>
+                                                        th:text="'CHỦ ĐỀ '+${i.count}+'. '+${chapter.chapterName}"></button>
                                                 <div th:id="'collapse'+${chapter.id}"
                                                      th:class="${chapter.id == exam.lesson.chapter.id ? 'collapse show' : 'collapse'}">
                                                     <div class="list-lesson" th:each=" lesson,i : ${chapter.lessons}">
@@ -194,7 +194,7 @@
                                 <div class="form-group row" style="display: none">
                                     <label class="col-sm-3 col-form-label">Ngày tạo</label>
                                     <div class="col-sm-8 pt-2">
-                                        <input class="form-check-input" type="text" th:field="*{createDate}"
+                                        <input class="form-check-input" type="text" th:if="${exam.createDate != null}" th:field="*{createDate}"
                                                name="createDate">
                                     </div>
                                 </div>
@@ -203,7 +203,7 @@
                                 <div class="form-group row" style="display: none">
                                     <label class="col-sm-3 col-form-label">Sửa đổi cuối</label>
                                     <div class="col-sm-8 pt-2">
-                                        <input class="form-check-input" type="text" th:field="*{lastModify}"
+                                        <input class="form-check-input" type="text" th:if="${exam.lastModify != null}" th:field="*{lastModify}"
                                                id="last-modify">
                                     </div>
                                 </div>
@@ -241,7 +241,7 @@
                                 </select>
                                 <select id="sub-chapter" class="btn dropdown-toggle" data-toggle="dropdown"
                                         style="background-color: #14c4ff" onchange="getSubLesson()">
-                                    <option value="" id="sub-chapter-default">--Chọn chương--</option>
+                                    <option value="" id="sub-chapter-default">--Chọn chủ đề--</option>
                                 </select>
                                 <select id="sub-lesson" class="btn dropdown-toggle" data-toggle="dropdown"
                                         style="background-color: #14c4ff" onchange="getQuestion()">
@@ -263,7 +263,7 @@
                                     <th>Tên môn học</th>
                                     <th>Lớp học</th>
                                     <th>Bài học</th>
-                                    <th style="display:none;">Chương</th>
+                                    <th style="display:none;">Chủ đề</th>
                                     <th>A</th>
                                     <th>B</th>
                                     <th>C</th>
@@ -515,8 +515,8 @@
         exam.append("idName", idName);
         exam.append("free", free);
         exam.append("time", time);
-        exam.append("createDate", createDate);
-        exam.append("lastModify", lastModify);
+        if (createDate) exam.append("createDate", createDate);
+        if (lastModify) exam.append("lastModify", lastModify);
         exam.append("nameExam", nameExam);
         exam.append("classes", classes);
         exam.append("subject", subjectId);
@@ -589,7 +589,10 @@
             month = "0" + month;
         if (day < 10)
             day = "0" + day;
-        document.getElementById('last-modify').value = year + "-" + month + "-" + day;
+        var lastModify = document.getElementById('last-modify');
+        if (lastModify) {
+            lastModify.value = year + "-" + month + "-" + day;
+        }
     }
 
     createDate();
@@ -735,7 +738,7 @@
                 var x = document.getElementById("sub-chapter");
                 for (let i = 0; i < response.length; i++) {
                     var option = document.createElement("option");
-                    option.text = 'Chương ' + (i + 1);
+                    option.text = 'Chủ đề ' + (i + 1);
                     option.value = response[i].id;
                     x.add(option);
                     // response[i].lessons.sort(function (it1, it2) {

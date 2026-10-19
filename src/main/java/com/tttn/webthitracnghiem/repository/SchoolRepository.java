@@ -9,9 +9,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SchoolRepository extends JpaRepository<School, Integer> {
+
+    Optional<School> findBySchoolCode(String schoolCode);
 
     List<School> findAllByActiveTrueOrderByNameAsc();
 

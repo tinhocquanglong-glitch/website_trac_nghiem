@@ -14,6 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -413,9 +414,73 @@ public class UserController {
     @GetMapping("/user/delete/{id}")
     public String delete(@PathVariable("id") String id, RedirectAttributes ra) {
         User user = userService.findById(id);
-        userService.delete(user);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication != null && authentication.getAuthorities()
+                .contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = authentication != null && authentication.getAuthorities()
+                .contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        User currentUser = authentication != null ? userService.findById(authentication.getName()) : null;
+
+        if (user == null || user.getRoles() == null || user.getRoles().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()))) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản quản trị hệ thống.");
+            return isSchoolAdmin ? "redirect:/school-admin/users" : "redirect:/user/list";
+        }
+        if (isSchoolAdmin) {
+            boolean isStudent = user.getRoles().stream()
+                    .anyMatch(role -> "ROLE_USER".equals(role.getRoleName()));
+            Integer currentSchoolId = currentUser != null && currentUser.getSchool() != null
+                    ? currentUser.getSchool().getId() : null;
+            Integer studentSchoolId = schoolIdForUser(user);
+            boolean sameSchool = currentSchoolId != null
+                    && Objects.equals(currentSchoolId, studentSchoolId);
+            if (!isStudent || !sameSchool) {
+                ra.addFlashAttribute("error", "Hiệu trưởng chỉ được xóa học sinh thuộc trường mình.");
+                return "redirect:/school-admin/users";
+            }
+        }
+        try {
+            userService.delete(user);
+        } catch (DataAccessException ex) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản vì vẫn còn dữ liệu liên quan.");
+            return isSchoolAdmin ? "redirect:/school-admin/users" : "redirect:/user/list";
+        }
         ra.addFlashAttribute("message","Xóa người dùng thành công!");
-        return "redirect:/user/list";
+        return isSchoolAdmin ? "redirect:/school-admin/users" : "redirect:/user/list";
+    }
+
+    private Integer schoolIdForUser(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (user.getTrackingClass() != null && user.getTrackingClass().getSchool() != null) {
+            return user.getTrackingClass().getSchool().getId();
+        }
+        return user.getSchool() != null ? user.getSchool().getId() : null;
+    }
+
+    @PostMapping("/user/update-role")
+    public String updateRole(@RequestParam("id") String id,
+                             @RequestParam("roleType") String roleType,
+                             RedirectAttributes ra) {
+        User user = userService.findById(id);
+        if (user == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy tài khoản.");
+            return "redirect:/user/list?viewMode=all";
+        }
+        if (!Arrays.asList("ROLE_USER", "ROLE_TEACHER", "ROLE_SCHOOL_ADMIN").contains(roleType)) {
+            ra.addFlashAttribute("error", "Vai trò không hợp lệ.");
+            return "redirect:/user/list?viewMode=all";
+        }
+        com.tttn.webthitracnghiem.model.Role role = roleService.findByName(roleType);
+        if (role == null) {
+            ra.addFlashAttribute("error", "Vai trò chưa được cấu hình trong hệ thống.");
+            return "redirect:/user/list?viewMode=all";
+        }
+        user.setRoles(new HashSet<>(Collections.singletonList(role)));
+        userService.save(user);
+        ra.addFlashAttribute("message", "Đã cập nhật vai trò cho tài khoản " + id + ".");
+        return "redirect:/user/list?viewMode=all";
     }
 
     @GetMapping("/user/editPass/{id}")

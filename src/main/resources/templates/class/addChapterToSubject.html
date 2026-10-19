@@ -93,7 +93,7 @@
             <div class="row">
                 <div class="container-fluid" style="margin-bottom: 150px">
                     <div class="h4 text-center mb-4">
-                        <p id="de">Thêm chương - <span style="text-transform: uppercase" th:text="${subjectClasses.subject.name} +' '+${subjectClasses.classes.nameClass}"></span></p>
+                        <p id="de">Thêm chủ đề - <span style="text-transform: uppercase" th:text="${subjectClasses.subject.name} +' '+${subjectClasses.classes.displayName}"></span></p>
                     </div>
                     <div class="alert alert-primary alert-dismissible fade show" role="alert"
                          th:if="${message != null}">
@@ -112,7 +112,7 @@
                             <input type="text" th:value="${serial}" style="display: none" id="serial">
                             <div class="border border-secondary rounded p-3 pt-5">
                                 <div class="form-group row mg-16-auto">
-                                    <label class="col-sm-3 col-form-label">Chương</label>
+                                    <label class="col-sm-3 col-form-label">Chủ đề</label>
                                     <div class="col-sm-8 row">
                                         <div class="list-chapter col-md-12">
                                             <div class="col-md-1">
@@ -154,7 +154,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p id="name-delete">Bạn có muốn xóa chương này không ?</p>
+                <p id="name-delete">Bạn có muốn xóa chủ đề này không ?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="delRef" data-dismiss="modal">Có</button>
@@ -214,7 +214,7 @@
         var text = document.createElement("input");
         text.type = "text";
         text.name = "chapter";
-        text.placeholder = "Nhập tên chương " + stt;
+        text.placeholder = "Nhập tên chủ đề " + stt;
         var input = document.createElement("input");
         input.name = "chapters";
         input.value = "0";
@@ -232,7 +232,7 @@
         div.appendChild(divWrap);
         var listChapter = document.querySelectorAll('input[name=chapter]');
         for (let i = 1; i < listChapter.length; i++) {
-            listChapter[i].placeholder = "Nhập tên chương " + (i + 1);
+            listChapter[i].placeholder = "Nhập tên chủ đề " + (i + 1);
         }
     });
     document.getElementById("addBefore").addEventListener("click", function () {
@@ -241,7 +241,7 @@
         divWrap.setAttribute("class", "chapter-item");
         var text = document.createElement("input");
         text.type = "text";
-        text.placeholder = "Nhập tên chương 1";
+        text.placeholder = "Nhập tên chủ đề 1";
         text.name = "chapter";
         var input = document.createElement("input");
         input.name = "chapters";
@@ -260,7 +260,7 @@
         div.prepend(divWrap);
         var listChapter = document.querySelectorAll('input[name=chapter]');
         for (let i = 1; i < listChapter.length; i++) {
-            listChapter[i].placeholder = "Nhập tên chương " + (i + 1);
+            listChapter[i].placeholder = "Nhập tên chủ đề " + (i + 1);
         }
     });
     $("#saveBtn").click(function () {
@@ -296,7 +296,7 @@
             stt--;
             var listLesson = document.querySelectorAll('input[name=chapter]');
             for (let i = 1; i < listLesson.length; i++) {
-                listLesson[i].placeholder = "Nhập tên chương " + (i + 1);
+                listLesson[i].placeholder = "Nhập tên chủ đề " + (i + 1);
             }
         });
     }

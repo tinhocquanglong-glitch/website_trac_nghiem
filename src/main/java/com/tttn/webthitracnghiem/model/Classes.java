@@ -13,6 +13,9 @@ public class Classes {
     private Integer id;
 
     private  String nameClass;
+
+    @Column(name = "grade")
+    private Integer grade;
     @OneToMany(mappedBy = "classes")
     @JsonManagedReference
     private Set<SubjectClasses> subjectClasses;
@@ -28,6 +31,13 @@ public class Classes {
     public Classes(Integer id, String nameClass, Set<SubjectClasses> subjectClasses) {
         this.id = id;
         this.nameClass = nameClass;
+        this.subjectClasses = subjectClasses;
+    }
+
+    public Classes(Integer id, String nameClass, Integer grade, Set<SubjectClasses> subjectClasses) {
+        this.id = id;
+        this.nameClass = nameClass;
+        this.grade = grade;
         this.subjectClasses = subjectClasses;
     }
 
@@ -53,6 +63,19 @@ public class Classes {
 
     public void setNameClass(String nameClass) {
         this.nameClass = nameClass;
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Integer grade) {
+        this.grade = grade;
+    }
+
+    @Transient
+    public String getDisplayName() {
+        return grade != null ? "Khối " + grade : nameClass;
     }
 
 }

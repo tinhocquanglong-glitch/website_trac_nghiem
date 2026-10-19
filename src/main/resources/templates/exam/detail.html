@@ -49,9 +49,9 @@
                                     <li>Số lượng câu hỏi: <span th:text="${exam.questions.size() + ' câu'}"></span></li>
                                     <li>Thời gian làm bài: <span
                                             th:text="${exam.free == true ? 'Không' : exam.time + ' phút'}"></span></li>
-                                    <li>Môn: <span style="text-transform: uppercase" th:text="${exam.lesson.chapter.subjectClasses.subject.name}+' '+${exam.lesson.chapter.subjectClasses.classes.nameClass}"></span></li>
-                                    <li>Chương: <span th:text="${exam.lesson.chapter.chapterName}"></span></li>
-                                    <li>Bài học: <span th:text="${exam.lesson.nameLesson}"></span></li>
+                                    <li>Môn: <span style="text-transform: uppercase" th:text="${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.subject.name : exam.lesson.chapter.subjectClasses.subject.name}+' '+${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName : exam.lesson.chapter.subjectClasses.classes.displayName}"></span></li>
+                                    <li>Chủ đề: <span th:text="${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.name : exam.lesson.chapter.chapterName}"></span></li>
+                                    <li>Bài học: <span th:text="${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.name : exam.lesson.nameLesson}"></span></li>
                                 </ul>
                             </div>
                         </div>
@@ -71,7 +71,7 @@
                         </div>
                         <div class="exam-action">
                             <a th:href="@{/quiz1/__${exam.id}__}" class="btn btn-info"><i class="fa-solid fa-pen-to-square"></i> Bắt đầu</a>
-                            <a th:href="@{/listExamSubject/__${subjectId}__}" class="btn btn-warning"><i class="fa-solid fa-rotate-left"></i>Quay lại</a>
+                            <a th:href="${examListPath}" class="btn btn-warning"><i class="fa-solid fa-rotate-left"></i>Quay lại</a>
                         </div>
                         <br>
                     </div>

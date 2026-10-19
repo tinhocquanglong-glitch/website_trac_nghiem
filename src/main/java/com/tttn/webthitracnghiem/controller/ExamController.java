@@ -47,6 +47,8 @@ public class ExamController {
     private ILessonService lessonService;
     @Autowired
     private IChapterService chapterService;
+    @Autowired
+    private ILessonPlanService lessonPlanService;
 
     @ModelAttribute("subjects")
     public Iterable<Subject> subjects() {
@@ -161,6 +163,13 @@ public class ExamController {
     public String edit(@PathVariable("id") Integer id, Model model, RedirectAttributes ra) {
         Exam exam = examService.findById(id);
 
+        if (exam == null) {
+            if (ra != null) {
+                ra.addFlashAttribute("error", "Khong tim thay de thi!");
+            }
+            return "redirect:/exam/list";
+        }
+
         // Giáo viên chỉ edit đề của mình
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (isTeacherOnly(auth)) {
@@ -169,6 +178,19 @@ public class ExamController {
                 ra = null; // workaround - redirect với flash attribute qua RedirectAttributes ko inject được qua GET
                 return "redirect:/exam/list";
             }
+        }
+
+        // Đề tạo từ giáo án không có legacy Lesson. Tách sang template tương ứng
+        // để không dereference exam.lesson và vẫn cho phép cập nhật đề.
+        if (exam.getLessonPlanLesson() != null && exam.getLesson() == null) {
+            List<Question> selectedQuestions = questionService.findByExam(id);
+            model.addAttribute("exam", exam);
+            model.addAttribute("questions", questionService.findAllWithContext());
+            model.addAttribute("selectedQuestions", selectedQuestions);
+            model.addAttribute("selectedQuestionIds", selectedQuestions.stream()
+                    .map(Question::getQuesId)
+                    .collect(java.util.stream.Collectors.toSet()));
+            return "exam/editCustomExam";
         }
 
         Iterable<Subject> subjects = subjectService.findAll();
@@ -213,13 +235,42 @@ public class ExamController {
     public String listExamSubject(@RequestParam Optional<String> keyword,
                                   @PathVariable int id, Model model,
                                   @PageableDefault(value = 10) Pageable pageable) {
-        Page<Exam> exams;
-        if(keyword.isPresent()){
-            exams = examService.findAllByNameExamContainingAndByLesson(id,keyword.get(),pageable);
-            model.addAttribute("keyword",keyword.get());
-        } else {
-            exams = examService.findAllByLesson(id,pageable);
+        Lesson legacyLesson = lessonService.findById(id);
+        LessonPlanLesson lessonPlanCandidate = lessonPlanService.findLesson(id);
+        LessonPlanLesson customLesson = legacyLesson == null ? lessonPlanCandidate : null;
+        Page<Exam> exams = legacyLesson == null
+                ? findCustomLessonExams(id, keyword, pageable)
+                : findLegacyLessonExams(id, keyword, pageable);
+        String view = renderExamList(keyword, model, pageable, id, legacyLesson, customLesson, exams,
+                "/listExamSubject/" + id);
+        if (legacyLesson != null && lessonPlanCandidate != null) {
+            model.addAttribute("lessonPlanCandidate", lessonPlanCandidate);
+            model.addAttribute("lessonPlanCandidatePath", "/listExamSubject/lesson-plan/" + id);
         }
+        return view;
+    }
+
+    /**
+     * Custom lesson-plan lessons use a separate URL because their IDs are
+     * independent from legacy lessons and can collide numerically.
+     */
+    @GetMapping("/listExamSubject/lesson-plan/{id}")
+    public String listLessonPlanExam(@RequestParam Optional<String> keyword,
+                                     @PathVariable int id, Model model,
+                                     @PageableDefault(value = 10) Pageable pageable) {
+        LessonPlanLesson customLesson = lessonPlanService.findLesson(id);
+        if (customLesson == null) {
+            return "redirect:/lesson-plans";
+        }
+        Page<Exam> exams = findCustomLessonExams(id, keyword, pageable);
+        return renderExamList(keyword, model, pageable, id, null, customLesson, exams,
+                "/listExamSubject/lesson-plan/" + id);
+    }
+
+    private String renderExamList(Optional<String> keyword, Model model, Pageable pageable, int id,
+                                  Lesson legacyLesson, LessonPlanLesson customLesson, Page<Exam> exams,
+                                  String examListPath) {
+        if (keyword.isPresent()) model.addAttribute("keyword", keyword.get());
         // Danh sách tài liệu
         List<Document> documents = documentService.findAll();
         List<Document> sDocument = new ArrayList<>();
@@ -272,9 +323,23 @@ public class ExamController {
         model.addAttribute("normal", normal);
         model.addAttribute("arrayNumber", arrayNumber);
         model.addAttribute("subjectId", id);
+        model.addAttribute("examListPath", examListPath);
         model.addAttribute("listIdExam", results);
-        model.addAttribute("lesson",lessonService.findById(id));
+        model.addAttribute("lesson", legacyLesson);
+        model.addAttribute("lessonPlanLesson", customLesson);
         return "listExamSubject";
+    }
+
+    private Page<Exam> findLegacyLessonExams(int id, Optional<String> keyword, Pageable pageable) {
+        return keyword.isPresent()
+                ? examService.findAllByNameExamContainingAndByLesson(id, keyword.get(), pageable)
+                : examService.findAllByLesson(id, pageable);
+    }
+
+    private Page<Exam> findCustomLessonExams(int id, Optional<String> keyword, Pageable pageable) {
+        return keyword.isPresent()
+                ? examService.findAllByNameExamContainingAndByLessonPlanLesson(id, keyword.get(), pageable)
+                : examService.findAllByLessonPlanLesson(id, pageable);
     }
 
     @GetMapping("/listExamSubject/{id}/{examId}")
@@ -284,6 +349,9 @@ public class ExamController {
         examService.save(exam);
         model.addAttribute("exam", exam);
         model.addAttribute("subjectId",id);
+        model.addAttribute("examListPath", exam.getLessonPlanLesson() != null
+                ? "/listExamSubject/lesson-plan/" + id
+                : "/listExamSubject/" + id);
         return "exam/detail";
     }
 }

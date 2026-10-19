@@ -11,9 +11,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
+
 @Repository
 public interface RoleRepository extends JpaRepository<Role,Integer> {
     Optional<Role> findByRoleName(String roleName);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Role r WHERE r.roleName = :roleName")
+    Optional<Role> findByRoleNameForUpdate(@Param("roleName") String roleName);
 
     @Modifying
     @Transactional

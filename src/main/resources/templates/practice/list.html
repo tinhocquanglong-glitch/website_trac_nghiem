@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thi thử</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f3f8fb; color: #173042; font-family: Inter, Arial, sans-serif; }
+        .practice-shell { max-width: 1180px; margin: 0 auto; padding: 42px 18px 64px; }
+        .practice-hero { background: linear-gradient(120deg,#0b789d,#27b7b1); color:#fff; padding:32px; border-radius:18px; box-shadow:0 14px 30px rgba(23,83,105,.18); }
+        .practice-hero h1 { font-size: clamp(1.8rem,4vw,3rem); font-weight:800; }
+        .filter-bar { background:#fff; margin-top:22px; padding:18px; border-radius:14px; box-shadow:0 6px 20px rgba(28,70,90,.08); }
+        .exam-card { background:#fff; height:100%; border:1px solid #dbe8ed; border-radius:14px; padding:20px; transition:transform .18s, box-shadow .18s; }
+        .exam-card:hover { transform:translateY(-3px); box-shadow:0 12px 24px rgba(28,70,90,.12); }
+        .exam-card h3 { font-size:1.08rem; font-weight:700; min-height:48px; }
+        .meta { color:#647d89; font-size:.88rem; }
+        .empty { background:#fff; border:1px dashed #9ebbc7; border-radius:14px; padding:44px; text-align:center; }
+    </style>
+</head>
+<body>
+<main class="practice-shell">
+    <section class="practice-hero">
+        <div class="small text-uppercase font-weight-bold mb-2">Kho đề mở</div>
+        <h1><i class="fa-solid fa-flask mr-2"></i>Thi thử không áp lực</h1>
+        <p class="mb-0">Chọn khối, môn, chủ đề hoặc loại đề. Bạn có thể thử đề của mọi trường và kết quả không được ghi vào sổ điểm.</p>
+    </section>
+
+    <form class="filter-bar row align-items-end" method="get" action="/practice">
+        <div class="form-group col-md-3 mb-2"><label for="grade">Khối</label>
+            <select id="grade" name="grade" class="form-control" onchange="this.form.submit()">
+                <option value="">Tất cả khối</option>
+                <option th:each="g : ${grades}" th:value="${g}" th:selected="${grade == g}" th:text="'Khối ' + g"></option>
+            </select>
+        </div>
+        <div class="form-group col-md-3 mb-2"><label for="subjectId">Môn học</label>
+            <select id="subjectId" name="subjectId" class="form-control" onchange="this.form.submit()">
+                <option value="">Tất cả môn</option>
+                <option th:each="subject : ${subjects}" th:value="${subject.id}" th:selected="${subjectId == subject.id}" th:text="${subject.name}"></option>
+            </select>
+        </div>
+        <div class="form-group col-md-3 mb-2"><label for="chapterId">Chủ đề</label>
+            <select id="chapterId" name="chapterId" class="form-control" onchange="this.form.submit()">
+                <option value="">Tất cả chủ đề</option>
+                <option th:each="chapter : ${chapters}" th:value="${chapter.id}" th:selected="${chapterId == chapter.id}" th:text="${chapter.serial + '. ' + chapter.chapterName}"></option>
+            </select>
+        </div>
+        <div class="form-group col-md-3 mb-2"><label for="scoreType">Kiểu đề</label>
+            <select id="scoreType" name="scoreType" class="form-control" onchange="this.form.submit()">
+                <option value="">Tất cả</option>
+                <option value="MIDTERM" th:selected="${scoreType == 'MIDTERM'}">Giữa kỳ (thi thử)</option>
+                <option value="FINAL" th:selected="${scoreType == 'FINAL'}">Cuối kỳ (thi thử)</option>
+                <option value="REGULAR_1" th:selected="${scoreType == 'REGULAR_1'}">Đánh giá thường xuyên</option>
+                <option value="REGULAR_2" th:selected="${scoreType == 'REGULAR_2'}">ĐGTX 2</option>
+            </select>
+        </div>
+    </form>
+
+    <section class="row mt-4" th:if="${!practiceExams.isEmpty()}">
+        <div class="col-md-6 col-lg-4 mb-4" th:each="exam : ${practiceExams}">
+            <article class="exam-card d-flex flex-column">
+                <div class="d-flex justify-content-between mb-3"><span class="badge badge-info">THI THỬ</span><span class="meta" th:text="${exam.targetGrade != null ? 'Khối ' + exam.targetGrade : (exam.lessonPlanLesson != null && exam.lessonPlanLesson.chapter.lessonPlan.grade != null ? 'Khối ' + exam.lessonPlanLesson.chapter.lessonPlan.grade.grade : 'Mọi khối')}"></span></div>
+                <h3 th:text="${exam.nameExam}"></h3>
+                <p class="meta mb-1" th:if="${exam.lessonPlanLesson != null}"
+                   th:text="${exam.lessonPlanLesson.chapter.lessonPlan.subject.name + ' · ' + exam.lessonPlanLesson.chapter.name}"></p>
+                <p class="meta mb-1" th:if="${exam.lesson != null}" th:text="${exam.lesson.chapter.subjectClasses.subject.name + ' · ' + exam.lesson.chapter.chapterName}"></p>
+                <p class="meta mb-3" th:text="${exam.scoreType == 'REGULAR_1' ? 'ĐGTX 1' : (exam.scoreType == 'REGULAR_2' ? 'ĐGTX 2' : (exam.scoreType == 'MIDTERM' ? 'Giữa kỳ' : (exam.scoreType == 'FINAL' ? 'Cuối kỳ' : 'Tự luyện')))}"></p>
+                <a class="btn btn-primary mt-auto" th:href="@{/quiz1/{id}(id=${exam.id})}"><i class="fa-solid fa-play mr-1"></i>Bắt đầu làm bài</a>
+            </article>
+        </div>
+    </section>
+    <section class="empty mt-4" th:if="${practiceExams.isEmpty()}">
+        <i class="fa-regular fa-folder-open fa-2x text-info mb-3"></i>
+        <h3>Chưa có đề phù hợp</h3>
+        <p class="text-muted mb-0">Hãy thử bỏ bớt bộ lọc hoặc quay lại sau khi giáo viên đăng đề thi thử.</p>
+    </section>
+</main>
+</body>
+</html>

@@ -232,6 +232,15 @@
                             </td>
                             <td th:text="${user.phoneNumber}" class="text-center"></td>
                             <td class="text-center">
+                                <form method="post" action="/user/update-role" class="d-inline-flex align-items-center mr-2">
+                                    <input type="hidden" name="id" th:value="${user.id}">
+                                    <select name="roleType" class="form-control form-control-sm" style="width:145px;">
+                                        <option value="ROLE_USER" th:selected="${user.roles.?[roleName == 'ROLE_USER'].size() > 0}">Học sinh</option>
+                                        <option value="ROLE_TEACHER" th:selected="${user.roles.?[roleName == 'ROLE_TEACHER'].size() > 0}">Giáo viên</option>
+                                        <option value="ROLE_SCHOOL_ADMIN" th:selected="${user.roles.?[roleName == 'ROLE_SCHOOL_ADMIN'].size() > 0}">Hiệu trưởng</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-success ml-1" title="Cập nhật vai trò"><i class="fas fa-user-shield"></i></button>
+                                </form>
                                 <a th:href="@{/user/editMember/{id}(id=${user.id})}" title="Chỉnh sửa"><i class="fas fa-edit text-primary"></i></a>
                                 <span>&nbsp;&nbsp;</span>
                                 <a th:href="@{/user/delete/{id}(id=${user.id})}" title="Xóa"

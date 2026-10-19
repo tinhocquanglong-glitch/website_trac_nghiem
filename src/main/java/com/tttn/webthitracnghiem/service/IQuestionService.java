@@ -11,6 +11,7 @@ public interface IQuestionService {
     Page<Question> findAll(Pageable pageable);
 
     Iterable<Question> findAll();
+    List<Question> findAllWithContext();
     List<Question> getAll();
 
     Question findById(Integer id);
@@ -27,6 +28,7 @@ public interface IQuestionService {
 
     Page<Question> findAllBySubject(Optional<Integer> id, Pageable pageable);
     List<Question> findByLessonId(int id);
+    List<Question> findByLessonPlanLessonId(int id);
     List<Question> findByExam(int examId);
     List<Question> findBySubAndClass(int subId, int classId);
     List<Question> findBySub(int subId);
@@ -36,4 +38,9 @@ public interface IQuestionService {
     Page<Question> findAllBySchool(int schoolId, Pageable pageable);
     Page<Question> findAllByTitleContainingAndSchool(String title, int schoolId, Pageable pageable);
     Page<Question> findBySubjectAndTitleAndSchool(int subjectId, String title, int schoolId, Pageable pageable);
+
+    Page<Question> findByFilters(Integer subjectId, Integer classId, Integer chapterId, String title, Pageable pageable);
+
+    Page<Question> findByFiltersAndSchool(Integer subjectId, Integer classId, Integer chapterId, String title,
+                                          int schoolId, Pageable pageable);
 }

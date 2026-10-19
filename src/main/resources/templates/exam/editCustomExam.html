@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chinh sua de thi</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/loader.css}" rel="stylesheet">
+    <style>
+        .edit-panel { max-width: 1280px; margin: 0 auto; }
+        .lesson-context { background: #eef8ff; border-left: 4px solid #14c4ff; }
+        .question-table td, .question-table th { vertical-align: middle; }
+        .question-title { min-width: 280px; }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <div class="right_col" role="main">
+            <div class="edit-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2>Chinh sua de thi</h2>
+                        <p class="text-muted mb-0">De nay su dung noi dung tu giao an tuy chinh.</p>
+                    </div>
+                    <a th:href="@{/exam/list}" class="btn btn-outline-secondary">Quay lai</a>
+                </div>
+
+                <form id="customExamForm" th:object="${exam}">
+                    <input type="hidden" name="id" th:value="*{id}">
+                    <input type="hidden" name="idName" th:value="*{idName}">
+                    <input type="hidden" name="createDate" th:if="${exam.createDate != null}" th:value="*{createDate}">
+                    <input type="hidden" name="lastModify" th:if="${exam.lastModify != null}" th:value="*{lastModify}">
+                    <input type="hidden" name="view" th:value="*{view}">
+                    <input type="hidden" name="turn" th:value="*{turn}">
+                    <input type="hidden" name="lessonPlanLessonId"
+                           th:value="${exam.lessonPlanLesson.id}">
+                    <input type="hidden" name="school" th:if="${exam.school != null}"
+                           th:value="${exam.school.id}">
+                    <input type="hidden" name="targetClassId" th:if="${exam.targetClass != null}"
+                           th:value="${exam.targetClass.id}">
+                    <input type="hidden" name="startTimeStr" th:if="${exam.startTime != null}"
+                           th:value="${exam.startTime}">
+                    <input type="hidden" name="endTimeStr" th:if="${exam.endTime != null}"
+                           th:value="${exam.endTime}">
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="nameExam">Ten de thi</label>
+                                    <input id="nameExam" name="nameExam" class="form-control"
+                                           th:value="*{nameExam}" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="idName">Ma de</label>
+                                    <input id="idName" class="form-control" th:value="*{idName}" readonly>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="time">Thoi gian (phut)</label>
+                                    <input id="time" name="time" type="number" min="0" max="300"
+                                           class="form-control" th:value="*{time}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="free">Khong gioi han thoi gian</label>
+                                    <select id="free" name="free" class="form-control">
+                                        <option value="true" th:selected="${exam.free}">Co</option>
+                                        <option value="false" th:selected="${!exam.free}">Khong</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="targetType">Pham vi giao de</label>
+                                    <select id="targetType" name="targetType" class="form-control">
+                                        <option value="PUBLIC" th:selected="${exam.targetType == 'PUBLIC'}">Cong khai</option>
+                                        <option value="GRADE" th:selected="${exam.targetType == 'GRADE'}">Theo khoi</option>
+                                        <option value="CLASS" th:selected="${exam.targetType == 'CLASS'}">Theo lop</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="targetGrade">Khoi</label>
+                                    <input id="targetGrade" name="targetGrade" type="number" min="1" max="12"
+                                           class="form-control" th:value="*{targetGrade}">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="scoreType">Loai bai thi</label>
+                                    <select id="scoreType" name="scoreType" class="form-control">
+                                        <option value="" th:selected="${exam.scoreType == null}">Khong chon</option>
+                                        <option value="REGULAR_1" th:selected="${exam.scoreType == 'REGULAR_1'}">Danh gia thuong xuyen 1</option>
+                                        <option value="REGULAR_2" th:selected="${exam.scoreType == 'REGULAR_2'}">Danh gia thuong xuyen 2</option>
+                                        <option value="MIDTERM" th:selected="${exam.scoreType == 'MIDTERM'}">Giua ky</option>
+                                        <option value="FINAL" th:selected="${exam.scoreType == 'FINAL'}">Cuoi ky</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                <input id="practice" name="practice" class="form-check-input" type="checkbox"
+                                       value="true" th:checked="*{practice}">
+                                <label class="form-check-label" for="practice">Day la de thi thu</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 lesson-context">
+                        <div class="card-body">
+                            <div class="small text-uppercase text-muted">Giao an dang su dung</div>
+                            <h4 class="mb-2" th:text="${exam.lessonPlanLesson.chapter.lessonPlan.name}"></h4>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Mon:</strong>
+                                    <span th:text="${exam.lessonPlanLesson.chapter.lessonPlan.subject != null ? exam.lessonPlanLesson.chapter.lessonPlan.subject.name : ''}"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Chu de:</strong>
+                                    <span th:text="${exam.lessonPlanLesson.chapter.name}"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Bai hoc:</strong>
+                                    <span th:text="${exam.lessonPlanLesson.name}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Cau hoi trong ngan hang</span>
+                            <span class="badge badge-info" id="selectedCount">0 cau da chon</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover question-table mb-0">
+                                <thead>
+                                <tr>
+                                    <th>Chon</th>
+                                    <th class="question-title">Cau hoi</th>
+                                    <th>Mon</th>
+                                    <th>Khoi</th>
+                                    <th>Bai hoc</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="question : ${questions}">
+                                    <td>
+                                        <input class="question-selection" type="checkbox" name="questions"
+                                               th:value="${question.quesId}"
+                                               th:checked="${selectedQuestionIds.contains(question.quesId)}">
+                                    </td>
+                                    <td class="question-title" th:utext="${question.title}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null && question.lessonPlanLesson.chapter.lessonPlan.subject != null ? question.lessonPlanLesson.chapter.lessonPlan.subject.name : (question.lesson != null && question.lesson.chapter.subjectClasses.subject != null ? question.lesson.chapter.subjectClasses.subject.name : '')}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null && question.lessonPlanLesson.chapter.lessonPlan.grade != null ? question.lessonPlanLesson.chapter.lessonPlan.grade.displayName : (question.lesson != null && question.lesson.chapter.subjectClasses.classes != null ? question.lesson.chapter.subjectClasses.classes.displayName : '')}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.name : (question.lesson != null ? question.lesson.nameLesson : '')}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-body d-flex justify-content-end">
+                            <a th:href="@{/exam/list}" class="btn btn-light mr-2">Huy</a>
+                            <button type="button" id="saveCustomExam" class="btn btn-primary">Luu thay doi</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div th:insert="~{index.html :: footerAdmin}"></div>
+    </div>
+</div>
+
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/loader.js}"></script>
+<script>
+    function updateSelectedCount() {
+        document.getElementById('selectedCount').textContent =
+            document.querySelectorAll('.question-selection:checked').length + ' cau da chon';
+    }
+
+    document.querySelectorAll('.question-selection').forEach(function (checkbox) {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    updateSelectedCount();
+
+    document.getElementById('saveCustomExam').addEventListener('click', function () {
+        var selected = document.querySelectorAll('.question-selection:checked');
+        if (selected.length === 0) {
+            window.alert('De thi phai co it nhat mot cau hoi.');
+            return;
+        }
+
+        var formData = new FormData(document.getElementById('customExamForm'));
+        formData.set('practice', document.getElementById('practice').checked ? 'true' : 'false');
+        formData.set('lessonPlanLessonId', document.querySelector('[name=lessonPlanLessonId]').value);
+
+        fetch('/api/exam', {
+            method: 'POST',
+            body: formData
+        }).then(function (response) {
+            if (!response.ok) {
+                return response.text().then(function (message) { throw new Error(message); });
+            }
+            window.location.replace('/exam/list?update=true');
+        }).catch(function (error) {
+            window.alert(error.message || 'Khong the luu de thi.');
+        });
+    });
+</script>
+</body>
+</html>

@@ -15,6 +15,7 @@ public class DocumentRequest {
     private String content;
     private User users;
     private Subject subject;
+    private Integer grade;
 
     public Integer getId() {
         return id;
@@ -78,5 +79,13 @@ public class DocumentRequest {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Integer grade) {
+        this.grade = grade;
     }
 }

@@ -1,0 +1,102 @@
+package com.tttn.webthitracnghiem.service;
+
+import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.model.Role;
+import com.tttn.webthitracnghiem.repository.LessonPlanRepository;
+import com.tttn.webthitracnghiem.repository.RoleRepository;
+import com.tttn.webthitracnghiem.repository.UserRepository;
+import com.tttn.webthitracnghiem.service.impl.UserServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+import java.util.List;
+
+@ExtendWith(MockitoExtension.class)
+class UserServiceImplTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private LessonPlanRepository lessonPlanRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    @Test
+    void clearsStudentClassBeforeDeletingUser() {
+        User user = new User();
+        user.setId("student-1");
+        when(lessonPlanRepository.findByOwner_IdOrderByUpdatedAtDesc("student-1")).thenReturn(List.of());
+
+        userService.delete(user);
+
+        verify(userRepository).clearTrackingClass("student-1");
+        verify(lessonPlanRepository).deleteAll(List.of());
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    void givesAdminRoleToFirstRegisteredUserWhenNoAdminExists() {
+        Role adminRole = new Role("ROLE_ADMIN");
+        Role userRole = new Role("ROLE_USER");
+        User user = new User();
+
+        when(roleRepository.findByRoleNameForUpdate("ROLE_ADMIN")).thenReturn(java.util.Optional.of(adminRole));
+        when(roleRepository.findByRoleName("ROLE_USER")).thenReturn(java.util.Optional.of(userRole));
+        when(userRepository.countUsersByRoleName("ROLE_ADMIN")).thenReturn(0);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        userService.register(user);
+
+        assertEquals(1, user.getRoles().size());
+        assertSame(adminRole, user.getRoles().iterator().next());
+    }
+
+    @Test
+    void givesAdminRoleToNextRegisteredUserWhenUsersExistButNoAdminExists() {
+        Role adminRole = new Role("ROLE_ADMIN");
+        Role userRole = new Role("ROLE_USER");
+        User user = new User();
+
+        when(roleRepository.findByRoleNameForUpdate("ROLE_ADMIN")).thenReturn(java.util.Optional.of(adminRole));
+        when(roleRepository.findByRoleName("ROLE_USER")).thenReturn(java.util.Optional.of(userRole));
+        when(userRepository.countUsersByRoleName("ROLE_ADMIN")).thenReturn(0);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        userService.register(user);
+
+        assertSame(adminRole, user.getRoles().iterator().next());
+    }
+
+    @Test
+    void keepsDefaultRoleWhenAnAdminAlreadyExists() {
+        Role submittedAdminRole = new Role("ROLE_ADMIN");
+        Role userRole = new Role("ROLE_USER");
+        User user = new User();
+        user.setRoles(java.util.Set.of(submittedAdminRole));
+
+        when(roleRepository.findByRoleNameForUpdate("ROLE_ADMIN")).thenReturn(java.util.Optional.of(submittedAdminRole));
+        when(roleRepository.findByRoleName("ROLE_USER")).thenReturn(java.util.Optional.of(userRole));
+        when(userRepository.countUsersByRoleName("ROLE_ADMIN")).thenReturn(1);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        userService.register(user);
+
+        assertEquals(1, user.getRoles().size());
+        assertSame(userRole, user.getRoles().iterator().next());
+    }
+}

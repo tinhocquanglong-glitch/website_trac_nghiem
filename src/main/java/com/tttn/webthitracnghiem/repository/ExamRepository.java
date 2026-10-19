@@ -20,6 +20,11 @@ public interface ExamRepository extends JpaRepository<Exam, Integer> {
     Page<Exam> findAllByQuestions(@Param("id") int id, Pageable pageable);
     @Query(nativeQuery = true,value = "SELECT * FROM exam WHERE lesson_id = :id",countQuery = "SELECT COUNT(*) FROM exam WHERE lesson_id = :id")
     Page<Exam> findAllByLesson(int id,Pageable pageable);
+    List<Exam> findByLessonId(Integer lessonId);
+    List<Exam> findByLessonPlanLessonId(Integer lessonPlanLessonId);
+    Page<Exam> findAllByLessonPlanLesson_Id(Integer lessonPlanLessonId, Pageable pageable);
+    Page<Exam> findByNameExamContainingAndLessonPlanLesson_Id(String name, Integer lessonPlanLessonId,
+                                                               Pageable pageable);
     Page<Exam> findAllByNameExamContaining(String name, Pageable pageable);
     @Query(value = "SELECT exam.* FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id and exam.name_exam like %:name%",
             countQuery = "SELECT COUNT(exam.*) FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id and exam.name_exam like %:name%",

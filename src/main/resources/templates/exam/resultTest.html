@@ -42,7 +42,7 @@
         <div class="result-more">
             <div class="d-flex">
                 <p>Tên Người Tham Gia:&nbsp;&nbsp;</p>
-                <p class="more-value" th:if="${result}" th:text="${result.users.fullName}"></p>
+                <p class="more-value" th:if="${result != null and result.users != null}" th:text="${result.users.fullName}"></p>
             </div>
             <div class="d-flex">
                 <p>Thời gian làm bài:&nbsp;&nbsp;</p>

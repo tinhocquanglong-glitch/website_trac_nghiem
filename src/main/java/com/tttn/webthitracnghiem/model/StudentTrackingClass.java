@@ -1,5 +1,7 @@
 package com.tttn.webthitracnghiem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,6 +21,7 @@ import java.util.List;
 @Entity
 @Table(name = "student_tracking_class", uniqueConstraints =
         @UniqueConstraint(name = "uk_tracking_class_year_school", columnNames = {"class_name", "school_year", "school_id"}))
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class StudentTrackingClass {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +41,8 @@ public class StudentTrackingClass {
     private School school;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "homeroom_teacher_id")
+    @JoinColumn(name = "homeroom_teacher_id",
+            columnDefinition = "varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci")
     private User homeroomTeacher;
 
     @OneToMany(mappedBy = "trackingClass", cascade = CascadeType.ALL, orphanRemoval = true)

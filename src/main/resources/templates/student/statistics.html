@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thống kê điểm</title>
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/default-page.css}">
+    <style>
+        :root { --stats-ink: #17324d; --stats-muted: #6f7f8f; --stats-line: #e4ebf1; --stats-teal: #0b8f8c; }
+        body.stats-page { background: #f5f7fa; color: var(--stats-ink); }
+        .stats-shell { max-width: 1180px; }
+        .stats-hero { background: #17324d; color: #fff; border-radius: 10px; padding: 30px 34px; margin-bottom: 24px; }
+        .stats-hero-content { display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+        .stats-hero-copy { min-width: 0; }
+        .stats-hero h1 { font-size: 2rem; line-height: 1.15; margin: 0; font-weight: 700; }
+        .stats-hero .stats-eyebrow { color: #9ccbcf; font-size: .72rem; font-weight: 700; letter-spacing: .12em; margin: 0 0 12px; }
+        .stats-hero .stats-subtitle { color: #cbd8e4; margin: 10px 0 0; }
+        .stats-hero-icon { flex: 0 0 54px; width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(125, 212, 207, .42); border-radius: 8px; color: #7dd4cf; }
+        .stats-kpi { background: #fff; border: 1px solid var(--stats-line); border-radius: 8px; padding: 18px; height: 100%; }
+        .stats-kpi .icon { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: #e8f6f5; color: var(--stats-teal); margin-bottom: 14px; }
+        .stats-kpi .label { color: var(--stats-muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+        .stats-kpi .value { display: block; font-size: 1.65rem; font-weight: 700; margin-top: 3px; }
+        .stats-section { background: #fff; border: 1px solid var(--stats-line); border-radius: 8px; margin-top: 20px; overflow: hidden; }
+        .stats-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--stats-line); }
+        .stats-section-head h2 { font-size: 1.08rem; margin: 0; font-weight: 700; }
+        .stats-section-head p { color: var(--stats-muted); font-size: .86rem; margin: 4px 0 0; }
+        .stats-section-body { padding: 0 20px 18px; }
+        .stats-table { min-width: 620px; margin-bottom: 0; }
+        .stats-table thead th { color: var(--stats-muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; border-bottom-width: 1px; white-space: nowrap; }
+        .stats-table td { vertical-align: middle; border-color: #edf1f4; padding-top: 14px; padding-bottom: 14px; }
+        .result-name { font-weight: 600; color: var(--stats-ink); }
+        .result-meta { color: var(--stats-muted); font-size: .82rem; margin-top: 3px; }
+        .score-badge { display: inline-flex; min-width: 46px; justify-content: center; border-radius: 5px; padding: 5px 8px; background: #e8f6f5; color: #087b78; font-weight: 700; }
+        .practice-section .score-badge { background: #fff3df; color: #a46500; }
+        .empty-state { padding: 34px 16px 28px; text-align: center; color: var(--stats-muted); }
+        .empty-state i { color: #a9bac8; font-size: 1.7rem; margin-bottom: 10px; }
+        .empty-state strong { display: block; color: var(--stats-ink); margin-bottom: 4px; }
+        @media (max-width: 575.98px) {
+            .stats-hero { padding: 24px 20px; }
+            .stats-hero-content { align-items: flex-start; flex-direction: column; gap: 20px; }
+            .stats-hero h1 { font-size: 1.55rem; }
+            .stats-hero-icon { flex-basis: 46px; width: 46px; height: 46px; }
+            .stats-section-head { align-items: flex-start; flex-direction: column; }
+            .stats-section-body { padding-left: 12px; padding-right: 12px; }
+        }
+    </style>
+</head>
+<body class="stats-page">
+<div th:insert="~{default-page :: navbar}"></div>
+<main class="container py-4 stats-shell">
+    <header class="stats-hero">
+        <div class="stats-hero-content">
+            <div class="stats-hero-copy">
+                <p class="stats-eyebrow">HỒ SƠ HỌC TẬP</p>
+                <h1>Thống kê kết quả</h1>
+                <p class="stats-subtitle" th:text="${student != null ? student.fullName : 'Theo dõi tiến độ làm bài của bạn'}">Theo dõi tiến độ làm bài của bạn</p>
+            </div>
+            <span class="stats-hero-icon" aria-hidden="true"><i class="fa-solid fa-chart-line fa-lg"></i></span>
+        </div>
+    </header>
+
+    <div class="row g-3">
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i></span><span class="label">Bài thi thật</span><strong class="value" th:text="${realResults.size()}">0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></span><span class="label">Điểm TB thi thật</span><strong class="value" th:text="${#numbers.formatDecimal(realAverage, 1, 1)}">0,0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon" style="background:#fff3df;color:#a46500"><i class="fa-solid fa-flask" aria-hidden="true"></i></span><span class="label">Bài thi thử</span><strong class="value" th:text="${practiceResults.size()}">0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon" style="background:#fff3df;color:#a46500"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><span class="label">Điểm TB thi thử</span><strong class="value" th:text="${#numbers.formatDecimal(practiceAverage, 1, 1)}">0,0</strong></div></div>
+    </div>
+
+    <section class="stats-section">
+        <div class="stats-section-head">
+            <div><h2><i class="fa-solid fa-clipboard-check me-2" style="color:var(--stats-teal)" aria-hidden="true"></i>Thi thật</h2><p>Kết quả được dùng để theo dõi và đánh giá học tập.</p></div>
+            <span class="badge rounded-pill text-bg-light" th:text="${realResults.size() + ' bài'}">0 bài</span>
+        </div>
+        <div class="stats-section-body">
+            <div class="table-responsive" th:if="${realResults != null and !realResults.isEmpty()}">
+                <table class="table stats-table">
+                    <thead><tr><th>Bài thi</th><th>Điểm</th><th>Tháng ghi điểm</th><th>Nộp bài</th></tr></thead>
+                    <tbody>
+                    <tr th:each="result : ${realResults}">
+                        <td><div class="result-name" th:text="${result.exam.nameExam}">Bài thi</div><div class="result-meta"><span th:if="${result.exam.lessonPlanLesson != null}" th:text="${result.exam.lessonPlanLesson.chapter.lessonPlan.subject.name + ' · Khối ' + result.exam.lessonPlanLesson.chapter.lessonPlan.grade.grade}"></span><span th:if="${result.exam.lessonPlanLesson == null and result.exam.lesson != null}" th:text="${result.exam.lesson.chapter.subjectClasses.subject.name}"></span></div></td>
+                        <td><span class="score-badge" th:text="${#numbers.formatDecimal(result.mark, 1, 1)}">0,0</span></td>
+                        <td th:text="${result.scoreMonth != null ? 'Tháng ' + result.scoreMonth : 'Chưa chọn'}">Chưa chọn</td>
+                        <td class="text-muted small" th:text="${result.endTime != null ? result.endTime : '-'}">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state" role="status" th:if="${realResults == null or realResults.isEmpty()}"><i class="fa-regular fa-folder-open d-block" aria-hidden="true"></i><strong>Chưa có kết quả thi thật</strong><span>Khi bạn hoàn thành bài kiểm tra được giao, kết quả sẽ xuất hiện tại đây.</span></div>
+        </div>
+    </section>
+
+    <section class="stats-section practice-section">
+        <div class="stats-section-head">
+            <div><h2><i class="fa-solid fa-flask me-2" style="color:#b87812" aria-hidden="true"></i>Thi thử</h2><p>Luyện tập tự do, không ghi vào sổ điểm.</p></div>
+            <span class="badge rounded-pill text-bg-light" th:text="${practiceResults.size() + ' bài'}">0 bài</span>
+        </div>
+        <div class="stats-section-body">
+            <div class="table-responsive" th:if="${practiceResults != null and !practiceResults.isEmpty()}">
+                <table class="table stats-table">
+                    <thead><tr><th>Bài thi</th><th>Điểm</th><th>Nộp bài</th></tr></thead>
+                    <tbody><tr th:each="result : ${practiceResults}"><td><div class="result-name" th:text="${result.exam.nameExam}">Bài thi</div><div class="result-meta">Luyện tập</div></td><td><span class="score-badge" th:text="${#numbers.formatDecimal(result.mark, 1, 1)}">0,0</span></td><td class="text-muted small" th:text="${result.endTime != null ? result.endTime : '-'}">-</td></tr></tbody>
+                </table>
+            </div>
+            <div class="empty-state" role="status" th:if="${practiceResults == null or practiceResults.isEmpty()}"><i class="fa-solid fa-flask d-block" aria-hidden="true"></i><strong>Chưa có lượt thi thử</strong><span>Chọn một bài thi thử trong phần học tập để bắt đầu luyện tập.</span></div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

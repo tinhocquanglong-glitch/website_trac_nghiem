@@ -16,7 +16,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "student_monthly_record", uniqueConstraints =
-        @UniqueConstraint(name = "uk_student_semester_month", columnNames = {"student_id", "semester", "month"}))
+        @UniqueConstraint(name = "uk_student_semester_month_teacher_subject",
+                columnNames = {"student_id", "semester", "month", "teacher_id", "subject_id"}))
 public class StudentMonthlyRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +32,15 @@ public class StudentMonthlyRecord {
 
     @Column(nullable = false)
     private Integer month;
+
+    @Column(name = "teacher_id")
+    private String teacherId;
+
+    @Column(name = "subject_id")
+    private Integer subjectId;
+
+    @Column(name = "exam_id")
+    private Integer examId;
 
     @Column(name = "regular_score_1", precision = 4, scale = 2)
     private BigDecimal regularScore1;
@@ -61,6 +71,12 @@ public class StudentMonthlyRecord {
     public void setSemester(Integer semester) { this.semester = semester; }
     public Integer getMonth() { return month; }
     public void setMonth(Integer month) { this.month = month; }
+    public String getTeacherId() { return teacherId; }
+    public void setTeacherId(String teacherId) { this.teacherId = teacherId; }
+    public Integer getSubjectId() { return subjectId; }
+    public void setSubjectId(Integer subjectId) { this.subjectId = subjectId; }
+    public Integer getExamId() { return examId; }
+    public void setExamId(Integer examId) { this.examId = examId; }
     public BigDecimal getRegularScore1() { return regularScore1; }
     public void setRegularScore1(BigDecimal regularScore1) { this.regularScore1 = regularScore1; }
     public BigDecimal getRegularScore2() { return regularScore2; }

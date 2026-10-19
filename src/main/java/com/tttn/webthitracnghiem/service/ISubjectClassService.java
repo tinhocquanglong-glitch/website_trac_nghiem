@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ISubjectClassService {
+    List<SubjectClasses> findAll();
     Page<SubjectClasses> findAll(Pageable pageable);
     SubjectClasses findById(int id);
     Page<SubjectClasses> findByClassId(int id, Pageable pageable);

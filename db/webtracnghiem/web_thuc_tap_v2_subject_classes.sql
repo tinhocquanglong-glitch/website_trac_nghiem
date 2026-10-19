@@ -27,6 +27,7 @@ CREATE TABLE `subject_classes` (
   `class_id` int(11) DEFAULT NULL,
   `subject_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_subject_classes_subject_class` (`subject_id`,`class_id`),
   KEY `FKhntniubqkx6m4froyepa5qbrb` (`class_id`),
   KEY `FKsvu8veaopfx3q36er0s89m2hf` (`subject_id`),
   CONSTRAINT `FKhntniubqkx6m4froyepa5qbrb` FOREIGN KEY (`class_id`) REFERENCES `classes` (`id`),

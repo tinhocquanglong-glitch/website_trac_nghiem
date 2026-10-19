@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ResultRepository extends JpaRepository<Result, Integer> {
-    @Query(value = "SELECT r.id, r.end_time, r.start_time, r.id_exam, r.mark, r.username \n" +
+    @Query(value = "SELECT r.* \n" +
             "FROM result r\n" +
             "INNER JOIN (\n" +
             "    SELECT username, id_exam, MAX(mark) AS max_mark\n" +
@@ -36,4 +36,6 @@ public interface ResultRepository extends JpaRepository<Result, Integer> {
 
     @Query(value = "SELECT * FROM result where id_exam= :idExam order by mark desc", nativeQuery = true)
     List<Result> findTopByExam(@Param("idExam") int idExam);
+
+    List<Result> findByExamIdOrderByMarkDescEndTimeAsc(Integer examId);
 }

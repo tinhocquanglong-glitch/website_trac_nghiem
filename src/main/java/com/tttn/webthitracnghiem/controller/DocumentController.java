@@ -3,6 +3,7 @@ package com.tttn.webthitracnghiem.controller;
 import com.tttn.webthitracnghiem.model.Document;
 import com.tttn.webthitracnghiem.model.News;
 import com.tttn.webthitracnghiem.service.IDocumentService;
+import com.tttn.webthitracnghiem.service.IClassesService;
 import com.tttn.webthitracnghiem.service.ISubjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,8 @@ public class DocumentController {
     private IDocumentService documentService;
     @Autowired
     private ISubjectService subjectService;
+    @Autowired
+    private IClassesService classesService;
     @GetMapping("/list")
     public String index(@RequestParam("keyword") Optional<String> name,
                         @RequestParam("create") Optional<Boolean> create,
@@ -52,6 +55,7 @@ public class DocumentController {
     public String create(Model model){
         model.addAttribute("document",new Document());
         model.addAttribute("subjects",subjectService.findAll());
+        model.addAttribute("grades", classesService.findAll());
         return "document/add";
     }
     @GetMapping("/edit/{id}")
@@ -59,6 +63,7 @@ public class DocumentController {
         Document document = documentService.findById(Integer.parseInt(id));
         model.addAttribute("document",document);
         model.addAttribute("subjects",subjectService.findAll());
+        model.addAttribute("grades", classesService.findAll());
         return "document/edit";
     }
     @GetMapping("/delete/{id}")

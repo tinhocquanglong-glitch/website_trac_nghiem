@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import javax.servlet.http.HttpSession;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -32,9 +33,6 @@ import java.util.concurrent.TimeUnit;
 public class MainController {
     private boolean status = true;
     private Date timer = null;
-    @Autowired
-    Result result;
-
     @Autowired
     IQ iqTest;
     @Autowired
@@ -62,7 +60,7 @@ public class MainController {
 
     @ModelAttribute("result")
     public Result getResult() {
-        return result;
+        return new Result();
     }
 
     @ModelAttribute("iq")
@@ -136,14 +134,21 @@ public class MainController {
     }
 
     @PostMapping("/submit1/{id}")
-    public String submit1(@PathVariable(name = "id") int idExam, @ModelAttribute QuestionForm qForm, Model m) {
+    public String submit1(@PathVariable(name = "id") int idExam, @ModelAttribute QuestionForm qForm,
+                          Model m, HttpSession session) {
         this.status = true;
-        if (!submitted) {
+        if (!Boolean.TRUE.equals(session.getAttribute("examSubmitted"))) {
             double score = qService.getResult(qForm);
-            result.setMark(score);
-            result.setEndTime(new Timestamp(System.currentTimeMillis()));
-            qService.saveScore(result);
-            long millis = result.getEndTime().getTime() - result.getStartTime().getTime();
+            Exam currentExam = examService.findById(idExam);
+            boolean practice = currentExam != null && currentExam.isPractice();
+            Result currentResult = (Result) session.getAttribute("examResult");
+            if (currentResult == null) currentResult = new Result();
+            currentResult.setMark(score);
+            currentResult.setEndTime(new Timestamp(System.currentTimeMillis()));
+            if (currentExam != null) currentResult.setScoreMonth(currentExam.getGradeMonth());
+            qService.saveScore(currentResult);
+            long millis = currentResult.getStartTime() == null ? 0
+                    : currentResult.getEndTime().getTime() - currentResult.getStartTime().getTime();
             String hms = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
                     TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(millis)),
                     TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(millis)));
@@ -151,57 +156,63 @@ public class MainController {
 
             // Tự động đồng bộ điểm vào sổ theo dõi học sinh nếu đề có cấu hình scoreType
             try {
-                Exam currentExam = examService.findById(idExam);
-                if (currentExam != null && currentExam.getScoreType() != null
+                if (!practice && currentExam != null && currentExam.getScoreType() != null
                         && !currentExam.getScoreType().trim().isEmpty() && trackingService != null) {
                     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                     String username = (authentication != null) ? authentication.getName() : null;
                     User student = (username != null) ? userService.findById(username) : null;
                     if (student != null) {
-                        Integer classId = (student.getTrackingClass() != null) ? student.getTrackingClass().getId()
-                                : (currentExam.getTargetClass() != null ? currentExam.getTargetClass().getId() : null);
+                        Integer classId = student.getTrackingClass() == null ? null : student.getTrackingClass().getId();
                         if (classId != null) {
-                            int totalQuestions = (qForm.getQuestions() != null && !qForm.getQuestions().isEmpty())
-                                    ? qForm.getQuestions().size() : (currentExam.getQuestions() != null ? currentExam.getQuestions().size() : 10);
-                            double scaled = totalQuestions > 0 ? ((double) score / totalQuestions) * 10.0 : 0.0;
-                            BigDecimal score10 = BigDecimal.valueOf(Math.round(scaled * 100.0) / 100.0);
-                            trackingService.recordExamScore(classId, student.getFullName(), currentExam.getScoreType(), score10);
+                            BigDecimal score10 = BigDecimal.valueOf(Math.round(score * 100.0) / 100.0);
+                            trackingService.recordExamScore(classId, student.getFullName(), currentExam.getScoreType(), score10,
+                                    currentExam.getGradeMonth(), currentExam.getUsers() == null ? null : currentExam.getUsers().getId(),
+                                    subjectIdForExam(currentExam), currentExam.getId());
                         }
                     }
                 }
             } catch (Exception ignored) {}
 
-            result = new Result();
             m.addAttribute("qForm", qForm);
             m.addAttribute("idExam", idExam);
-            submitted = true;
+            // The result model attribute is initialized by @ModelAttribute for every request.
+            // Replace it with the persisted attempt so the result page can render the student.
+            m.addAttribute("result", currentResult);
+            session.setAttribute("examSubmitted", true);
+            session.removeAttribute("examResult");
         }
         return "exam/resultTest";
     }
 
     @GetMapping("/quiz1/{id}")
-    public String quiz13(@PathVariable("id") int id, Model m, RedirectAttributes ra) throws ParseException {
+    public String quiz13(@PathVariable("id") int id, Model m, RedirectAttributes ra, HttpSession session) throws ParseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication != null ? authentication.getName() : null;
         if (username == null || "anonymousUser".equalsIgnoreCase(username)) {
             ra.addFlashAttribute("warning", "Bạn phải đăng nhập để làm bài.");
             return "redirect:/";
         }
-        submitted = false;
         Exam exam = examService.findById(id);
         if (exam == null) {
             ra.addFlashAttribute("warning", "Không tìm thấy đề thi.");
             return "redirect:/default";
         }
 
+        // Thi thử là nội dung công khai: bỏ qua khung giờ và mọi giới hạn trường/khối/lớp.
+        boolean practice = exam.isPractice();
+        if (practice && !Boolean.TRUE.equals(exam.getIsPublic())) {
+            ra.addFlashAttribute("warning", "Đề thi thử này không ở chế độ công khai.");
+            return "redirect:/practice";
+        }
+
         // 1. Kiểm tra khung giờ thi (startTime, endTime)
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        if (exam.getStartTime() != null && now.before(exam.getStartTime())) {
+        if (!practice && exam.getStartTime() != null && now.before(exam.getStartTime())) {
             SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             ra.addFlashAttribute("warning", "Kỳ thi chưa bắt đầu. Thời gian mở đề: " + df.format(exam.getStartTime()));
             return "redirect:/default";
         }
-        if (exam.getEndTime() != null && now.after(exam.getEndTime())) {
+        if (!practice && exam.getEndTime() != null && now.after(exam.getEndTime())) {
             SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm");
             ra.addFlashAttribute("warning", "Kỳ thi đã kết thúc vào lúc: " + df.format(exam.getEndTime()));
             return "redirect:/default";
@@ -215,11 +226,14 @@ public class MainController {
         }
 
         String targetType = exam.getTargetType();
+        if (practice) {
+            targetType = "PUBLIC";
+        }
         if (targetType == null || targetType.trim().isEmpty()) {
             targetType = (exam.getIsPublic() == null || exam.getIsPublic()) ? "PUBLIC" : "SCHOOL";
         }
 
-        if ("SCHOOL".equalsIgnoreCase(targetType)) {
+        if (!practice && "SCHOOL".equalsIgnoreCase(targetType)) {
             School studentSchool = student.getSchool();
             School examSchool = exam.getSchool();
             boolean sameSchool = (studentSchool != null && examSchool != null && studentSchool.getId() == examSchool.getId());
@@ -228,7 +242,7 @@ public class MainController {
                 ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho học sinh trường " + schoolName + ".");
                 return "redirect:/default";
             }
-        } else if ("GRADE".equalsIgnoreCase(targetType)) {
+        } else if (!practice && "GRADE".equalsIgnoreCase(targetType)) {
             School studentSchool = student.getSchool();
             School examSchool = exam.getSchool();
             boolean sameSchool = (studentSchool != null && examSchool != null && studentSchool.getId() == examSchool.getId());
@@ -242,7 +256,7 @@ public class MainController {
                 ra.addFlashAttribute("warning", "Đề thi này dành riêng cho học sinh Khối " + targetGrade + ".");
                 return "redirect:/default";
             }
-        } else if ("CLASS".equalsIgnoreCase(targetType)) {
+        } else if (!practice && "CLASS".equalsIgnoreCase(targetType)) {
             StudentTrackingClass targetClass = exam.getTargetClass();
             StudentTrackingClass studentClass = student.getTrackingClass();
             if (targetClass != null && (studentClass == null || !targetClass.getId().equals(studentClass.getId()))) {
@@ -250,7 +264,7 @@ public class MainController {
                 ra.addFlashAttribute("warning", "Đề thi này chỉ dành riêng cho học sinh lớp " + className + ".");
                 return "redirect:/default";
             }
-        } else {
+        } else if (!practice) {
             // PUBLIC nhưng isPublic = false
             Boolean isPublic = exam.getIsPublic();
             if (isPublic != null && !isPublic) {
@@ -270,9 +284,12 @@ public class MainController {
         examService.save(exam);
 
         User user1 = userService.findById(username);
-        result.setUsers(user1);
-        result.setExam(exam);
-        result.setStartTime(new Timestamp(System.currentTimeMillis()));
+        Result examResult = new Result();
+        examResult.setUsers(user1);
+        examResult.setExam(exam);
+        examResult.setStartTime(new Timestamp(System.currentTimeMillis()));
+        session.setAttribute("examResult", examResult);
+        session.setAttribute("examSubmitted", false);
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (!exam.isFree()) {
             timer = new Date(System.currentTimeMillis());
@@ -290,6 +307,21 @@ public class MainController {
         m.addAttribute("exam", exam);
         return "exam/quizTest";
 
+    }
+
+    private Integer subjectIdForExam(Exam exam) {
+        if (exam == null) return null;
+        if (exam.getLesson() != null && exam.getLesson().getChapter() != null
+                && exam.getLesson().getChapter().getSubjectClasses() != null
+                && exam.getLesson().getChapter().getSubjectClasses().getSubject() != null) {
+            return exam.getLesson().getChapter().getSubjectClasses().getSubject().getId();
+        }
+        if (exam.getLessonPlanLesson() != null && exam.getLessonPlanLesson().getChapter() != null
+                && exam.getLessonPlanLesson().getChapter().getLessonPlan() != null
+                && exam.getLessonPlanLesson().getChapter().getLessonPlan().getSubject() != null) {
+            return exam.getLessonPlanLesson().getChapter().getLessonPlan().getSubject().getId();
+        }
+        return null;
     }
 
 

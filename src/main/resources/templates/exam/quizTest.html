@@ -45,7 +45,7 @@
 
 <div class="container py-5 px-4">
     <h1 id="title" class="bg-info text-light"><span style="font-weight: bold"
-                                         th:text="${exam.nameExam} + ' - Chương '+${exam.lesson.chapter.serial}+' - '+${exam.lesson.chapter.subjectClasses.subject.name} +' '+${exam.lesson.chapter.subjectClasses.classes.nameClass}"></span>
+                                         th:text="${exam.nameExam} + ' - ' + ${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.name : exam.lesson.chapter.chapterName}+' - '+${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.subject.name : exam.lesson.chapter.subjectClasses.subject.name} +' '+${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName : exam.lesson.chapter.subjectClasses.classes.displayName}"></span>
     </h1>
     <form class="form-question" th:action="@{/submit1/{id}(id=${exam.id})}" method="POST" th:object="${qForm}"
           id="formQuestion">

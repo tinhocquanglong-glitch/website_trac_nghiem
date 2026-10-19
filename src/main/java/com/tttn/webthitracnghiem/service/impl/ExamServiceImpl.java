@@ -74,6 +74,16 @@ public class ExamServiceImpl implements IExamService {
     }
 
     @Override
+    public Page<Exam> findAllByLessonPlanLesson(int id, Pageable pageable) {
+        return examRepository.findAllByLessonPlanLesson_Id(id, pageable);
+    }
+
+    @Override
+    public Page<Exam> findAllByNameExamContainingAndByLessonPlanLesson(int id, String name, Pageable pageable) {
+        return examRepository.findByNameExamContainingAndLessonPlanLesson_Id(name, id, pageable);
+    }
+
+    @Override
     public Page<Exam> findAllByNameExamContaining(String name, Pageable pageable) {
         return examRepository.findAllByNameExamContaining(name, pageable);
     }

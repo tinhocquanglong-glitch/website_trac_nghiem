@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
@@ -74,7 +75,7 @@
                         </form>
                     </div>
                     <div style="display: flex;gap: 15px;">
-                        <a href="/subject/create" class="btn btn-primary">
+                        <a href="/subject/create" class="btn btn-primary" sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
                             Thêm mới
                         </a>
                     </div>
@@ -85,7 +86,7 @@
                         <th>STT</th>
                         <th>Hình ảnh</th>
                         <th>Tên môn học</th>
-                        <th class="text-center">
+                        <th class="text-center" sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
                             <i class="far fa-plus-square"></i>
                         </th>
                     </tr>
@@ -101,7 +102,7 @@
                 border-radius: 10px;">
                         </td>
                         <td th:text="${subject.name}"></td>
-                        <td class="text-center">
+                        <td class="text-center" sec:authorize="hasAnyAuthority('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
                             <a th:href="@{/subject/edit/{id}(id=${subject.getId()})}"><i
                                     class="fas fa-edit text-primary"></i></a>
                             <a th:href="@{/subject/delete/{id}(id=${subject.getId()})}" id="deleteButton"><i

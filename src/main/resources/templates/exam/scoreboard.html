@@ -65,11 +65,20 @@
                 </span>
             </td>
             <td th:text="${count.index+1}"></td>
-            <td style="text-transform: uppercase" th:text="${score.exam.lesson.chapter.subjectClasses.subject.name} +' '+ ${score.exam.lesson.chapter.subjectClasses.classes.nameClass}"></td>
+            <td style="text-transform: uppercase">
+                <span th:if="${score.exam.lesson != null}"
+                      th:text="${score.exam.lesson.chapter.subjectClasses.subject.name} +' '+ ${score.exam.lesson.chapter.subjectClasses.classes.nameClass}"></span>
+                <span th:if="${score.exam.lessonPlanLesson != null}"
+                      th:text="${score.exam.lessonPlanLesson.chapter.lessonPlan.subject.name} +' '+ ${score.exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName}"></span>
+            </td>
             <td th:if="${score.users.id != #authentication.name}" th:text="${score.users.fullName}"></td>
             <td th:if="${score.users.id == #authentication.name}">Bạn</td>
             <td th:text="${score.exam.nameExam}"></td>
-            <td th:text="${score.exam.lesson.nameLesson}"></td>
+            <td>
+                <span th:if="${score.exam.lesson != null}" th:text="${score.exam.lesson.nameLesson}"></span>
+                <span th:if="${score.exam.lessonPlanLesson != null}"
+                      th:text="${score.exam.lessonPlanLesson.chapter.name} + ' / ' + ${score.exam.lessonPlanLesson.name}"></span>
+            </td>
             <td th:text="${new java.text.DecimalFormat('0.#').format(score.mark)}"></td>
         </tr>
     </table>

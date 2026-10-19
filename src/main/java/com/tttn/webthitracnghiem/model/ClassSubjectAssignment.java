@@ -19,7 +19,8 @@ public class ClassSubjectAssignment {
     private Subject subject;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id", nullable = false,
+            columnDefinition = "varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci")
     private User teacher;
 
     public ClassSubjectAssignment() {

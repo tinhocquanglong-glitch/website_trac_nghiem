@@ -1,6 +1,9 @@
 package com.tttn.webthitracnghiem.controller;
 
 import com.tttn.webthitracnghiem.model.School;
+import com.tttn.webthitracnghiem.model.Role;
+import com.tttn.webthitracnghiem.model.StudentTrackingClass;
+import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.repository.SchoolRepository;
 import com.tttn.webthitracnghiem.repository.UserRepository;
 import com.tttn.webthitracnghiem.service.IUserService;
@@ -18,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserControllerTest {
@@ -58,6 +62,39 @@ class UserControllerTest {
         assertThat(filteredModel.get("addressKeyword")).isEqualTo("quan 1");
         assertThat(filteredModel.get("hasSchoolSearch")).isEqualTo(true);
         assertThat(filteredModel.get("schools")).isEqualTo(List.of(firstSchool, secondSchool));
+    }
+
+    @Test
+    void schoolAdminCanDeleteStudentAssignedToTheirSchoolClass() {
+        School school = school(5, "School A", "Ward", "District", "Province");
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setSchool(school);
+
+        User schoolAdmin = new User();
+        schoolAdmin.setId("principal");
+        schoolAdmin.setSchool(school);
+
+        Role studentRole = new Role();
+        studentRole.setRoleName("ROLE_USER");
+        User student = new User();
+        student.setId("free-student");
+        student.setRoles(java.util.Set.of(studentRole));
+        student.setTrackingClass(trackingClass);
+        student.setSchool(null);
+
+        IUserService userService = mock(IUserService.class);
+        when(userService.findById("free-student")).thenReturn(student);
+        when(userService.findById("principal")).thenReturn(schoolAdmin);
+
+        UserController controller = new UserController();
+        ReflectionTestUtils.setField(controller, "userService", userService);
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "principal", "password", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"))));
+
+        controller.delete("free-student", new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap());
+
+        verify(userService).delete(student);
     }
 
     private School school(Integer id, String name, String ward, String district, String province) {

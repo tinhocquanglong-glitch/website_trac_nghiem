@@ -81,6 +81,12 @@
                                     <li><a th:href="@{/subject/list}">Danh sách môn học</a></li>
                                 </ul>
                             </li>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/class/list}"><i class="fa fa-book"></i> Chương trình học</a>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/lesson-plans}"><i class="fa fa-file-text-o"></i> Giáo án</a>
+                            </li>
                             <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-desktop"></i> Đề thi <span class="fa fa-chevron-down"></span></a>
                                 <ul class="nav child_menu">
                                     <li><a th:href="@{/exam/list}">Danh sách đề thi</a></li>

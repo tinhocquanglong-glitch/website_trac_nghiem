@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thống kê bài thi</title>
+    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" th:href="@{/css/default-page.css}">
+    <style>
+        :root { --stats-ink: #17324d; --stats-muted: #6f7f8f; --stats-line: #e4ebf1; --stats-teal: #0b8f8c; }
+        body.stats-page { background: #f5f7fa; color: var(--stats-ink); }
+        .stats-shell { max-width: 1180px; }
+        .stats-hero { background: #17324d; color: #fff; border-radius: 10px; padding: 30px 34px; margin-bottom: 24px; }
+        .stats-hero-content { display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+        .stats-hero-copy { min-width: 0; }
+        .stats-hero h1 { font-size: 2rem; line-height: 1.15; margin: 0; font-weight: 700; }
+        .stats-hero .stats-eyebrow { color: #9ccbcf; font-size: .72rem; font-weight: 700; letter-spacing: .12em; margin: 0 0 12px; }
+        .stats-hero .stats-subtitle { color: #cbd8e4; margin: 10px 0 0; }
+        .stats-hero-icon { flex: 0 0 54px; width: 54px; height: 54px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(125, 212, 207, .42); border-radius: 8px; color: #7dd4cf; }
+        .stats-kpi { background: #fff; border: 1px solid var(--stats-line); border-radius: 8px; padding: 18px; height: 100%; }
+        .stats-kpi .icon { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: #e8f6f5; color: var(--stats-teal); margin-bottom: 14px; }
+        .stats-kpi .label { color: var(--stats-muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; display: block; }
+        .stats-kpi .value { display: block; font-size: 1.65rem; font-weight: 700; margin-top: 3px; }
+        .stats-panel { background: #fff; border: 1px solid var(--stats-line); border-radius: 8px; margin-top: 20px; overflow: hidden; }
+        .stats-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 20px; border-bottom: 1px solid var(--stats-line); }
+        .stats-panel-head h2 { font-size: 1.1rem; margin: 0; font-weight: 700; }
+        .stats-panel-head p { color: var(--stats-muted); margin: 5px 0 0; font-size: .86rem; }
+        .sort-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .sort-actions .btn { border-radius: 5px; font-size: .84rem; }
+        .stats-table { min-width: 680px; margin: 0; }
+        .stats-table thead th { color: var(--stats-muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; border-bottom-width: 1px; }
+        .stats-table td { vertical-align: middle; border-color: #edf1f4; padding: 14px 12px; }
+        .student-name { font-weight: 600; color: var(--stats-ink); }
+        .student-id { color: var(--stats-muted); font-size: .8rem; }
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 5px; padding: 5px 9px; font-size: .8rem; font-weight: 600; }
+        .status-pill.done { background: #e8f6f5; color: #087b78; }
+        .status-pill.pending { background: #f1f3f5; color: #6f7f8f; }
+        .score-badge { display: inline-flex; min-width: 46px; justify-content: center; border-radius: 5px; padding: 5px 8px; background: #e8f6f5; color: #087b78; font-weight: 700; }
+        .empty-state { padding: 38px 16px; text-align: center; color: var(--stats-muted); }
+        .empty-state i { color: #a9bac8; font-size: 1.7rem; margin-bottom: 10px; }
+        .empty-state strong { display: block; color: var(--stats-ink); margin-bottom: 4px; }
+        @media (max-width: 575.98px) { .stats-hero { padding: 24px 20px; } .stats-hero-content { align-items: flex-start; flex-direction: column; gap: 20px; } .stats-hero h1 { font-size: 1.5rem; } .stats-hero-icon { flex-basis: 46px; width: 46px; height: 46px; } .stats-panel-head { flex-direction: column; } }
+    </style>
+</head>
+<body class="stats-page">
+<div th:insert="~{default-page :: navbar}"></div>
+<main class="container py-4 stats-shell">
+    <header class="stats-hero">
+        <div class="stats-hero-content">
+            <div class="stats-hero-copy">
+                <p class="stats-eyebrow">THEO DÕI LỚP HỌC</p>
+                <h1 th:text="${exam.nameExam}">Thống kê bài thi</h1>
+                <p class="stats-subtitle"><span th:if="${exam.practice}"><i class="fa-solid fa-flask me-1" aria-hidden="true"></i>Thi thử · </span>Danh sách mức độ tham gia của học sinh</p>
+            </div>
+            <span class="stats-hero-icon" aria-hidden="true"><i class="fa-solid fa-chart-column fa-lg"></i></span>
+        </div>
+    </header>
+
+    <div class="row g-3">
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><span class="label">Tổng học sinh</span><strong class="value" th:text="${rows.size()}">0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></span><span class="label">Đã nộp bài</span><strong class="value" th:text="${takenCount}">0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon" style="background:#f1f3f5;color:#6f7f8f"><i class="fa-solid fa-user-clock" aria-hidden="true"></i></span><span class="label">Chưa thi</span><strong class="value" th:text="${pendingCount}">0</strong></div></div>
+        <div class="col-6 col-lg-3"><div class="stats-kpi"><span class="icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><span class="label">Điểm trung bình</span><strong class="value" th:text="${#numbers.formatDecimal(averageScore, 1, 1)}">0,0</strong></div></div>
+    </div>
+
+    <section class="stats-panel">
+        <div class="stats-panel-head">
+            <div><h2><i class="fa-solid fa-list-check me-2" style="color:var(--stats-teal)" aria-hidden="true"></i>Chi tiết học sinh</h2><p>Điểm cao nhất: <strong th:text="${#numbers.formatDecimal(highestScore, 1, 1)}">0,0</strong> · Chọn cách sắp xếp để rà soát nhanh.</p></div>
+            <nav class="sort-actions" aria-label="Sắp xếp kết quả"><a class="btn btn-sm btn-outline-primary" th:href="@{/teacher/exams/{id}/statistics(id=${exam.id},sort='score')}" th:classappend="${sort == 'score' ? 'active' : ''}"><i class="fa-solid fa-arrow-down-wide-short me-1" aria-hidden="true"></i>Điểm</a><a class="btn btn-sm btn-outline-secondary" th:href="@{/teacher/exams/{id}/statistics(id=${exam.id},sort='time')}" th:classappend="${sort == 'time' ? 'active' : ''}"><i class="fa-regular fa-clock me-1" aria-hidden="true"></i>Thời gian</a><a class="btn btn-sm btn-outline-secondary" th:href="@{/teacher/exams/{id}/statistics(id=${exam.id},sort='name')}" th:classappend="${sort == 'name' ? 'active' : ''}"><i class="fa-solid fa-arrow-down-a-z me-1" aria-hidden="true"></i>Tên</a></nav>
+        </div>
+        <div class="table-responsive" th:if="${rows != null and !rows.isEmpty()}">
+            <table class="table stats-table">
+                <thead><tr><th>Học sinh</th><th>Trạng thái</th><th>Điểm</th><th>Thời gian nộp</th></tr></thead>
+                <tbody><tr th:each="row : ${rows}"><td><div class="student-name" th:text="${row.student.fullName}">Học sinh</div><div class="student-id" th:text="${row.student.id}">mã học sinh</div></td><td><span class="status-pill done" th:if="${row.taken}"><i class="fa-solid fa-check" aria-hidden="true"></i>Đã thi</span><span class="status-pill pending" th:unless="${row.taken}"><i class="fa-regular fa-hourglass" aria-hidden="true"></i>Chưa thi</span></td><td><span class="score-badge" th:if="${row.score != null}" th:text="${#numbers.formatDecimal(row.score, 1, 1)}">0,0</span><span class="text-muted" th:unless="${row.score != null}">-</span></td><td class="text-muted small" th:text="${row.endTime != null ? row.endTime : '-'}">-</td></tr></tbody>
+            </table>
+        </div>
+        <div class="empty-state" role="status" th:if="${rows == null or rows.isEmpty()}"><i class="fa-solid fa-users-slash d-block" aria-hidden="true"></i><strong>Chưa có học sinh trong phạm vi bài thi</strong><span>Kiểm tra lại khối, lớp hoặc phạm vi giao bài của đề thi.</span></div>
+    </section>
+</main>
+</body>
+</html>

@@ -11,6 +11,8 @@ import com.tttn.webthitracnghiem.service.IExamService;
 import com.tttn.webthitracnghiem.service.IQuestionService;
 import com.tttn.webthitracnghiem.service.ISubjectService;
 import com.tttn.webthitracnghiem.service.IUserService;
+import com.tttn.webthitracnghiem.service.IChapterService;
+import com.tttn.webthitracnghiem.service.ILessonPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,6 +41,10 @@ public class QuestionController {
     private IClassesService classesService;
     @Autowired
     private IUserService userService;
+    @Autowired
+    private IChapterService chapterService;
+    @Autowired
+    private ILessonPlanService lessonPlanService;
 
     @ModelAttribute("exams")
     public Iterable<Exam> exams() {
@@ -66,6 +72,8 @@ public class QuestionController {
 
     @GetMapping("/question/list")
     public String showList(@RequestParam("subjectId") Optional<Integer> subjectId,
+                           @RequestParam("classId") Optional<Integer> classId,
+                           @RequestParam("chapterId") Optional<Integer> chapterId,
                            @RequestParam("keyword") Optional<String> name,
                            @RequestParam("create") Optional<Boolean> create,
                            @RequestParam("update") Optional<Boolean> update,
@@ -74,6 +82,12 @@ public class QuestionController {
         Page<Question> questions;
         model.addAttribute("exams", examService.findAll());
         model.addAttribute("subjects", subjectService.findAll());
+        model.addAttribute("selectedClassId", classId.orElse(null));
+        model.addAttribute("selectedChapterId", chapterId.orElse(null));
+        model.addAttribute("classes", subjectId.isPresent()
+                ? classesService.findAllBySubject(subjectId.get()) : Collections.emptyList());
+        model.addAttribute("chapters", subjectId.isPresent() && classId.isPresent()
+                ? chapterService.findBySubjectAndClass(subjectId.get(), classId.get()) : Collections.emptyList());
         if (create.isPresent()) {
             model.addAttribute("message", "Thêm câu hỏi thành công!");
         }
@@ -92,43 +106,16 @@ public class QuestionController {
             School school = getCurrentUserSchool(auth);
             int schoolId = (school != null) ? school.getId() : 1;
 
-            if (!name.isPresent()) {
-                if (subjectId.isPresent()) {
-                    questions = questionService.findAllBySubjectAndSchool(subjectId, schoolId, pageable);
-                    model.addAttribute("subjectId", subjectId.get());
-                } else {
-                    questions = questionService.findAllBySchool(schoolId, pageable);
-                }
-            } else {
-                if (subjectId.isPresent()) {
-                    questions = questionService.findBySubjectAndTitleAndSchool(subjectId.get(), name.get(), schoolId, pageable);
-                    model.addAttribute("subjectId", subjectId.get());
-                } else {
-                    questions = questionService.findAllByTitleContainingAndSchool(name.get(), schoolId, pageable);
-                }
-                model.addAttribute("keyword", name.get());
-            }
+            questions = questionService.findByFiltersAndSchool(subjectId.orElse(null), classId.orElse(null),
+                    chapterId.orElse(null), name.orElse(null), schoolId, pageable);
         } else {
             // Admin: thấy tất cả
-            if (!name.isPresent()) {
-                if (subjectId.isPresent()) {
-                    questions = questionService.findAllBySubject(subjectId, pageable);
-                    model.addAttribute("subjectId", subjectId.get());
-                    model.addAttribute("questions", questions);
-                    return "question/listQuestion";
-                }
-                questions = questionService.findAll(pageable);
-            } else {
-                if (subjectId.isPresent()) {
-                    questions = questionService.findBySubjectAndTitle(subjectId.get(), name.get(), pageable);
-                    model.addAttribute("subjectId", subjectId.get());
-                } else {
-                    questions = questionService.findAllByTitleContaining(name.get(), pageable);
-                }
-                model.addAttribute("keyword", name.get());
-            }
+            questions = questionService.findByFilters(subjectId.orElse(null), classId.orElse(null),
+                    chapterId.orElse(null), name.orElse(null), pageable);
         }
 
+        subjectId.ifPresent(value -> model.addAttribute("subjectId", value));
+        name.ifPresent(value -> model.addAttribute("keyword", value));
         model.addAttribute("questions", questions);
         return "question/listQuestion";
     }
@@ -207,6 +194,10 @@ public class QuestionController {
     public String create(Model model) {
         model.addAttribute("question", new Question());
         model.addAttribute("subjects", subjectService.findAll());
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = auth == null ? null : userService.findById(auth.getName());
+        model.addAttribute("lessonPlanGrades", user == null
+                ? Collections.emptyList() : lessonPlanService.findGrades(user, false));
         return "question/createQuestion";
     }
 

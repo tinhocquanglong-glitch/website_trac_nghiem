@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,6 +26,13 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/subject")
 public class SubjectController {
+
+    private boolean canManageSubjects() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())
+                        || "ROLE_SCHOOL_ADMIN".equals(a.getAuthority()));
+    }
 
     @Autowired
     ISubjectService subjectService;
@@ -79,17 +87,26 @@ public class SubjectController {
     }
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable("id") Integer id, Model model) {
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
         Subject subject = subjectService.findById(id);
         model.addAttribute("subject", subject);
         return "subject/edit";
     }
     @GetMapping("/create")
     public String create(Model model){
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
         model.addAttribute("subject",new SubjectRequest());
         return "subject/add";
     }
     @PostMapping("/create")
     public String create(@Validated @ModelAttribute SubjectRequest subject, BindingResult bindingResult, RedirectAttributes re){
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
         if(bindingResult.hasErrors()){
             return "subject/add";
         } else {
@@ -103,6 +120,9 @@ public class SubjectController {
     }
     @GetMapping("/delete/{id}")
     public String remove(@PathVariable Integer id, RedirectAttributes ra){
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
         Subject subject = subjectService.findById(id);
         subjectService.remove(subject);
         ra.addFlashAttribute("message","Xóa môn học thành công!");
@@ -110,6 +130,9 @@ public class SubjectController {
     }
     @GetMapping("/class/create/{classId}")
     public String createSubject(Model model, @PathVariable Integer classId){
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list/" + classId;
+        }
         List<SubjectClasses> subjectClassesList = subjectClassService.findByClassId(classId);
         List<Subject> subjectList = new ArrayList<>();
         for(int i = 0; i<subjectClassesList.size();i++){
@@ -124,12 +147,15 @@ public class SubjectController {
     @GetMapping("/class/{classId}/{subjectId}")
     public String deleteSubject(@PathVariable("classId") Integer classId,
                                 @PathVariable("subjectId") Integer subjectId, Model model, RedirectAttributes ra){
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list/" + classId;
+        }
         SubjectClasses subjectClasses = subjectClassService.findByClassAndSubject(classId,subjectId);
         List<Chapter> chapters = new ArrayList<>(subjectClasses.getChapters());
         for(int i = 0; i<chapters.size();i++){
             List<Lesson> lessons = new ArrayList<>(chapters.get(i).getLessons());
             for(int j = 0; j<lessons.size();j++){
-                lessonService.remove(lessons.get(i));
+                lessonService.remove(lessons.get(j));
             }
             chapterService.remove(chapters.get(i));
         }

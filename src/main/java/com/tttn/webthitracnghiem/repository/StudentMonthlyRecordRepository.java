@@ -8,4 +8,7 @@ import java.util.List;
 public interface StudentMonthlyRecordRepository extends JpaRepository<StudentMonthlyRecord, Integer> {
     List<StudentMonthlyRecord> findByStudentIdInAndSemesterAndMonth(
             List<Integer> studentIds, Integer semester, Integer month);
+
+    List<StudentMonthlyRecord> findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(
+            List<Integer> studentIds, Integer semester, Integer month, String teacherId, Integer subjectId);
 }

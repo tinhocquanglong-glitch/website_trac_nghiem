@@ -25,8 +25,9 @@ DROP TABLE IF EXISTS `classes`;
 CREATE TABLE `classes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name_class` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+  `grade` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -35,7 +36,19 @@ CREATE TABLE `classes` (
 
 LOCK TABLES `classes` WRITE;
 /*!40000 ALTER TABLE `classes` DISABLE KEYS */;
-INSERT INTO `classes` VALUES (1,'IT');
+INSERT INTO `classes` VALUES
+  (1,'Khối 1',1),
+  (2,'Khối 2',2),
+  (3,'Khối 3',3),
+  (4,'Khối 4',4),
+  (5,'Khối 5',5),
+  (6,'Khối 6',6),
+  (7,'Khối 7',7),
+  (8,'Khối 8',8),
+  (9,'Khối 9',9),
+  (10,'Khối 10',10),
+  (11,'Khối 11',11),
+  (12,'Khối 12',12);
 /*!40000 ALTER TABLE `classes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

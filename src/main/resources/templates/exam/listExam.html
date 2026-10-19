@@ -110,7 +110,7 @@
                         <td th:text="${i.count}"></td>
                         <td th:text="${exam.idName}"></td>
                         <td th:text="${exam.nameExam}"></td>
-                        <td style="text-transform: uppercase" th:text="${exam.lesson.chapter.subjectClasses.subject.name}+' '+${exam.lesson.chapter.subjectClasses.classes.nameClass}+ ': '+${exam.lesson.nameLesson}"></td>
+                        <td style="text-transform: uppercase" th:text="${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.subject.name : exam.lesson.chapter.subjectClasses.subject.name}+' '+${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName : exam.lesson.chapter.subjectClasses.classes.displayName}+ ': '+${exam.lessonPlanLesson != null ? exam.lessonPlanLesson.name : exam.lesson.nameLesson}"></td>
                         <td>
                             <span th:if="${exam.isPublic == null or exam.isPublic}" class="badge badge-success">
                                 <i class="fa fa-globe"></i> Công khai
@@ -125,6 +125,10 @@
                         <td th:text="${exam.createDate}"></td>
                         <td th:text="${exam.free != true ? exam.time + ' phút' : 'No Time'}"></td>
                         <td class="text-center">
+                            <a th:href="@{/teacher/exams/{id}/statistics(id=${exam.getId()})}"
+                               title="Xem thống kê bài thi" aria-label="Xem thống kê bài thi">
+                                <i class="fas fa-chart-line text-success"></i>
+                            </a>
                             <a th:href="@{/exam/editExam/{id}(id=${exam.getId()})}"><i
                                     class="fas fa-edit text-primary"></i></a>
                             <a th:href="@{/exam/delete/{id}(id=${exam.getId()})}" id="deleteButton"><i

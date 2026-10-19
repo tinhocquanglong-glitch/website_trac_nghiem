@@ -45,16 +45,40 @@
                     <div class="mid_card card-block col-sm-12 col-lg-12 mb-2 rounded btn"
                          th:each="chapter, i : ${chapters}">
                         <div class="chapter">
-                            <p class="title" th:text="'CHƯƠNG '+${i.index + 1}+'. '+${chapter.chapterName}"></p>
+                            <p class="title" th:text="'CHỦ ĐỀ '+${i.index + 1}+'. '+${chapter.chapterName}"></p>
                             <div class="lesson" th:each="lesson, j : ${chapter.lessons}">
                                 <a th:href="@{/listExamSubject/__${lesson.id}__}"><p th:text="'Bài '+${j.index + 1}+'. '+${lesson.nameLesson}"></p></a>
+                                <div class="small text-primary ml-3" th:if="${lesson.exams != null and !lesson.exams.isEmpty()}">
+                                    <span class="d-block font-weight-bold">Bai kiem tra trong bai hoc:</span>
+                                    <a class="d-block" th:each="exam : ${lesson.exams}" th:href="@{/quiz1/{id}(id=${exam.id})}">
+                                        <i class="fa fa-clipboard-check mr-1"></i><span th:text="${exam.nameExam}">Bai kiem tra</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div th:if="${chapters.isEmpty()}" class="text-center">
-                <span>Chưa có chương trình học của môn <span style="text-transform: uppercase;font-weight: bold" th:text="${subject.name}+' ' + ${class.nameClass}"></span></span>
+                <span>Chưa có nội dung khung chương trình của môn <span style="text-transform: uppercase;font-weight: bold" th:text="${subject.name}+' ' + ${class.nameClass}"></span></span>
+            </div>
+            <div class="mt-4" th:if="${studentLessonPlans != null and !studentLessonPlans.isEmpty()}">
+                <h5 class="border-bottom pb-2"><i class="fa fa-book-open mr-1"></i>Giáo án công khai</h5>
+                <div th:each="plan : ${studentLessonPlans}" class="mb-3">
+                    <h6 th:text="${plan.name}">Giáo án</h6>
+                    <div th:each="topic : ${plan.planChapters}" class="ml-3 mb-2">
+                        <strong th:text="${topic.name}">Chủ đề</strong>
+                        <div th:each="lesson : ${topic.lessons}" class="ml-3">
+                            <a th:href="@{/listExamSubject/lesson-plan/{id}(id=${lesson.id})}"
+                               th:text="${lesson.name}">Bài học</a>
+                            <a th:each="exam : ${studentLessonPlanExams[lesson.id]}"
+                               class="d-block small text-primary"
+                               th:href="@{/quiz1/{id}(id=${exam.id})}">
+                                <i class="fa fa-clipboard-check mr-1"></i><span th:text="${exam.nameExam}">Bài kiểm tra</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">

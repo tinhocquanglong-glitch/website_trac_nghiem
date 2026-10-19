@@ -7,7 +7,9 @@ import javax.persistence.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "subject_classes")
+@Table(name = "subject_classes",
+        uniqueConstraints = @UniqueConstraint(name = "uk_subject_classes_subject_class",
+                columnNames = {"subject_id", "class_id"}))
 public class SubjectClasses {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

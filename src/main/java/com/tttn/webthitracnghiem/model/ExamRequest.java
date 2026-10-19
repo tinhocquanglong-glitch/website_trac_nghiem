@@ -13,6 +13,7 @@ public class ExamRequest {
     private String nameExam;
     private String usersId;
     private int lessonId;
+    private Integer lessonPlanLessonId;
     private List<QuestionRequest> questions;
     private Boolean isPublic = true;
     private Integer schoolId;
@@ -23,6 +24,8 @@ public class ExamRequest {
     private Timestamp startTime;
     private Timestamp endTime;
     private String scoreType;
+    private Integer gradeMonth;
+    private boolean practice;
 
     public ExamRequest() {
     }
@@ -113,6 +116,14 @@ public class ExamRequest {
         this.lessonId = lessonId;
     }
 
+    public Integer getLessonPlanLessonId() {
+        return lessonPlanLessonId;
+    }
+
+    public void setLessonPlanLessonId(Integer lessonPlanLessonId) {
+        this.lessonPlanLessonId = lessonPlanLessonId;
+    }
+
     public List<QuestionRequest> getQuestions() {
         return questions;
     }
@@ -183,5 +194,16 @@ public class ExamRequest {
 
     public void setScoreType(String scoreType) {
         this.scoreType = scoreType;
+    }
+
+    public Integer getGradeMonth() { return gradeMonth; }
+    public void setGradeMonth(Integer gradeMonth) { this.gradeMonth = gradeMonth; }
+
+    public boolean isPractice() {
+        return practice;
+    }
+
+    public void setPractice(boolean practice) {
+        this.practice = practice;
     }
 }

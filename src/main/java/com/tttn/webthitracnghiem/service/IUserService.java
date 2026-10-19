@@ -11,6 +11,7 @@ public interface IUserService {
     Page<User> findAll(Pageable pageable);
     Page<User> search(String name, Pageable pageable);
     User save(User user);
+    User register(User user);
     Iterable<User> findAll();
     User findById(String id);
     void delete(User user);

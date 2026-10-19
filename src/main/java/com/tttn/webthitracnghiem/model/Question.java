@@ -2,6 +2,7 @@ package com.tttn.webthitracnghiem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
@@ -28,6 +29,11 @@ public class Question {
     @JoinColumn(name = "lesson_id",referencedColumnName = "id")
     @JsonBackReference
     private Lesson lesson;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lesson_plan_lesson_id")
+    @JsonIgnore
+    private LessonPlanLesson lessonPlanLesson;
     @ManyToMany(mappedBy = "questions")
     @JsonManagedReference
     private Set<Exam> exams;
@@ -71,6 +77,14 @@ public class Question {
 
     public void setLesson(Lesson lesson) {
         this.lesson = lesson;
+    }
+
+    public LessonPlanLesson getLessonPlanLesson() {
+        return lessonPlanLesson;
+    }
+
+    public void setLessonPlanLesson(LessonPlanLesson lessonPlanLesson) {
+        this.lessonPlanLesson = lessonPlanLesson;
     }
 
     public int getQuesId() {

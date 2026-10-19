@@ -7,6 +7,8 @@ import com.tttn.webthitracnghiem.service.IChapterService;
 import com.tttn.webthitracnghiem.service.ILessonService;
 import com.tttn.webthitracnghiem.service.ISubjectClassService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +39,7 @@ public class ChapterController {
     public String index(@RequestParam Optional<Boolean> create,
                         @PathVariable("id") Integer subjectClassId, Model model) {
         if (create.isPresent()) {
-            model.addAttribute("message", "Cập nhập chương thành công!");
+            model.addAttribute("message", "Cập nhập chủ đề thành công!");
         }
         List<Chapter> chapters = chapterService.findBySubjectClass(subjectClassId);
         model.addAttribute("chapters", chapters);
@@ -48,6 +50,9 @@ public class ChapterController {
 
     @GetMapping("/create/{id}")
     public String create(@PathVariable("id") Integer subjectClassId, Model model) {
+        if (!canManageCurriculum()) {
+            return "redirect:/chapter/list/" + subjectClassId;
+        }
         SubjectClasses subjectClasses = subjectClassService.findById(subjectClassId);
         List<Chapter> chapters = chapterService.findBySubjectClass(subjectClasses.getId());
         model.addAttribute("serial", chapterService.getSerial(subjectClasses.getId()));
@@ -58,18 +63,24 @@ public class ChapterController {
 
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable("id") Integer chapId, Model model, RedirectAttributes ra) {
+        if (!canManageCurriculum()) {
+            return "redirect:/chapter/list/" + chapId;
+        }
         Chapter chapter = chapterService.findById(chapId);
         List<Lesson> lessons = new ArrayList<>(chapter.getLessons());
         for (int i = 0; i < lessons.size(); i++) {
             lessonService.remove(lessons.get(i));
         }
         chapterService.remove(chapter);
-        ra.addFlashAttribute("message", "Xóa chương thành công!");
+        ra.addFlashAttribute("message", "Xóa chủ đề thành công!");
         return "redirect:/chapter/list/" + chapter.getSubjectClasses().getId();
     }
 
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable("id") Integer id, Model model) {
+        if (!canManageCurriculum()) {
+            return "redirect:/chapter/list/" + id;
+        }
         Chapter chapter = chapterService.findById(id);
         for (int i = 0; i < chapter.getLessons().size(); i++) {
             Set<Lesson> lessons = chapter.getLessons();
@@ -85,8 +96,18 @@ public class ChapterController {
 
     @PostMapping("/edit")
     public String save(@ModelAttribute Chapter chapter, RedirectAttributes ra) {
+        if (!canManageCurriculum()) {
+            return "redirect:/chapter/list/" + chapter.getSubjectClasses().getId();
+        }
         chapterService.save(chapter);
-        ra.addFlashAttribute("message", "Chỉnh sửa chương thành công!");
+        ra.addFlashAttribute("message", "Chỉnh sửa chủ đề thành công!");
         return "redirect:/chapter/list/" + chapter.getSubjectClasses().getId();
+    }
+
+    private boolean canManageCurriculum() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())
+                        || "ROLE_SCHOOL_ADMIN".equals(authority.getAuthority()));
     }
 }

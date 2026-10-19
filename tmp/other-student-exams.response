@@ -1,0 +1,175 @@
+HTTP/1.1 200 
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: text/html;charset=UTF-8
+Content-Language: en-US
+Transfer-Encoding: chunked
+Date: Fri, 16 Oct 2026 10:10:42 GMT
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bài thi được giao</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f3f8fb; color: #173042; font-family: Inter, Arial, sans-serif; }
+        .exam-shell { max-width: 1180px; margin: 0 auto; padding: 42px 18px 64px; }
+        .exam-hero { background: linear-gradient(120deg, #176b87, #2aa7a0); color: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 12px 28px rgba(23, 83, 105, .16); }
+        .exam-hero h1 { font-size: clamp(1.8rem, 4vw, 2.7rem); font-weight: 800; }
+        .exam-card { background: #fff; height: 100%; border: 1px solid #dbe8ed; border-radius: 12px; padding: 20px; box-shadow: 0 5px 16px rgba(28, 70, 90, .07); }
+        .exam-card h2 { font-size: 1.12rem; font-weight: 700; min-height: 48px; }
+        .meta { color: #607984; font-size: .9rem; }
+        .empty { background: #fff; border: 1px dashed #9ebbc7; border-radius: 12px; padding: 44px; text-align: center; }
+    </style>
+</head>
+<body>
+<div><header>
+
+    <div class="container-fluid">
+
+        <div class="navb-logo">
+            <img src="/img/logo.png" alt="Logo">
+        </div>
+
+        <div class="navb-items d-none d-xl-flex">
+
+            <div class="item">
+                <a href="/">Trang chủ</a>
+            </div>
+
+            <div class="item">
+                <a href="/default">Tạo bài kiểm tra</a>
+            </div>
+
+            <div class="item">
+                <a href="/tin-tuc">Tin tức</a>
+            </div>
+
+            <div class="item">
+                <a href="/tai-lieu">Tài liệu</a>
+            </div>
+            
+            
+            
+            <div class="item">
+                <a href="/student/exams" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-clipboard-check me-1"></i>Bài thi được giao</a>
+            </div>
+            <div class="item">
+                <a href="/practice" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-flask me-1"></i>Thi thử</a>
+            </div>
+            
+            <div class="item">
+                <a href="/aboutus">Về chúng tôi</a>
+            </div>
+            <div class="item-button">
+                <div>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span>Xin Chào,</span> <span style="color: red">demo_hs_62_1</span>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/view">Profile <span><i class="fa-solid fa-address-card"></i></span></a>
+                            <a class="dropdown-item" href="/logout">Logout <span><i class="fa-solid fa-right-from-bracket"></i></span></a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Button trigger modal -->
+        <div class="mobile-toggler d-lg-none">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#navbModal">
+                <i class="fa-solid fa-bars"></i>
+            </a>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="navbModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <img src="/img/logo.png" alt="Logo">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i
+                                class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-house"></i><a href="/">Trang chủ</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-bell-concierge"></i><a href="/services">Tạo bài kiểm tra</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-file-lines"></i> <a href="/cases">Tin tức</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-circle-info"></i><a href="/tai-lieu">Tài liệu</a>
+                        </div>
+
+                        
+
+                        
+
+                        
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-clipboard-check"></i><a href="/student/exams">Bài thi được giao</a>
+                        </div>
+                        <div class="modal-line">
+                            <i class="fa-solid fa-flask"></i><a href="/practice">Thi thử</a>
+                        </div>
+
+                        
+
+                        
+                        <div>
+                            <a href="/logout" class="navb-button" type="button">Đăng xuất</a>
+                        </div>
+                    </div>
+
+                    <div class="mobile-modal-footer">
+
+                        <a target="_blank" href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-youtube"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</header></div>
+<main class="exam-shell">
+    <section class="exam-hero mb-4">
+        <div class="small text-uppercase font-weight-bold mb-2">Khu vực học sinh</div>
+        <h1><i class="fa-solid fa-clipboard-check mr-2"></i>Bài thi được giao</h1>
+        <p class="mb-0">Các bài kiểm tra giáo viên giao cho lớp, khối hoặc trường của bạn.</p>
+    </section>
+
+    
+
+    <section class="empty">
+        <i class="fa-regular fa-folder-open fa-2x text-info mb-3"></i>
+        <h3>Chưa có bài thi được giao</h3>
+        <p class="text-muted mb-0">Khi giáo viên giao bài cho lớp của bạn, bài thi sẽ xuất hiện tại đây.</p>
+    </section>
+</main>
+</body>
+</html>

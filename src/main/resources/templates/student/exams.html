@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bài thi được giao</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --ink: #153243; --muted: #607884; --line: #d8e5e9; --accent: #147d7b; --done: #237c58; --done-soft: #f0faf5; }
+        body { background: #f5f8f9; color: var(--ink); font-family: Inter, Arial, sans-serif; }
+        .exam-shell { max-width: 1180px; margin: 0 auto; padding: 34px 18px 64px; }
+        .exam-hero { background: #123e4d; color: #fff; padding: 28px 30px; border-radius: 10px; box-shadow: 0 10px 24px rgba(21, 50, 67, .12); }
+        .exam-hero__eyebrow { color: #9ad9d0; letter-spacing: .08em; font-size: .72rem; }
+        .exam-hero h1 { font-size: clamp(1.65rem, 3vw, 2.35rem); font-weight: 800; margin-bottom: 8px; }
+        .exam-hero p { color: #d4e5e8; max-width: 680px; }
+        .exam-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+        .summary-item { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: #fff; font-size: .86rem; }
+        .summary-item i { color: #9ad9d0; }
+        .exam-legend { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; color: var(--muted); font-size: .82rem; padding: 15px 2px 4px; }
+        .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+        .legend-dot { width: 9px; height: 9px; border-radius: 50%; background: #b5c8ce; }
+        .legend-dot--done { background: var(--done); }
+        .exam-card { background: #fff; height: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 20px; box-shadow: 0 4px 13px rgba(28, 70, 90, .05); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+        .exam-card:hover { border-color: #9accc6; box-shadow: 0 8px 20px rgba(28, 70, 90, .09); transform: translateY(-2px); }
+        .exam-card--completed { background: var(--done-soft); border-color: #9ed2b6; }
+        .exam-card--completed:hover { border-color: #65ae88; }
+        .exam-card h2 { font-size: 1.08rem; line-height: 1.45; font-weight: 750; min-height: 48px; }
+        .exam-status { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 5px 8px; font-size: .75rem; font-weight: 700; }
+        .exam-status--done { color: var(--done); background: #d9f1e3; }
+        .exam-status--pending { color: #55707b; background: #edf2f4; }
+        .exam-score { color: var(--done); font-weight: 700; }
+        .meta { color: var(--muted); font-size: .88rem; }
+        .empty { background: #fff; border: 1px dashed #9ebbc7; border-radius: 8px; padding: 44px; text-align: center; }
+        @media (max-width: 575px) { .exam-shell { padding-top: 18px; } .exam-hero { padding: 22px 20px; } .summary-item { flex: 1 1 130px; } }
+    </style>
+</head>
+<body>
+<div th:insert="~{default-page :: navbar}"></div>
+<main class="exam-shell">
+    <section class="exam-hero mb-4">
+        <div class="small text-uppercase font-weight-bold mb-2">Khu vực học sinh</div>
+        <h1><i class="fa-solid fa-clipboard-check mr-2"></i>Bài thi được giao</h1>
+        <p class="mb-0">Các bài kiểm tra giáo viên giao cho lớp, khối hoặc trường của bạn.</p>
+    </section>
+    <div class="exam-summary" aria-label="Exam summary">
+        <span class="summary-item"><i class="fa-solid fa-layer-group"></i><strong th:text="${assignedExams.size()}">0</strong> b&#224;i thi</span>
+        <span class="summary-item"><i class="fa-solid fa-circle-check"></i><strong th:text="${completedAssignedCount}">0</strong> &#272;&#227; thi</span>
+        <span class="summary-item"><i class="fa-regular fa-circle"></i><strong th:text="${pendingAssignedCount}">0</strong> Ch&#432;a thi</span>
+    </div>
+    <div class="exam-legend">
+        <span class="legend-item"><span class="legend-dot"></span>Ch&#432;a ho&#224;n th&#224;nh</span>
+        <span class="legend-item"><span class="legend-dot legend-dot--done"></span>&#272;&#227; ho&#224;n th&#224;nh</span>
+    </div>
+
+    <section class="row" th:if="${!assignedExams.isEmpty()}">
+        <div class="col-md-6 col-lg-4 mb-4" th:each="exam : ${assignedExams}">
+            <article class="exam-card d-flex flex-column"
+                     th:classappend="${completedExamIds.contains(exam.id)} ? ' exam-card--completed' : ''">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="badge badge-primary" th:text="${exam.targetType == 'CLASS' ? 'LỚP' : (exam.targetType == 'GRADE' ? 'KHỐI' : 'TRƯỜNG')}">LỚP</span>
+                    <span class="meta" th:text="${exam.targetClass != null ? exam.targetClass.className : (exam.targetGrade != null ? 'Khối ' + exam.targetGrade : 'Toàn trường')}">6A1</span>
+                </div>
+                <h2 th:text="${exam.nameExam}">Tên bài thi</h2>
+                <div class="mb-2">
+                    <span th:if="${completedExamIds.contains(exam.id)}" class="exam-status exam-status--done"><i class="fa-solid fa-check"></i> &#272;&#227; thi</span>
+                    <span th:unless="${completedExamIds.contains(exam.id)}" class="exam-status exam-status--pending"><i class="fa-regular fa-clock"></i> Ch&#432;a thi</span>
+                </div>
+                <p class="meta mb-1" th:if="${exam.lessonPlanLesson != null}"
+                   th:text="${exam.lessonPlanLesson.chapter.lessonPlan.subject.name + ' · ' + exam.lessonPlanLesson.chapter.name}"></p>
+                <p class="meta mb-1" th:if="${exam.lesson != null}"
+                   th:text="${exam.lesson.chapter.subjectClasses.subject.name + ' · ' + exam.lesson.chapter.chapterName}"></p>
+                <p class="meta mb-3" th:text="${exam.scoreType == 'MIDTERM' ? 'Giữa kỳ' : (exam.scoreType == 'FINAL' ? 'Cuối kỳ' : (exam.scoreType == 'REGULAR_1' ? 'ĐGTX 1' : (exam.scoreType == 'REGULAR_2' ? 'ĐGTX 2' : 'Bài kiểm tra')))}"></p>
+                <p class="exam-score small mb-3" th:if="${completedResults[exam.id] != null}">
+                    <i class="fa-solid fa-award mr-1"></i>&#272;i&#7875;m: <span th:text="${completedResults[exam.id].mark}">0</span>
+                </p>
+                <div class="small text-muted mb-3" th:if="${exam.startTime != null and exam.startTime.after(now)}">
+                    <i class="fa-regular fa-clock mr-1"></i>Chưa mở: <span th:text="${#dates.format(exam.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+                <a class="btn btn-primary mt-auto" th:classappend="${completedExamIds.contains(exam.id)} ? ' btn-outline-success' : ''" th:href="@{/quiz1/{id}(id=${exam.id})}">
+                    <i class="fa-solid fa-play mr-1"></i>Bắt đầu làm bài
+                </a>
+            </article>
+        </div>
+    </section>
+
+    <section class="empty" th:if="${assignedExams.isEmpty()}">
+        <i class="fa-regular fa-folder-open fa-2x text-info mb-3"></i>
+        <h3>Chưa có bài thi được giao</h3>
+        <p class="text-muted mb-0">Khi giáo viên giao bài cho lớp của bạn, bài thi sẽ xuất hiện tại đây.</p>
+    </section>
+</main>
+</body>
+</html>

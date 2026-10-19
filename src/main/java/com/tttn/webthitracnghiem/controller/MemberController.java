@@ -16,10 +16,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.ServletContext;
 import javax.validation.Valid;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Controller
 public class MemberController {
@@ -30,8 +28,6 @@ public class MemberController {
     IResultService rService;
     @Autowired
     private IExamService examService;
-    @Autowired
-    private IRoleService roleService;
     @Autowired
     private IQService iqService;
     @Autowired
@@ -100,13 +96,8 @@ public class MemberController {
         user.setTrackingClass(null);
 
         // Phân quyền User
-        Role role = roleService.findByName("ROLE_USER");
-        Set<Role> roles = new HashSet<>();
-        roles.add(role);
-        user.setRoles(roles);
-
         model.addAttribute("message", "Đăng kí thành công !");
-        userService.save(user);
+        userService.register(user);
         return "login";
     }
 

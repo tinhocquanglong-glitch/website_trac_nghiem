@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${editMode ? 'Chỉnh sửa giáo án' : 'Tạo giáo án'}">Tạo giáo án</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <style>
+        :root { --ink: #173042; --muted: #6a7b87; --line: #dbe6eb; --accent: #1b7282; --soft: #f4f8fa; }
+        html, body { min-height: 100%; }
+        body { background: #f7f7f7; }
+        .main_container { min-height: 100vh; }
+        .left_col { z-index: 1000 !important; }
+        .top_nav { position: relative; z-index: 1001; }
+        main.right_col { min-height: calc(100vh - 70px); position: relative; z-index: 1; overflow: visible; }
+        .lesson-shell { width: 100%; max-width: 1120px; margin: 0 auto; }
+        .lesson-hero { background: linear-gradient(135deg, #173042, #287f8d); color: white; border-radius: 14px; padding: 28px; }
+        .lesson-panel { border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: 0 8px 24px rgba(23, 48, 66, .07); }
+        .step-label { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+        .scope-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .content-builder { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+        .chapter-editor { border: 1px solid var(--line); border-radius: 10px; background: white; padding: 16px; }
+        .chapter-editor + .chapter-editor { margin-top: 14px; }
+        .lesson-editor { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; margin-top: 12px; }
+        .lesson-editor .lesson-name, .lesson-editor textarea, .lesson-editor .rich-toolbar, .lesson-editor .rich-editor, .lesson-editor .lesson-file { grid-column: 1; }
+        .lesson-editor .remove-lesson { grid-column: 2; grid-row: 1; }
+        .lesson-editor textarea { min-height: 90px; resize: vertical; }
+        .lesson-editor .lesson-file { font-size: 12px; }
+        .lesson-editor > textarea.lesson-content-field { display: none; }
+        .rich-toolbar { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; padding: 6px; background: #f7fafb; border: 1px solid var(--line); border-bottom: 0; border-radius: 6px 6px 0 0; }
+        .rich-toolbar .btn { min-width: 32px; }
+        .rich-editor { min-height: 120px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: 0 0 6px 6px; outline: 0; }
+        .rich-editor:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(27, 114, 130, .12); }
+        .rich-editor:empty:before { content: attr(data-placeholder); color: #9aaab2; }
+        .document-import-note { border-left: 3px solid var(--accent); padding-left: 12px; }
+        .empty-copy { color: var(--muted); font-size: 13px; }
+        @media (max-width: 768px) { .scope-grid { grid-template-columns: 1fr; } .lesson-hero { padding: 22px; } }
+    </style>
+</head>
+<body class="nav-md">
+<div class="container body"><div class="main_container">
+    <div th:insert="~{index.html :: navbarAdmin}"></div>
+    <div th:insert="~{index.html :: topnavAdmin}"></div>
+    <main class="right_col" role="main">
+        <div class="container-fluid py-4 lesson-shell">
+            <section class="lesson-hero mb-4">
+                <div class="step-label text-white-50">Bộ soạn giáo án</div>
+                <h1 class="h2 mb-2" th:text="${editMode ? 'Chỉnh sửa giáo án' : 'Tạo giáo án mới'}">Tạo giáo án mới</h1>
+                <p class="mb-0">Chọn phạm vi giảng dạy trước, sau đó tự xây dựng chủ đề và bài học cho giáo án này.</p>
+            </section>
+
+            <div th:if="${error != null}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+            <div th:if="${grades.isEmpty()}" class="alert alert-warning" role="alert">
+                Chưa có danh mục khối phù hợp với cấp học của tài khoản. Vui lòng thử tải lại sau khi quản trị viên đồng bộ danh mục khối.
+            </div>
+            <form th:action="@{/lesson-plans/save}" th:object="${lessonPlan}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}">
+
+                <section class="lesson-panel p-4 mb-4">
+                    <div class="step-label mb-2">Bước 1 · Thông tin</div>
+                    <div class="form-row">
+                        <div class="form-group col-md-7">
+                            <label for="planName">Tên giáo án</label>
+                            <input id="planName" class="form-control" th:field="*{name}" placeholder="Ví dụ: Ôn tập Toán 10 - Học kỳ I" required>
+                            <small class="text-danger" th:errors="*{name}"></small>
+                        </div>
+                        <div class="form-group col-md-5">
+                            <label for="description">Mô tả ngắn</label>
+                            <input id="description" class="form-control" th:field="*{description}" placeholder="Mục tiêu hoặc ghi chú sử dụng">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="lesson-panel p-4 mb-4">
+                    <div class="step-label mb-2">Bước 2 · Phạm vi giảng dạy</div>
+                    <p class="text-muted small">Môn học và khối được chọn độc lập. Lớp là tùy chọn nếu giáo án dùng riêng cho một lớp.</p>
+                    <div class="scope-grid">
+                        <div class="form-group mb-0">
+                            <label for="subjectId">Môn học</label>
+                            <select id="subjectId" class="form-control" th:field="*{subjectId}" required>
+                                <option value="">-- Chọn môn học --</option>
+                                <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}">Toán</option>
+                            </select>
+                            <small class="text-danger" th:errors="*{subjectId}"></small>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="gradeId">Khối</label>
+                            <select id="gradeId" class="form-control" th:field="*{gradeId}" required>
+                                <option value="">-- Chọn khối --</option>
+                                <option th:each="grade : ${grades}" th:value="${grade.id}" th:attr="data-grade-number=${grade.grade}" th:text="${grade.displayName}">Khối 10</option>
+                            </select>
+                            <small class="text-danger" th:errors="*{gradeId}"></small>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="classId">Lớp <span class="text-muted font-weight-normal">(tùy chọn)</span></label>
+                            <select id="classId" class="form-control" th:field="*{classId}">
+                                <option value="">Dùng chung cho cả khối</option>
+                                <option th:each="targetClass : ${targetClasses}" th:value="${targetClass.id}"
+                                        th:attr="data-grade=${targetClass.grade}"
+                                        th:text="${targetClass.className + ' · ' + targetClass.schoolYear}">10A1</option>
+                            </select>
+                            <small class="form-text text-muted">Chỉ các lớp trong phạm vi tài khoản mới xuất hiện.</small>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="lesson-panel p-4 mb-4">
+                    <div class="step-label mb-2">Bước 3A · Nhập nội dung từ Word</div>
+                    <p class="text-muted small">Chọn file Word và cách nhập. File cấu trúc sẽ lấy chủ đề, bài học và nội dung theo cỡ chữ; file nội dung chỉ ghi vào bài học đã chọn.</p>
+                    <div class="form-row align-items-end">
+                        <div class="form-group col-lg-4">
+                            <label for="documentImportMode">Kiểu file</label>
+                            <select id="documentImportMode" class="form-control" th:field="*{documentImportMode}">
+                                <option value="FULL_STRUCTURE">File chủ đề + bài học + nội dung</option>
+                                <option value="LESSON_CONTENT">Chỉ nội dung bài học</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-lg-5">
+                            <label for="documentFile">File Word</label>
+                            <input id="documentFile" class="form-control-file" type="file" accept=".doc,.docx" th:field="*{documentFile}">
+                        </div>
+                        <div class="form-group col-lg-3" id="documentTargetFields">
+                            <label for="documentLessonIndex">Bài học nhận nội dung</label>
+                            <select id="documentLessonIndex" class="form-control" th:field="*{documentLessonIndex}"></select>
+                            <input type="hidden" id="documentChapterIndex" th:field="*{documentChapterIndex}">
+                        </div>
+                    </div>
+                    <p class="document-import-note text-muted small mb-0">Sau khi bấm Lưu thay đổi, hệ thống sẽ đọc file và cập nhật form theo kiểu đã chọn.</p>
+                </section>
+
+                <section class="lesson-panel p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+                        <div>
+                            <div class="step-label mb-2">Bước 3 · Tự xây dựng nội dung</div>
+                            <h2 class="h4 mb-1">Chủ đề và bài học</h2>
+                            <p class="empty-copy mb-0">Nội dung ở đây thuộc riêng giáo án, không làm thay đổi chương trình học chung.</p>
+                        </div>
+                        <button type="button" id="addChapter" class="btn btn-outline-primary mt-2 mt-md-0">
+                            <i class="fas fa-plus mr-1"></i> Thêm chủ đề
+                        </button>
+                    </div>
+                    <div id="chapterBuilder" class="content-builder">
+                        <div th:each="chapter, chapterStatus : ${lessonPlan.chapters}" class="chapter-editor" th:attr="data-chapter-index=${chapterStatus.index}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="font-weight-bold mb-0" th:for="${'chapter-' + chapterStatus.index}">Chủ đề <span th:text="${chapterStatus.index + 1}">1</span></label>
+                                <button type="button" class="btn btn-sm btn-link text-danger remove-chapter" aria-label="Xóa chủ đề"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                            <input class="form-control mt-2 chapter-name" th:id="${'chapter-' + chapterStatus.index}"
+                                   th:name="${'chapters[' + chapterStatus.index + '].name'}" th:value="${chapter.name}" placeholder="Tên chủ đề" required>
+                            <div class="lesson-list">
+                                <div th:each="lesson, lessonStatus : ${chapter.lessons}" class="lesson-editor">
+                                    <input type="hidden" th:name="${'chapters[' + chapterStatus.index + '].lessons[' + lessonStatus.index + '].id'}" th:value="${lesson.id}">
+                                    <label class="sr-only">Tên bài học</label>
+                                    <input class="form-control lesson-name" th:name="${'chapters[' + chapterStatus.index + '].lessons[' + lessonStatus.index + '].name'}"
+                                           th:value="${lesson.name}" placeholder="Tên bài học" required>
+                                    <textarea class="form-control lesson-content-field" th:name="${'chapters[' + chapterStatus.index + '].lessons[' + lessonStatus.index + '].content'}"
+                                              placeholder="Soạn nội dung bài học tại đây..." th:text="${lesson.content}"></textarea>
+                                    <div class="rich-toolbar" role="toolbar" aria-label="Định dạng nội dung bài học">
+                                        <button type="button" class="btn btn-light btn-sm" data-command="bold" title="In đậm"><strong>B</strong></button>
+                                        <button type="button" class="btn btn-light btn-sm" data-command="italic" title="In nghiêng"><em>I</em></button>
+                                        <button type="button" class="btn btn-light btn-sm" data-command="underline" title="Gạch chân"><u>U</u></button>
+                                        <button type="button" class="btn btn-light btn-sm" data-command="insertUnorderedList" title="Danh sách"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" class="btn btn-light btn-sm" data-command="insertOrderedList" title="Danh sách đánh số"><i class="fas fa-list-ol"></i></button>
+                                        <select class="form-control form-control-sm" data-command="fontSize" title="Cỡ chữ" aria-label="Cỡ chữ">
+                                            <option value="3">Cỡ chữ</option>
+                                            <option value="2">Nhỏ</option>
+                                            <option value="4">Lớn</option>
+                                            <option value="5">Rất lớn</option>
+                                        </select>
+                                    </div>
+                                    <div class="rich-editor" contenteditable="true" data-placeholder="Soạn nội dung bài học tại đây..."></div>
+                                    <div class="lesson-file">
+                                        <input type="file" accept=".doc,.docx" th:name="${'chapters[' + chapterStatus.index + '].lessons[' + lessonStatus.index + '].attachment'}">
+                                        <span class="text-muted" th:if="${lesson.attachmentOriginalName != null}" th:text="${'File hiện tại: ' + lesson.attachmentOriginalName}">File hiện tại</span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-lesson" aria-label="Xóa bài học"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link px-0 add-lesson"><i class="fas fa-plus mr-1"></i> Thêm bài học</button>
+                        </div>
+                        <p id="builderEmpty" class="empty-copy text-center my-3">Chưa có chủ đề. Hãy thêm chủ đề đầu tiên.</p>
+                    </div>
+                </section>
+
+                <section class="lesson-panel p-4 mb-4">
+                    <div class="custom-control custom-switch mb-0">
+                        <input id="isPublic" type="checkbox" class="custom-control-input" th:field="*{isPublic}">
+                        <label class="custom-control-label" for="isPublic">Chia sẻ Public để giáo viên khác có thể tham khảo</label>
+                    </div>
+                </section>
+
+                <div class="d-flex justify-content-end mb-4">
+                    <a th:href="@{/lesson-plans}" class="btn btn-light mr-2">Hủy</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i><span th:text="${editMode ? 'Lưu thay đổi' : 'Tạo giáo án'}">Tạo giáo án</span></button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <div th:insert="~{index.html :: footerAdmin}"></div>
+</div></div>
+
+<template id="chapterTemplate">
+    <div class="chapter-editor" data-chapter-index="__CHAPTER_INDEX__">
+        <div class="d-flex justify-content-between align-items-center">
+            <label class="font-weight-bold mb-0" for="chapter-__CHAPTER_INDEX__">Chủ đề <span class="chapter-number">1</span></label>
+            <button type="button" class="btn btn-sm btn-link text-danger remove-chapter" aria-label="Xóa chủ đề"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <input id="chapter-__CHAPTER_INDEX__" class="form-control mt-2 chapter-name" name="chapters[__CHAPTER_INDEX__].name" placeholder="Tên chủ đề" required>
+        <div class="lesson-list"></div>
+        <button type="button" class="btn btn-sm btn-link px-0 add-lesson"><i class="fas fa-plus mr-1"></i> Thêm bài học</button>
+    </div>
+</template>
+<template id="lessonTemplate">
+    <div class="lesson-editor">
+        <label class="sr-only" for="lesson-__CHAPTER_INDEX__-__LESSON_INDEX__">Tên bài học</label>
+        <input id="lesson-__CHAPTER_INDEX__-__LESSON_INDEX__" class="form-control lesson-name" name="chapters[__CHAPTER_INDEX__].lessons[__LESSON_INDEX__].name" placeholder="Tên bài học" required>
+        <textarea class="form-control lesson-content-field" name="chapters[__CHAPTER_INDEX__].lessons[__LESSON_INDEX__].content" placeholder="Soạn nội dung bài học tại đây..."></textarea>
+        <div class="rich-toolbar" role="toolbar" aria-label="Định dạng nội dung bài học">
+            <button type="button" class="btn btn-light btn-sm" data-command="bold" title="In đậm"><strong>B</strong></button>
+            <button type="button" class="btn btn-light btn-sm" data-command="italic" title="In nghiêng"><em>I</em></button>
+            <button type="button" class="btn btn-light btn-sm" data-command="underline" title="Gạch chân"><u>U</u></button>
+            <button type="button" class="btn btn-light btn-sm" data-command="insertUnorderedList" title="Danh sách"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="btn btn-light btn-sm" data-command="insertOrderedList" title="Danh sách đánh số"><i class="fas fa-list-ol"></i></button>
+            <select class="form-control form-control-sm" data-command="fontSize" title="Cỡ chữ" aria-label="Cỡ chữ">
+                <option value="3">Cỡ chữ</option>
+                <option value="2">Nhỏ</option>
+                <option value="4">Lớn</option>
+                <option value="5">Rất lớn</option>
+            </select>
+        </div>
+        <div class="rich-editor" contenteditable="true" data-placeholder="Soạn nội dung bài học tại đây..."></div>
+        <div class="lesson-file"><input type="file" accept=".doc,.docx" name="chapters[__CHAPTER_INDEX__].lessons[__LESSON_INDEX__].attachment"></div>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-lesson" aria-label="Xóa bài học"><i class="fas fa-times"></i></button>
+    </div>
+</template>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script>
+    (function () {
+        const builder = document.getElementById('chapterBuilder');
+        const form = builder.closest('form');
+        const empty = document.getElementById('builderEmpty');
+        const chapterTemplate = document.getElementById('chapterTemplate').innerHTML;
+        const lessonTemplate = document.getElementById('lessonTemplate').innerHTML;
+        const modeSelect = document.getElementById('documentImportMode');
+        const targetFields = document.getElementById('documentTargetFields');
+        const targetSelect = document.getElementById('documentLessonIndex');
+        const targetChapter = document.getElementById('documentChapterIndex');
+
+        function syncEditor(lesson) {
+            const field = lesson.querySelector('.lesson-content-field');
+            const editor = lesson.querySelector('.rich-editor');
+            if (!field || !editor) return;
+            if (!editor.dataset.ready) {
+                editor.innerHTML = field.value || '';
+                editor.dataset.ready = 'true';
+                editor.addEventListener('input', function () {
+                    field.value = editor.innerHTML;
+                });
+            }
+        }
+
+        function syncAllEditors() {
+            builder.querySelectorAll('.lesson-editor').forEach(function (lesson) {
+                syncEditor(lesson);
+                const field = lesson.querySelector('.lesson-content-field');
+                const editor = lesson.querySelector('.rich-editor');
+                if (field && editor) field.value = editor.innerHTML;
+            });
+        }
+
+        function renumberFields() {
+            builder.querySelectorAll('.chapter-editor').forEach(function (chapter, chapterIndex) {
+                chapter.dataset.chapterIndex = chapterIndex;
+                const chapterName = chapter.querySelector('.chapter-name');
+                if (chapterName) {
+                    chapterName.name = 'chapters[' + chapterIndex + '].name';
+                    chapterName.id = 'chapter-' + chapterIndex;
+                }
+                const chapterLabel = chapter.querySelector('label[for^="chapter-"]');
+                if (chapterLabel) chapterLabel.setAttribute('for', 'chapter-' + chapterIndex);
+                chapter.querySelectorAll('.lesson-editor').forEach(function (lesson, lessonIndex) {
+                    const lessonName = lesson.querySelector('.lesson-name');
+                    const content = lesson.querySelector('.lesson-content-field');
+                    const attachment = lesson.querySelector('.lesson-file input[type="file"]');
+                    const prefix = 'chapters[' + chapterIndex + '].lessons[' + lessonIndex + ']';
+                    if (lessonName) {
+                        lessonName.name = prefix + '.name';
+                        lessonName.id = 'lesson-' + chapterIndex + '-' + lessonIndex;
+                    }
+                    if (content) content.name = prefix + '.content';
+                    if (attachment) attachment.name = prefix + '.attachment';
+                    const lessonLabel = lesson.querySelector('label[for^="lesson-"]');
+                    if (lessonLabel) lessonLabel.setAttribute('for', 'lesson-' + chapterIndex + '-' + lessonIndex);
+                });
+            });
+        }
+
+        function syncDocumentTargets() {
+            if (!targetSelect) return;
+            const oldValue = targetSelect.value;
+            const oldChapter = targetChapter.value;
+            targetSelect.innerHTML = '';
+            builder.querySelectorAll('.chapter-editor').forEach(function (chapter, chapterIndex) {
+                chapter.querySelectorAll('.lesson-editor').forEach(function (lesson, lessonIndex) {
+                    const name = lesson.querySelector('.lesson-name');
+                    const option = document.createElement('option');
+                    option.value = lessonIndex;
+                    option.dataset.chapterIndex = chapterIndex;
+                    option.textContent = (chapterIndex + 1) + '.' + (lessonIndex + 1) + ' ' + (name ? name.value : 'Bài học');
+                    if (String(lessonIndex) === oldValue && String(chapterIndex) === oldChapter) option.selected = true;
+                    targetSelect.appendChild(option);
+                });
+            });
+            if (!targetSelect.value && targetSelect.options.length) {
+                targetSelect.selectedIndex = 0;
+                targetChapter.value = targetSelect.options[0].dataset.chapterIndex;
+            }
+            if (targetSelect.selectedOptions.length) targetChapter.value = targetSelect.selectedOptions[0].dataset.chapterIndex;
+        }
+
+        function refreshBuilder() {
+            const chapters = builder.querySelectorAll('.chapter-editor');
+            renumberFields();
+            empty.hidden = chapters.length > 0;
+            chapters.forEach(function (chapter, index) {
+                chapter.querySelector('.chapter-number').textContent = index + 1;
+                chapter.querySelectorAll('.lesson-editor').forEach(syncEditor);
+            });
+            syncDocumentTargets();
+        }
+
+        function addLesson(chapter) {
+            const chapterIndex = chapter.dataset.chapterIndex;
+            const lessonIndex = chapter.querySelectorAll('.lesson-editor').length;
+            chapter.querySelector('.lesson-list').insertAdjacentHTML('beforeend', lessonTemplate
+                .replaceAll('__CHAPTER_INDEX__', chapterIndex)
+                .replaceAll('__LESSON_INDEX__', lessonIndex));
+            refreshBuilder();
+        }
+
+        function addChapter() {
+            const index = builder.querySelectorAll('.chapter-editor').length;
+            builder.insertAdjacentHTML('beforeend', chapterTemplate.replaceAll('__CHAPTER_INDEX__', index));
+            const chapter = builder.querySelectorAll('.chapter-editor')[index];
+            addLesson(chapter);
+            refreshBuilder();
+            chapter.querySelector('.chapter-name').focus();
+        }
+
+        function toggleImportTarget() {
+            const contentOnly = modeSelect && modeSelect.value === 'LESSON_CONTENT';
+            if (targetFields) targetFields.hidden = !contentOnly;
+        }
+
+        document.getElementById('addChapter').addEventListener('click', addChapter);
+        builder.addEventListener('mousedown', function (event) {
+            if (event.target.closest('button[data-command]')) event.preventDefault();
+        });
+        builder.addEventListener('click', function (event) {
+            const command = event.target.closest('[data-command]');
+            if (command) {
+                const lesson = command.closest('.lesson-editor');
+                const editor = lesson && lesson.querySelector('.rich-editor');
+                if (editor) {
+                    editor.focus();
+                    document.execCommand(command.dataset.command, false, command.dataset.command === 'fontSize' ? command.value : null);
+                    editor.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                return;
+            }
+            const removeChapter = event.target.closest('.remove-chapter');
+            const removeLesson = event.target.closest('.remove-lesson');
+            const addLessonButton = event.target.closest('.add-lesson');
+            if (removeChapter) { removeChapter.closest('.chapter-editor').remove(); refreshBuilder(); }
+            if (removeLesson) { removeLesson.closest('.lesson-editor').remove(); refreshBuilder(); }
+            if (addLessonButton) addLesson(addLessonButton.closest('.chapter-editor'));
+        });
+        builder.addEventListener('change', function (event) {
+            if (event.target.matches('[data-command="fontSize"]')) {
+                const lesson = event.target.closest('.lesson-editor');
+                const editor = lesson && lesson.querySelector('.rich-editor');
+                if (editor) {
+                    editor.focus();
+                    document.execCommand('fontSize', false, event.target.value);
+                    editor.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                event.target.value = '3';
+            }
+            if (event.target.classList.contains('lesson-name')) syncDocumentTargets();
+        });
+        if (targetSelect) targetSelect.addEventListener('change', function () {
+            if (targetSelect.selectedOptions.length) targetChapter.value = targetSelect.selectedOptions[0].dataset.chapterIndex;
+        });
+        if (modeSelect) { modeSelect.addEventListener('change', toggleImportTarget); toggleImportTarget(); }
+        form.addEventListener('submit', function () { syncAllEditors(); syncDocumentTargets(); });
+
+        const gradeSelect = document.getElementById('gradeId');
+        const classSelect = document.getElementById('classId');
+        function filterClasses() {
+            const gradeOption = gradeSelect.options[gradeSelect.selectedIndex];
+            const selectedGrade = gradeOption ? gradeOption.dataset.gradeNumber : '';
+            Array.from(classSelect.options).forEach(function (option, index) {
+                if (index === 0) { option.hidden = false; option.disabled = false; return; }
+                const visible = option.dataset.grade === selectedGrade;
+                option.hidden = !visible;
+                option.disabled = !visible;
+                if (!visible && option.selected) classSelect.value = '';
+            });
+        }
+        gradeSelect.addEventListener('change', filterClasses);
+        filterClasses();
+        if (!builder.querySelector('.chapter-editor')) addChapter();
+        refreshBuilder();
+    })();
+</script>
+</body>
+</html>

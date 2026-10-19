@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +41,9 @@ public class LessonController {
     }
     @GetMapping("/create/{id}")
     public String create(@PathVariable Integer id, Model model){
+        if (!canManageCurriculum()) {
+            return "redirect:/lesson/list/" + id;
+        }
         Chapter chapter = chapterService.findById(id);
         List<Lesson> lessons = new ArrayList<>(chapter.getLessons());
         Collections.sort(lessons);
@@ -50,6 +55,9 @@ public class LessonController {
     }
     @GetMapping("/delete/{lessonId}")
     public String delete(@PathVariable int lessonId, Model model, RedirectAttributes ra){
+        if (!canManageCurriculum()) {
+            return "redirect:/lesson/list/" + lessonId;
+        }
         Lesson lesson = lessonService.findById(lessonId);
         lessonService.remove(lesson);
         ra.addFlashAttribute("message","Xóa thành công bài học!");
@@ -57,6 +65,9 @@ public class LessonController {
     }
     @GetMapping("/edit/{lessonId}")
     public String edit(@PathVariable int lessonId, Model model){
+        if (!canManageCurriculum()) {
+            return "redirect:/lesson/list/" + lessonId;
+        }
         Lesson lesson = lessonService.findById(lessonId);
         model.addAttribute("lesson",lesson);
         model.addAttribute("chapter",lesson.getChapter());
@@ -64,8 +75,18 @@ public class LessonController {
     }
     @PostMapping("/edit")
     public String save(@ModelAttribute Lesson lesson, RedirectAttributes ra){
+        if (!canManageCurriculum()) {
+            return "redirect:/lesson/list/" + lesson.getChapter().getId();
+        }
         lessonService.save(lesson);
         ra.addFlashAttribute("message","Chỉnh sửa bài học thành công!");
         return "redirect:/lesson/list/"+lesson.getChapter().getId();
+    }
+
+    private boolean canManageCurriculum() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())
+                        || "ROLE_SCHOOL_ADMIN".equals(authority.getAuthority()));
     }
 }

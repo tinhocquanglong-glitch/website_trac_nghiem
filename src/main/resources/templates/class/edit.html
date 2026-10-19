@@ -83,9 +83,12 @@
             <input th:type="hidden" name="id" th:field="*{id}" id="subjectId">
             <div class="border border-secondary rounded p-3 pt-5">
               <div class="form-group row mg-16-auto">
-                <label class="col-sm-3 col-form-label">Tên lớp học</label>
+                <label class="col-sm-3 col-form-label">Khối</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" th:field="*{nameClass}" name="name" id="name">
+                  <select class="form-control" th:field="*{grade}" required>
+                    <option value="">-- Chọn khối --</option>
+                    <option th:each="g : ${#numbers.sequence(1, 12)}" th:value="${g}" th:text="'Khối ' + ${g}"></option>
+                  </select>
                 </div>
               </div>
               <button type="submit" class="btn btn-primary">Cập nhập</button>

@@ -42,9 +42,20 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/school-admin/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/create-teacher").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/user/delete/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/user/update-role").hasRole("ADMIN")
                 .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
+                .antMatchers("/subject/create", "/subject/edit/**", "/subject/delete/**")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/api/subject/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/api/subjectClasses/**", "/api/chapter/**", "/api/lesson/**", "/api/document/**")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
+                .antMatchers("/lesson-plans/**")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
                         "/lesson/**", "/chapter/**", "/student-tracking/**", "/teacher/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
+                .antMatchers("/practice/**").hasAnyRole("USER", "TEACHER", "SCHOOL_ADMIN", "ADMIN")
+                .antMatchers("/student/exams", "/student/statistics").hasAnyRole("USER", "TEACHER", "SCHOOL_ADMIN", "ADMIN")
                 .antMatchers("/quiz1/**", "/subject/**", "/score/**", "/history/**",
                         "/submit1/**", "/view", "/editMember", "/editPass").hasAnyRole("USER", "TEACHER", "SCHOOL_ADMIN", "ADMIN");
 //                .anyRequest().authenticated();

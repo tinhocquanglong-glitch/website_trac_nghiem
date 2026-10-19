@@ -96,8 +96,6 @@ public class QuizServiceImpl implements IQuizService {
 //        saveResult.setUsername(result.getUsername());
 //        saveResult.setTotalCorrect(result.getTotalCorrect());
 //        rRepo.save(saveResult);
-        result.getUsers().setResult(null);
-        result.getExam().setUsers(null);
         rRepo.save(result);
 
     }
@@ -109,7 +107,6 @@ public class QuizServiceImpl implements IQuizService {
 //        saveResult.setTotalCorrect(result.getTotalCorrect());
 //        rRepo.save(saveResult);
         //result.getQuestions().setUsers(null);
-        result.getUsers().setResult(null);
         rRepo.save(result);
     }
 

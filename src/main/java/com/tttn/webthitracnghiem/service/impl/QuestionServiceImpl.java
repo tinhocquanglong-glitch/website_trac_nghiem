@@ -27,6 +27,11 @@ public class QuestionServiceImpl implements IQuestionService {
     }
 
     @Override
+    public List<Question> findAllWithContext() {
+        return questionRepository.findAllWithContext();
+    }
+
+    @Override
     public List<Question> getAll() {
         return questionRepository.findAll();
     }
@@ -65,6 +70,11 @@ public class QuestionServiceImpl implements IQuestionService {
     public List<Question> findByLessonId(int id) {
         return questionRepository.findByLesson(id);
     }
+
+    @Override
+    public List<Question> findByLessonPlanLessonId(int id) {
+        return questionRepository.findByLessonPlanLesson_Id(id);
+    }
     @Override
     public List<Question> findByExam(int examId) {
         return questionRepository.findByExam(examId);
@@ -97,5 +107,20 @@ public class QuestionServiceImpl implements IQuestionService {
     @Override
     public Page<Question> findBySubjectAndTitleAndSchool(int subjectId, String title, int schoolId, Pageable pageable) {
         return questionRepository.findAllBySubjectAndTitleContainingAndSchool(subjectId, title, schoolId, pageable);
+    }
+
+    @Override
+    public Page<Question> findByFilters(Integer subjectId, Integer classId, Integer chapterId, String title, Pageable pageable) {
+        return questionRepository.findByFilters(subjectId, classId, chapterId, emptyToNull(title), pageable);
+    }
+
+    @Override
+    public Page<Question> findByFiltersAndSchool(Integer subjectId, Integer classId, Integer chapterId, String title,
+                                                 int schoolId, Pageable pageable) {
+        return questionRepository.findByFiltersAndSchool(subjectId, classId, chapterId, emptyToNull(title), schoolId, pageable);
+    }
+
+    private String emptyToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
     }
 }

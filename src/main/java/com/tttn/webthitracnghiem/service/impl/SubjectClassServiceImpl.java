@@ -15,6 +15,11 @@ public class SubjectClassServiceImpl implements ISubjectClassService {
     @Autowired
     private SubjectClassRepository subjectClassRepository;
     @Override
+    public List<SubjectClasses> findAll() {
+        return subjectClassRepository.findAll();
+    }
+
+    @Override
     public Page<SubjectClasses> findAll(Pageable pageable) {
         return subjectClassRepository.findAll(pageable);
     }

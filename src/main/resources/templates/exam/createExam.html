@@ -244,23 +244,31 @@
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Bài học</label>
+                                    <label class="col-sm-3 col-form-label">Môn, khối, chủ đề, bài học</label>
                                     <div class="col-sm-8 pt-2">
                                         <select id="subject" class="btn dropdown-toggle" data-toggle="dropdown"
-                                                style="background-color: #14c4ff" onchange="getClass()">
+                                                style="background-color: #14c4ff" onchange="getGrade()">
                                             <option value="" selected disabled>--Chọn môn học--</option>
                                             <th:block class="dropdown-menu" th:each="subject : ${subjects}">
                                                 <option class="dropdown-item" th:value="${subject.id}"
                                                         th:text="${subject.name}"></option>
                                             </th:block>
                                         </select>
-                                        <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
-                                                style="background-color: #14c4ff;display: none" onchange="getChapter()">
-                                            <option id="default" value="" selected disabled>--Chọn lớp học--</option>
-                                            </th:block>
+                                        <select id="grade" class="btn dropdown-toggle" data-toggle="dropdown"
+                                                style="background-color: #14c4ff;display: none" onchange="getTopic()">
+                                            <option id="grade-default" value="" selected disabled>--Chọn khối--</option>
                                         </select>
-                                        <div id="lesson">
-                                        </div>
+                                        <select id="topic" class="btn dropdown-toggle" data-toggle="dropdown"
+                                                style="background-color: #14c4ff;display: none" onchange="getPlanLesson()">
+                                            <option value="">--Chọn chủ đề--</option>
+                                        </select>
+                                        <select id="planLesson" class="btn dropdown-toggle" data-toggle="dropdown"
+                                                style="background-color: #14c4ff;display: none" onchange="selectPlanLesson()">
+                                            <option value="">--Chọn bài học--</option>
+                                        </select>
+                                        <input type="hidden" id="selectedLessonId" name="lessonPlanLessonId">
+                                        <input type="hidden" id="legacyLessonId" name="lesson">
+                                        <div id="lesson"></div>
                                         <span id="lessonError" style="color: red"></span>
                                     </div>
                                 </div>
@@ -446,6 +454,28 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-group row align-items-center">
+                                    <label class="col-sm-3 col-form-label">Tháng ghi điểm</label>
+                                    <div class="col-sm-8">
+                                        <select id="gradeMonth" class="form-control" style="max-width:220px;" disabled>
+                                            <option value="">-- Chọn tháng --</option>
+                                            <option th:each="month : ${#numbers.sequence(1, 12)}" th:value="${month}" th:text="'Tháng ' + ${month}"></option>
+                                        </select>
+                                        <small class="text-muted">Chỉ dùng khi chọn loại điểm cho đề thi thật.</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row align-items-center">
+                                    <label class="col-sm-3 col-form-label">Hình thức</label>
+                                    <div class="col-sm-8">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="practiceExam">
+                                            <label class="custom-control-label text-primary" for="practiceExam">
+                                                <i class="fa fa-flask mr-1"></i>Đề thi thử công khai
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Học sinh mọi trường và mọi khối đều có thể làm; không ghi điểm.</small>
+                                    </div>
+                                </div>
                                 <div>
                                     <button type="button" class="btn btn-primary" id="saveExam"
                                             name="btn-submit">Thêm đề thi
@@ -464,17 +494,17 @@
                                                 th:text="${sub.name}"></option>
                                     </th:block>
                                 </select>
-                                <select id="sub-class" class="btn dropdown-toggle" data-toggle="dropdown"
+                                <select id="sub-grade" class="btn dropdown-toggle" data-toggle="dropdown"
                                         style="background-color: #14c4ff" onchange="getSubChapter()">
-                                    <option value="" id="sub-default">--Chọn lớp--</option>
+                                    <option value="" id="sub-grade-default">--Chọn khối--</option>
                                 </select>
-                                <select id="sub-chapter" class="btn dropdown-toggle" data-toggle="dropdown"
+                                <select id="sub-topic" class="btn dropdown-toggle" data-toggle="dropdown"
                                         style="background-color: #14c4ff" onchange="getSubLesson()">
-                                    <option value="" id="sub-chapter-default">--Chọn chương--</option>
+                                    <option value="" id="sub-topic-default">--Chọn chủ đề--</option>
                                 </select>
-                                <select id="sub-lesson" class="btn dropdown-toggle" data-toggle="dropdown"
+                                <select id="sub-plan-lesson" class="btn dropdown-toggle" data-toggle="dropdown"
                                         style="background-color: #14c4ff" onchange="getQuestion()">
-                                    <option value="" id="sub-lesson-default">--Chọn bài--</option>
+                                    <option value="" id="sub-plan-lesson-default">--Chọn bài học--</option>
                                 </select>
                             </div>
                             <div id="random">
@@ -491,7 +521,7 @@
                                     <th>Tên môn học</th>
                                     <th>Lớp học</th>
                                     <th>Bài học</th>
-                                    <th style="display:none;">Chương</th>
+                                    <th style="display:none;">Chủ đề</th>
                                     <th>A</th>
                                     <th>B</th>
                                     <th>C</th>
@@ -507,10 +537,10 @@
                                 <tr th:each="question ,i: ${questions}">
                                     <td th:text="${i.count}"></td>
                                     <td th:utext="${question.title}"></td>
-                                    <td th:text="${question.lesson.chapter.subjectClasses.subject.name}"></td>
-                                    <td th:text="${question.lesson.chapter.subjectClasses.classes.nameClass}"></td>
-                                    <td th:text="${question.lesson.nameLesson}"></td>
-                                    <td style="display:none;" th:text="${question.lesson.chapter.id}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.chapter.lessonPlan.subject.name : question.lesson.chapter.subjectClasses.subject.name}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.chapter.lessonPlan.grade.displayName : question.lesson.chapter.subjectClasses.classes.displayName}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.name : question.lesson.nameLesson}"></td>
+                                    <td style="display:none;" th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.chapter.id : question.lesson.chapter.id}"></td>
                                     <td th:text="${question.optionA}"></td>
                                     <td th:text="${question.optionB}"></td>
                                     <td th:text="${question.optionC}"></td>
@@ -518,7 +548,7 @@
                                     <td th:text="${question.ans}"></td>
                                     <td class="text-center">
                                         <div class="justify-content-center">
-                                            <input type="checkbox" name="A" class="check"
+                                            <input type="checkbox" class="check question-selection"
                                                    th:value="${question.quesId}" th:field="*{questions}">
                                             <label class="form-check-label" th:value="${question.quesId}"></label>
                                             <div th:if="${#fields.hasErrors('questions')}" th:errors="*{questions}"
@@ -611,8 +641,8 @@
     }
 
     function checkLesson() {
-        var obj = $("input[name=lesson]:checked");
-        var result = checkEmpty(obj);
+        var selectedCustom = $("#selectedLessonId").val();
+        var result = selectedCustom !== "" || checkEmpty($("input[name=lesson]:checked"));
         if (!result) {
             document.getElementById("lessonError").innerHTML = "Vui lòng chọn bài học!";
             return false;
@@ -700,7 +730,7 @@
         table.columns(5).search("").draw();
         table.columns(4).search("").draw();
     });
-    $('#sub-class').on('change', function () {
+    $('#sub-grade').on('change', function () {
         if (this.value === '') {
             $("#random").css("display", "none");
             table.columns(3).search("").draw();
@@ -711,21 +741,21 @@
         table.columns(5).search("").draw();
         table.columns(4).search("").draw();
     });
-    $('#sub-chapter').on('change', function () {
+    $('#sub-topic').on('change', function () {
         if (this.value === '') {
             getSubChapter();
             table.columns(5).search("").draw();
         } else {
-            table.columns(5).search($("#sub-chapter option:selected").val()).draw();
+            table.columns(5).search($("#sub-topic option:selected").val()).draw();
         }
         table.columns(4).search("").draw();
     });
-    $('#sub-lesson').on('change', function () {
+    $('#sub-plan-lesson').on('change', function () {
         if (this.value === '') {
             getSubLesson();
             table.columns(4).search("").draw();
         } else {
-            table.columns(4).search($("#sub-lesson option:selected").text()).draw();
+            table.columns(4).search($("#sub-plan-lesson option:selected").text()).draw();
         }
     });
 
@@ -770,9 +800,13 @@
         $('.progress-bar').text("0%");
     }
 
+    function selectedQuestionInputs() {
+        return table.$("input.question-selection:checked");
+    }
+
     $("#success").click(function () {
         questions = [];
-        var data = table.$("input[name=questions]:checked");
+        var data = selectedQuestionInputs();
         for (let i = 0; i < data.length; i++) {
             questions.push(data[i].value);
         }
@@ -966,7 +1000,8 @@
                         optionD : newQuestion[i].optionD,
                         ans : newQuestion[i].ans,
                         level : newQuestion[i].level,
-                        lessonId : $("input[name=lesson]:checked").val()
+                        lessonId : parseInt($("#legacyLessonId").val() || "0"),
+                        lessonPlanLessonId : parseInt($("#selectedLessonId").val() || "0") || null
                     }
                     questionRequest.push(question);
                 }
@@ -974,8 +1009,10 @@
                 var targetGradeVal = $("#targetGradeSelect").val();
                 var targetClassIdVal = $("#targetClassSelect").val();
                 var scoreTypeVal = $("input[name=scoreTypeRadio]:checked").val() || "";
+                var gradeMonthVal = $("#gradeMonth").val();
                 var startTimeVal = $("#startTimeInput").val() || "";
                 var endTimeVal = $("#endTimeInput").val() || "";
+                var practiceVal = $("#practiceExam").is(":checked");
 
                 if (targetTypeVal === 'CLASS' && (!targetClassIdVal || targetClassIdVal === "")) {
                     alert("Vui lòng chọn Lớp cụ thể mà bạn được phân công phụ trách!");
@@ -992,15 +1029,18 @@
                     time: $('#time').val(),
                     createDate: $("#createDate").val(),
                     nameExam: $("#nameExam").val(),
-                    lessonId: $("input[name=lesson]:checked").val(),
+                    lessonId: parseInt($("#legacyLessonId").val() || "0"),
+                    lessonPlanLessonId: parseInt($("#selectedLessonId").val() || "0") || null,
                     usersId: $("#author").val(),
                     isPublic: targetTypeVal === 'PUBLIC',
                     targetType: targetTypeVal,
                     targetGrade: targetGradeVal ? parseInt(targetGradeVal) : null,
                     targetClassId: targetClassIdVal ? parseInt(targetClassIdVal) : null,
                     scoreType: scoreTypeVal,
+                    gradeMonth: gradeMonthVal ? parseInt(gradeMonthVal) : null,
                     startTime: startTimeVal,
                     endTime: endTimeVal,
+                    practice: practiceVal,
                     schoolId: parseInt($("#schoolId").val()) || 0,
                     questions: questionRequest
                 }
@@ -1023,8 +1063,10 @@
                 var targetGradeVal = $("#targetGradeSelect").val();
                 var targetClassIdVal = $("#targetClassSelect").val();
                 var scoreTypeVal = $("input[name=scoreTypeRadio]:checked").val() || "";
+                var gradeMonthVal = $("#gradeMonth").val();
                 var startTimeVal = $("#startTimeInput").val() || "";
                 var endTimeVal = $("#endTimeInput").val() || "";
+                var practiceVal = $("#practiceExam").is(":checked");
 
                 if (targetTypeVal === 'CLASS' && (!targetClassIdVal || targetClassIdVal === "")) {
                     alert("Vui lòng chọn Lớp cụ thể mà bạn được phân công phụ trách!");
@@ -1036,7 +1078,7 @@
                 }
 
                 var exam = new FormData();
-                var data = table.$("input[name=questions]:checked");
+                var data = selectedQuestionInputs();
                 for (let i = 0; i < data.length; i++) {
                     exam.append('questions[]', data[i].value);
                 }
@@ -1047,7 +1089,8 @@
                 var nameExam = $("#nameExam").val();
                 var classes = $("input[name=classes]:checked").val();
                 var subjectId = $("#select").val();
-                var lessonId = $("input[name=lesson]:checked").val();
+                var lessonId = $("#legacyLessonId").val() || $("input[name=lesson]:checked").val();
+                var lessonPlanLessonId = $("#selectedLessonId").val();
                 var users = $("#author").val();
 
                 exam.append("idName", idName);
@@ -1057,15 +1100,18 @@
                 exam.append("nameExam", nameExam);
                 exam.append("classes", classes);
                 exam.append("subject", subjectId);
-                exam.append("lesson", lessonId);
+                if (lessonId) { exam.append("lesson", lessonId); }
+                if (lessonPlanLessonId) { exam.append("lessonPlanLessonId", lessonPlanLessonId); }
                 exam.append("users", users);
                 exam.append("isPublic", targetTypeVal === 'PUBLIC');
                 exam.append("targetType", targetTypeVal);
                 if (targetGradeVal) { exam.append("targetGrade", targetGradeVal); }
                 if (targetClassIdVal) { exam.append("targetClassId", targetClassIdVal); }
                 if (scoreTypeVal) { exam.append("scoreType", scoreTypeVal); }
+                if (gradeMonthVal) { exam.append("gradeMonth", gradeMonthVal); }
                 if (startTimeVal) { exam.append("startTimeStr", startTimeVal); }
                 if (endTimeVal) { exam.append("endTimeStr", endTimeVal); }
+                exam.append("practice", practiceVal);
 
                 var sId = parseInt($("#schoolId").val()) || 0;
                 if (sId > 0) { exam.append("school", sId); }
@@ -1153,12 +1199,31 @@
     // ---- Phạm vi giao đề ----
     function handleTargetTypeChange() {
         var tt = $("input[name=targetTypeRadio]:checked").val();
-        $("#gradeRow").toggle(tt === 'GRADE');
+        $("#gradeRow").toggle(tt === 'GRADE' || $("#practiceExam").is(":checked"));
         $("#classRow").toggle(tt === 'CLASS');
         if (tt === 'CLASS' && $("#targetClassSelect option").length <= 1) {
             loadTrackingClasses();
         }
     }
+
+    $("#practiceExam").on("change", function () {
+        if (this.checked) {
+            $("#ttPublic").prop("checked", true);
+            $("#gradeRow").show();
+            $("#classRow").hide();
+        } else {
+            handleTargetTypeChange();
+        }
+        updateGradeMonth();
+    });
+
+    function updateGradeMonth() {
+        var hasScoreType = $("input[name=scoreTypeRadio]:checked").val() !== "";
+        $("#gradeMonth").prop("disabled", !hasScoreType || $("#practiceExam").is(":checked"));
+    }
+
+    $("input[name=scoreTypeRadio]").on("change", updateGradeMonth);
+    updateGradeMonth();
 
     function loadTrackingClasses() {
         $("#classLoadStatus").text("Đang tải danh sách lớp...");
@@ -1276,7 +1341,7 @@
                 var x = document.getElementById("sub-chapter");
                 for (let i = 0; i < response.length; i++) {
                     var option = document.createElement("option");
-                    option.text = 'Chương ' + (i + 1);
+                    option.text = 'Chủ đề ' + (i + 1);
                     option.value = response[i].id;
                     x.add(option);
                     // response[i].lessons.sort(function (it1, it2) {
@@ -1346,7 +1411,7 @@
                     button.setAttribute("class", "btn btn-info");
                     button.setAttribute("data-toggle", "collapse");
                     button.setAttribute("data-target", '#collapse' + response[i].id);
-                    button.textContent = 'CHƯƠNG ' + (i + 1) + '.' + response[i].chapterName;
+                    button.textContent = 'CHỦ ĐỀ ' + (i + 1) + '.' + response[i].chapterName;
                     x.appendChild(button);
                     var demo = document.createElement("div");
                     demo.setAttribute("id", 'collapse' + response[i].id);
@@ -1490,7 +1555,7 @@
         while (numOfEasy > 0 || numOfMedium > 0 || numOfHard > 0) {
             var index = Math.floor(Math.random() * copyQuestions.length);
             var item = copyQuestions[index];
-            var data = table.$("input[name=questions]");
+            var data = table.$("input.question-selection");
             for (let i = 0; i < data.length; i++) {
                 if (parseInt(data[i].value) === item.quesId) {
                     data[i].checked = true;
@@ -1511,10 +1576,143 @@
     }
 
     function resetChecked() {
-        var data = table.$("input[name=questions]:checked");
+        var data = selectedQuestionInputs();
         for (let i = 0; i < data.length; i++) {
             data[i].checked = false;
         }
+    }
+
+    // Giáo án dùng khối độc lập; các chủ đề và bài học được lấy từ giáo án đã công khai hoặc do giáo viên hiện tại tạo.
+    var topCatalog = [];
+    var questionCatalog = [];
+
+    function gradeOptions(selectId) {
+        var select = document.querySelector(selectId);
+        if (!select) return;
+        var seen = {};
+        select.innerHTML = '<option value="">--Chọn khối--</option>';
+        $("#targetGradeSelect option").each(function () {
+            if (this.value && !seen[this.value]) {
+                seen[this.value] = true;
+                var option = document.createElement("option");
+                option.value = this.value;
+                option.text = this.text;
+                select.add(option);
+            }
+        });
+    }
+
+    function loadPlanCatalog(subjectId, grade, callback) {
+        $.getJSON('/lesson-plans/catalog', {subjectId: subjectId, grade: grade})
+            .done(callback)
+            .fail(function () { callback([]); });
+    }
+
+    function getGrade() {
+        var grade = document.getElementById('grade');
+        gradeOptions('#grade');
+        grade.style.display = 'inline-block';
+        $('#topic, #planLesson').hide().find('option:not(:first)').remove();
+        $('#selectedLessonId, #legacyLessonId').val('');
+    }
+
+    function getTopic() {
+        var subjectId = $('#subject').val();
+        var grade = $('#grade').val();
+        $('#topic').show().find('option:not(:first)').remove();
+        $('#planLesson').hide().find('option:not(:first)').remove();
+        $('#selectedLessonId, #legacyLessonId').val('');
+        loadPlanCatalog(subjectId, grade, function (catalog) {
+            topCatalog = catalog;
+            catalog.forEach(function (plan) {
+                plan.topics.forEach(function (topic) {
+                    var option = document.createElement('option');
+                    option.value = topic.id;
+                    option.text = topic.name + ' · ' + plan.planName;
+                    $('#topic')[0].add(option);
+                });
+            });
+        });
+    }
+
+    function getPlanLesson() {
+        var topicId = parseInt($('#topic').val());
+        var topic = null;
+        topCatalog.forEach(function (plan) { plan.topics.forEach(function (candidate) {
+            if (candidate.id === topicId) topic = candidate;
+        }); });
+        $('#planLesson').show().find('option:not(:first)').remove();
+        $('#selectedLessonId, #legacyLessonId').val('');
+        if (!topic) return;
+        topic.lessons.forEach(function (lesson) {
+            var option = document.createElement('option');
+            option.value = lesson.id;
+            option.text = lesson.name;
+            $('#planLesson')[0].add(option);
+        });
+    }
+
+    function selectPlanLesson() {
+        var lessonId = $('#planLesson').val();
+        $('#selectedLessonId').val(lessonId || '');
+        $('#legacyLessonId').val('');
+        if (!lessonId) return;
+        $.getJSON('/api/question/custom/' + lessonId).done(function (response) {
+            questions = response;
+            customQuestion();
+        });
+    }
+
+    function getSubClass() {
+        gradeOptions('#sub-grade');
+        $('#sub-grade').show();
+        $('#sub-topic, #sub-plan-lesson').hide().find('option:not(:first)').remove();
+        questionCatalog = [];
+    }
+
+    function getSubChapter() {
+        var subjectId = $('#sub-question').val();
+        var grade = $('#sub-grade').val();
+        $('#sub-topic').show().find('option:not(:first)').remove();
+        $('#sub-plan-lesson').hide().find('option:not(:first)').remove();
+        loadPlanCatalog(subjectId, grade, function (catalog) {
+            questionCatalog = catalog;
+            catalog.forEach(function (plan) { plan.topics.forEach(function (topic) {
+                var option = document.createElement('option');
+                option.value = topic.id;
+                option.text = topic.name + ' · ' + plan.planName;
+                $('#sub-topic')[0].add(option);
+            }); });
+        });
+    }
+
+    function getSubLesson() {
+        var topicId = parseInt($('#sub-topic').val());
+        var topic = null;
+        questionCatalog.forEach(function (plan) { plan.topics.forEach(function (candidate) {
+            if (candidate.id === topicId) topic = candidate;
+        }); });
+        $('#sub-plan-lesson').show().find('option:not(:first)').remove();
+        if (!topic) return;
+        topic.lessons.forEach(function (lesson) {
+            var option = document.createElement('option');
+            option.value = lesson.id;
+            option.text = lesson.name;
+            $('#sub-plan-lesson')[0].add(option);
+        });
+    }
+
+    function getQuestion() {
+        var id = $('#sub-plan-lesson').val();
+        if (!id) {
+            table.columns(4).search('').draw();
+            return;
+        }
+        $.getJSON('/api/question/custom/' + id).done(function (response) {
+            questions = response;
+            table.columns(4).search($('#sub-plan-lesson option:selected').text()).draw();
+            customQuestion();
+        });
     }
 </script>
 </body>

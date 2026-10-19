@@ -335,7 +335,7 @@
                                 <span class="row-label">Dạy:</span>
                                 <span th:each="a : ${teacherAssignments[teacher.id]}" class="badge-assign">
                                     <i class="fas fa-book" style="font-size:.7rem;"></i>
-                                    <span th:text="${a.subject.subjectName}"></span>
+                                    <span th:text="${a.subject.name}"></span>
                                     &mdash; Lớp&nbsp;<b th:text="${a.trackingClass.className}"></b>
                                 </span>
                             </div>

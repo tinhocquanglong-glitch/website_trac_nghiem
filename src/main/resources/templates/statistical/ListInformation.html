@@ -49,12 +49,18 @@
                                       th:text="${new java.text.DecimalFormat('0.#').format(result.mark)} + ' điểm'"></span>
                                 <span th:text="${result.users.fullName}"></span>
                             </div>
-                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam.id != null}">
-                                <span th:text="${result.exam.lesson.chapter.subjectClasses.classes.nameClass} + ', '"></span>
-                                <span th:text="${result.exam.lesson.chapter.subjectClasses.subject.name} + ', '"></span>
+                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam != null}">
+                                <span th:if="${result.exam.lesson != null}"
+                                      th:text="${result.exam.lesson.chapter.subjectClasses.classes.nameClass} + ', '"></span>
+                                <span th:if="${result.exam.lesson != null}"
+                                      th:text="${result.exam.lesson.chapter.subjectClasses.subject.name} + ', '"></span>
+                                <span th:if="${result.exam.lessonPlanLesson != null}"
+                                      th:text="${result.exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName} + ', '"></span>
+                                <span th:if="${result.exam.lessonPlanLesson != null}"
+                                      th:text="${result.exam.lessonPlanLesson.chapter.lessonPlan.subject.name} + ', '"></span>
                                 <span th:text="${result.exam.idName}"></span>
                             </div>
-                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam.id == null}">
+                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam == null}">
                                 <span>Bài kiểm tra IQ</span>
                             </div>
                             <div class="score-total">

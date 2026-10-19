@@ -23,6 +23,8 @@ public interface IExamService {
 
     Page<Exam> findAllBySubject(int id, Pageable pageable);
     Page<Exam> findAllByLesson(int id, Pageable pageable);
+    Page<Exam> findAllByLessonPlanLesson(int id, Pageable pageable);
+    Page<Exam> findAllByNameExamContainingAndByLessonPlanLesson(int id, String name, Pageable pageable);
 
     Page<Exam> findAllByNameExamContaining(String name, Pageable pageable);
     Page<Exam> findAllByNameExamContainingAndBySubject(int id, String name, Pageable pageable);

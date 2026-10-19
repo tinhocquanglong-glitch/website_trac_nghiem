@@ -26,6 +26,10 @@ public class Document {
     @JsonBackReference
     private Subject subject;
 
+    /** The grade this document is intended for; null keeps legacy common documents visible. */
+    @Column(name = "grade")
+    private Integer grade;
+
     @ManyToOne
     @JoinColumn(name = "school_id")
     private School school;
@@ -109,6 +113,14 @@ public class Document {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public Integer getGrade() {
+        return grade;
+    }
+
+    public void setGrade(Integer grade) {
+        this.grade = grade;
     }
 
     public School getSchool() {

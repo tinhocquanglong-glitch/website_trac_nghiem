@@ -53,7 +53,7 @@
                     <form style="max-width: 600px; margin: 0 auto; background-color: #d8f5ff;" th:object="${question}">
                         <div class="border border-secondary rounded p-3 pt-5">
                             <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Bài học</label>
+                                <label class="col-sm-3 col-form-label">Môn học</label>
                                 <div class="col-sm-8 pt-2">
                                     <select id="subject" class="btn dropdown-toggle" data-toggle="dropdown"
                                             style="background-color: #14c4ff" onchange="getClass()">
@@ -65,11 +65,30 @@
                                     </select>
                                     <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
                                             style="background-color: #14c4ff;display: none" onchange="getChapter()">
-                                        <option id="default" value="" selected disabled>--Chọn lớp học--</option>
+                                        <option id="default" value="" selected disabled>--Chọn khối--</option>
                                         </th:block>
                                     </select>
                                     <div id="lesson">
                                     </div>
+                                </div>
+                            </div>
+                            <div class="form-group row justify-content-center align-items-center">
+                                <label class="col-sm-3 col-form-label">Theo giáo án</label>
+                                <div class="col-sm-8 pt-2">
+                                    <select id="planSubject" class="form-control mb-2">
+                                        <option value="">-- Chọn môn trong giáo án --</option>
+                                        <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
+                                    </select>
+                                    <select id="planGrade" class="form-control mb-2">
+                                        <option value="">-- Chọn khối --</option>
+                                        <option th:each="grade : ${lessonPlanGrades}" th:value="${grade.grade}" th:text="${grade.displayName}"></option>
+                                    </select>
+                                    <select id="planTopic" class="form-control mb-2" disabled>
+                                        <option value="">-- Chọn chủ đề --</option>
+                                    </select>
+                                    <select id="planLessonCustom" class="form-control" disabled>
+                                        <option value="">-- Chọn bài học --</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-group row justify-content-center align-items-center">
@@ -218,11 +237,12 @@
         });
 
     function validate() {
+        if (!editor) return false;
         var valid = true;
         valid = valid && editor.getData() !== "";
         valid = valid && (checkEmpty($("#an1")) || checkEmpty($("#an2")) || checkEmpty($("#an3")) || checkEmpty($("#an4")) );
         valid = valid && checkEmpty($('input[name="ans"]:checked'));
-        valid = valid && checkEmpty($('input[name="lesson"]:checked'));
+        valid = valid && (!!$('#planLessonCustom').val() || checkEmpty($('input[name="lesson"]:checked')));
         valid = valid && checkEmpty($('input[name="level"]:checked'));
 
         $("#btnSub").attr("disabled", true);
@@ -241,6 +261,7 @@
         var ans = $("input[name=ans]:checked").val();
         var subjectId = $("#subject").val();
         var lessonId = $("input[name=lesson]:checked").val();
+        var customLessonId = $("#planLessonCustom").val();
         var level = $("input[name=level]:checked").val();
 
         var question = new FormData();
@@ -251,7 +272,12 @@
         question.append("optionD", optionD);
         question.append("ans", ans);
         question.append("subjects", subjectId);
-        question.append("lesson",lessonId);
+        question.append("classId", $("#class").val());
+        if (customLessonId) {
+            question.append("lessonPlanLessonId", customLessonId);
+        } else {
+            question.append("lesson", lessonId);
+        }
         question.append("level",level);
 
         console.log(...question);
@@ -272,6 +298,36 @@
         });
     });
 
+    var lessonPlanCatalog = [];
+    function loadLessonPlanTopics() {
+        var subjectId = $('#planSubject').val();
+        var grade = $('#planGrade').val();
+        $('#planTopic').prop('disabled', true).html('<option value="">-- Chọn chủ đề --</option>');
+        $('#planLessonCustom').prop('disabled', true).html('<option value="">-- Chọn bài học --</option>');
+        if (!subjectId || !grade) return;
+        $.getJSON('/lesson-plans/catalog', {subjectId: subjectId, grade: grade}).done(function (catalog) {
+            lessonPlanCatalog = catalog;
+            catalog.forEach(function (plan) { plan.topics.forEach(function (topic) {
+                $('#planTopic').append($('<option>', {value: topic.id, text: topic.name + ' · ' + plan.planName}));
+            }); });
+            $('#planTopic').prop('disabled', false);
+        });
+    }
+    $('#planSubject, #planGrade').on('change', loadLessonPlanTopics);
+    $('#planTopic').on('change', function () {
+        var topicId = parseInt(this.value);
+        var topic = null;
+        lessonPlanCatalog.forEach(function (plan) { plan.topics.forEach(function (item) {
+            if (item.id === topicId) topic = item;
+        }); });
+        $('#planLessonCustom').prop('disabled', !topic).html('<option value="">-- Chọn bài học --</option>');
+        if (topic) topic.lessons.forEach(function (lesson) {
+            $('#planLessonCustom').append($('<option>', {value: lesson.id, text: lesson.name}));
+        });
+        validate();
+    });
+    $('#planLessonCustom').on('change', validate);
+
     function getClass() {
         var subId = $("#subject").val();
         $("#lesson").html('');
@@ -291,7 +347,7 @@
                 for (let i = 0; i < response.length; i++) {
                     var x = document.getElementById("class");
                     var option = document.createElement("option");
-                    option.text = response[i].nameClass;
+                    option.text = response[i].grade != null ? 'Khối ' + response[i].grade : response[i].nameClass;
                     option.value = response[i].id;
                     x.add(option);
                 }
@@ -322,7 +378,7 @@
                     button.setAttribute("class","btn btn-info");
                     button.setAttribute("data-toggle","collapse");
                     button.setAttribute("data-target",'#collapse'+response[i].id);
-                    button.textContent = 'CHƯƠNG '+(i + 1)+'.'+response[i].chapterName;
+                    button.textContent = 'CHỦ ĐỀ '+(i + 1)+'.'+response[i].chapterName;
                     x.appendChild(button);
                     var demo = document.createElement("div");
                     demo.setAttribute("id",'collapse'+response[i].id);

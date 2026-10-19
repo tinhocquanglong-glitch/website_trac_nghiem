@@ -2,6 +2,7 @@ package com.tttn.webthitracnghiem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -39,6 +40,11 @@ public class Exam {
     @JoinColumn(name = "lesson_id",referencedColumnName = "id")
     @JsonBackReference
     private Lesson lesson;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lesson_plan_lesson_id")
+    @JsonIgnore
+    private LessonPlanLesson lessonPlanLesson;
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(name = "exam_question",
             joinColumns = @JoinColumn(name = "examId"),
@@ -71,6 +77,12 @@ public class Exam {
 
     @Column(name = "score_type", length = 30)
     private String scoreType; // REGULAR_1, REGULAR_2, MIDTERM, FINAL
+
+    @Column(name = "is_practice", nullable = false)
+    private boolean practice = false;
+
+    @Column(name = "grade_month")
+    private Integer gradeMonth;
 
     private long view;
     private long turn;
@@ -110,6 +122,14 @@ public class Exam {
 
     public void setLesson(Lesson lesson) {
         this.lesson = lesson;
+    }
+
+    public LessonPlanLesson getLessonPlanLesson() {
+        return lessonPlanLesson;
+    }
+
+    public void setLessonPlanLesson(LessonPlanLesson lessonPlanLesson) {
+        this.lessonPlanLesson = lessonPlanLesson;
     }
 
     public String getIdName() {
@@ -264,5 +284,16 @@ public class Exam {
     public void setScoreType(String scoreType) {
         this.scoreType = scoreType;
     }
+
+    public boolean isPractice() {
+        return practice;
+    }
+
+    public void setPractice(boolean practice) {
+        this.practice = practice;
+    }
+
+    public Integer getGradeMonth() { return gradeMonth; }
+    public void setGradeMonth(Integer gradeMonth) { this.gradeMonth = gradeMonth; }
 }
 

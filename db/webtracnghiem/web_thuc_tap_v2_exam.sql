@@ -34,6 +34,7 @@ CREATE TABLE `exam` (
   `view` bigint(20) NOT NULL,
   `lesson_id` int(11) DEFAULT NULL,
   `users_id` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+  `is_practice` bit(1) NOT NULL DEFAULT b'0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK_24v8k67m07gwmk83hn4vfsbfa` (`id_name`),
   KEY `FKfadk265rh4nru1po1rxqffc9y` (`lesson_id`),

@@ -1,6 +1,7 @@
 package com.tttn.webthitracnghiem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.validator.constraints.Length;
 
@@ -14,6 +15,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "user")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     @Id
     @Column(unique = true)
@@ -31,7 +33,7 @@ public class User {
     @NotBlank(message = "Tên không được để trống.")
     private String fullName;
 
-    @Pattern(regexp = "^[a-z][a-z0-9_\\.]*@[a-z0-9]{2,}(\\.[a-z0-9]{2,4}){1,2}$", message = "Sai định dạng email")
+    @Pattern(regexp = "^[A-Za-z0-9][A-Za-z0-9_.-]*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$", message = "Sai định dạng email")
     @NotBlank(message = " Email không được để trống.")
     private String email;
 
@@ -47,7 +49,9 @@ public class User {
     @Column(name = "create_date")
     private Date createDate;
 
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    // Role is loaded from the database before a new user is saved. Persisting it
+    // through this association makes Hibernate treat the existing role as new.
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "username", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     @JsonBackReference
@@ -59,9 +63,9 @@ public class User {
     @OneToMany(mappedBy = "users")
     @JsonManagedReference
     private Set<Document> documents;
-    @OneToOne(mappedBy = "users", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "users", cascade = CascadeType.REMOVE)
     @JsonManagedReference
-    private Result result;
+    private List<Result> results;
     @OneToOne(mappedBy = "users", cascade = CascadeType.REMOVE)
     @JsonManagedReference
     private IQ iq;
@@ -116,7 +120,6 @@ public class User {
         this.roles = roles;
         this.exams = exams;
         this.documents = documents;
-        this.result = result;
         this.news = news;
     }
 
@@ -208,12 +211,12 @@ public class User {
         this.exams = exams;
     }
 
-    public Result getResult() {
-        return result;
+    public List<Result> getResults() {
+        return results;
     }
 
-    public void setResult(Result result) {
-        this.result = result;
+    public void setResults(List<Result> results) {
+        this.results = results;
     }
 
     public Date getCreateDate() {

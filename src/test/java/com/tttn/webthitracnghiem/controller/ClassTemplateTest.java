@@ -49,11 +49,11 @@ class ClassTemplateTest {
 
         assertThat(html)
                 .contains("class/list")
-                .doesNotContain("/class/create", "Thêm mới");
+                .doesNotContain("/class/create");
     }
 
     @Test
-    void navigationDoesNotShowDuplicateCurriculumMenu() {
+    void navigationOffersCurriculumMenu() {
         MockHttpServletRequest request = new MockHttpServletRequest(servletContext);
         request.getSession().setAttribute("admin", Map.of("img", "/img/test.png", "id", "admin"));
         WebContext context = new WebContext(
@@ -63,8 +63,6 @@ class ClassTemplateTest {
 
         String html = templateEngine.process("index", context);
 
-        assertThat(html)
-                .doesNotContain("Chương trình học")
-                .doesNotContain("/class/list");
+        assertThat(html).contains("/class/list");
     }
 }

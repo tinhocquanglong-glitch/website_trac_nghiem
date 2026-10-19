@@ -18,7 +18,8 @@ a:hover{
 header{
 
     width: 100vw;
-    height: 80px;
+    min-height: 80px;
+    height: auto;
     background-color: #fff;
     box-shadow: 0px 3px 8px rgba(0, 0, 0, 25%);
     display: flex;
@@ -28,7 +29,7 @@ header{
 header .container-fluid{
 
     width: 100%;
-    padding: 0 60px;
+    padding: 0 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -44,25 +45,27 @@ header .container-fluid{
 
 header .navb-logo img{
     width: 150px;
-    /* height: 66px; */
+    height: 52px;
     object-fit: contain;
 }
 
 header .navb-items{
 
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 50px;
+    gap: 6px;
+    margin-left: 24px;
 }
 
 header .item{
-    border-radius: 10px;
-    font-size: 14px;
+    border-radius: 7px;
+    font-size: 12px;
     text-align: center;
     color: #102447;
-    padding: 10px;
-    text-transform: uppercase;
+    padding: 8px 9px;
+    text-transform: none;
     transition: all .1s ease;
     border: 1px solid transparent;
     cursor: pointer;
@@ -98,6 +101,13 @@ header .item-button a:hover{
 header .mobile-toggler{
 
     font-size: 30px;
+}
+
+@media(max-width: 1199.98px){
+
+    header .container-fluid{
+        padding: 0 5%;
+    }
 }
 
 /* modal */

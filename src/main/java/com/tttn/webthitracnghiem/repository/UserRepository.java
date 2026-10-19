@@ -4,6 +4,7 @@ import com.tttn.webthitracnghiem.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,8 +15,85 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
+    @Modifying
+    @Query(value = "DELETE FROM user_role WHERE username = :userId", nativeQuery = true)
+    void deleteRoleLinks(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM result WHERE username = :userId", nativeQuery = true)
+    void deleteResults(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM iq WHERE username = :userId", nativeQuery = true)
+    void deleteIqResults(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "UPDATE exam SET users_id = NULL WHERE users_id = :userId", nativeQuery = true)
+    void clearExamAuthors(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "UPDATE document SET user_id = NULL WHERE user_id = :userId", nativeQuery = true)
+    void clearDocumentAuthors(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "UPDATE news SET author = NULL WHERE author = :userId", nativeQuery = true)
+    void clearNewsAuthors(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "UPDATE student_tracking_class SET homeroom_teacher_id = NULL WHERE homeroom_teacher_id = :userId", nativeQuery = true)
+    void clearHomeroomTeacher(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "UPDATE user SET class_id = NULL WHERE id = :userId", nativeQuery = true)
+    void clearTrackingClass(@Param("userId") String userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM class_subject_assignment WHERE teacher_id = :userId", nativeQuery = true)
+    void deleteTeacherAssignments(@Param("userId") String userId);
+
+    @Modifying
+    @Query("delete from Notification n where n.recipient.id = :userId")
+    void deleteStudentNotifications(@Param("userId") String userId);
+
+    @Query(nativeQuery = true,
+            value = "SELECT u.* FROM user u JOIN user_role ur ON u.id = ur.username " +
+                    "JOIN role r ON ur.role_id = r.id WHERE r.role_name = 'ROLE_USER' " +
+                    "AND u.class_id = :classId ORDER BY u.full_name ASC")
+    List<User> findStudentsByClassId(@Param("classId") int classId);
+
+    @Query(nativeQuery = true,
+            value = "SELECT u.* FROM user u JOIN user_role ur ON u.id = ur.username " +
+                    "JOIN role r ON ur.role_id = r.id JOIN student_tracking_class c ON u.class_id = c.id " +
+                    "WHERE r.role_name = 'ROLE_USER' AND c.school_id = :schoolId AND c.grade = :grade " +
+                    "ORDER BY u.full_name ASC")
+    List<User> findStudentsBySchoolAndGrade(@Param("schoolId") int schoolId, @Param("grade") int grade);
+
+    @Query(nativeQuery = true,
+            value = "SELECT u.* FROM user u " +
+                    "JOIN user_role ur ON u.id = ur.username " +
+                    "JOIN role r ON ur.role_id = r.id " +
+                    "JOIN student_tracking_class c ON u.class_id = c.id " +
+                    "WHERE r.role_name = 'ROLE_USER' AND c.grade = :grade " +
+                    "ORDER BY u.full_name ASC")
+    List<User> findStudentsByGrade(@Param("grade") int grade);
+
+    @Query(nativeQuery = true,
+            value = "SELECT u.* FROM user u " +
+                    "JOIN user_role ur ON u.id = ur.username " +
+                    "JOIN role r ON ur.role_id = r.id " +
+                    "WHERE r.role_name = 'ROLE_USER' " +
+                    "ORDER BY u.full_name ASC")
+    List<User> findAllStudents();
+
     @Query(value = "select count(id) from user;", nativeQuery = true)
     Integer findByTotalUser();
+
+    @Query(value = "SELECT COUNT(*) " +
+            "FROM user u " +
+            "JOIN user_role ur ON u.id = ur.username " +
+            "JOIN role r ON ur.role_id = r.id " +
+            "WHERE r.role_name = :roleName", nativeQuery = true)
+    Integer countUsersByRoleName(@Param("roleName") String roleName);
 
     @Query(value = "SELECT full_name FROM user order by create_date DESC LIMIT 1", nativeQuery = true)
     String findByNewUser();
@@ -25,12 +103,42 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
-    @Query(value = "SELECT * FROM user WHERE id LIKE %:name% or address LIKE %:name% or email LIKE %:name% or" +
-            " full_name LIKE %:name% or phone_number LIKE %:name%", nativeQuery = true)
-    Page<User> search(String name, Pageable pageable);
+    @Query(value = "SELECT u.* FROM user u WHERE " +
+            "CONVERT(u.id USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.address USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.email USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.full_name USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci",
+            countQuery = "SELECT COUNT(*) FROM user u WHERE " +
+                    "CONVERT(u.id USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+                    "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+                    "CONVERT(u.address USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+                    "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+                    "CONVERT(u.email USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+                    "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+                    "CONVERT(u.full_name USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+                    "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+                    "CONVERT(u.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+                    "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci",
+            nativeQuery = true)
+    Page<User> search(@Param("name") String name, Pageable pageable);
 
-    @Query(value = "SELECT * FROM user WHERE school_id = :schoolId AND (id LIKE %:name% or address LIKE %:name% or email LIKE %:name% or" +
-            " full_name LIKE %:name% or phone_number LIKE %:name%)", nativeQuery = true)
+    @Query(value = "SELECT u.* FROM user u WHERE u.school_id = :schoolId AND (" +
+            "CONVERT(u.id USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.address USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.email USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.full_name USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +
+            "CONVERT(u.phone_number USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
+            "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci)", nativeQuery = true)
     Page<User> searchBySchool(@Param("schoolId") int schoolId, @Param("name") String name, Pageable pageable);
 
     Page<User> findBySchoolId(Integer schoolId, Pageable pageable);

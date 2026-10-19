@@ -385,7 +385,8 @@ public class StudentTrackingController {
 
         String cleanUsername = (username != null) ? username.trim() : "";
         String cleanFullName = (fullName != null) ? fullName.trim() : "";
-        if (cleanUsername.isEmpty() || cleanFullName.isEmpty() || password == null || password.trim().isEmpty()) {
+        if (cleanUsername.isEmpty() || cleanFullName.isEmpty() || password == null
+                || password.trim().length() < 6) {
             redirectAttributes.addFlashAttribute("error", "Vui lòng nhập đầy đủ tên đăng nhập, họ tên và mật khẩu.");
             return "redirect:/student-tracking/classes/" + classId;
         }
@@ -396,11 +397,29 @@ public class StudentTrackingController {
         }
 
         String studentEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : (cleanUsername + "@student.school.vn");
+        studentEmail = studentEmail.toLowerCase(java.util.Locale.ROOT);
+        if (!isValidEmail(studentEmail)) {
+            redirectAttributes.addFlashAttribute("error", "Email khong dung dinh dang.");
+            return "redirect:/student-tracking/classes/" + classId;
+        }
         if (userService != null && userService.userExistss(studentEmail)) {
-            studentEmail = cleanUsername + "_" + System.currentTimeMillis() + "@student.school.vn";
+            studentEmail = cleanUsername.toLowerCase(java.util.Locale.ROOT) + "_" + System.currentTimeMillis() + "@student.school.vn";
         }
 
-        StudentTrackingClass trackingClass = trackingService.findClass(classId);
+        StudentTrackingClass trackingClass;
+        try {
+            trackingClass = trackingService.findClass(classId);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", "Khong tim thay lop hoc.");
+            return "redirect:/student-tracking/classes/" + classId;
+        }
+
+        String studentPhone = phoneNumber != null && !phoneNumber.trim().isEmpty()
+                ? phoneNumber.trim() : "0900000000";
+        if (!studentPhone.matches("^((\\(84\\)\\+)|(0))[1-9][\\d]{8}$")) {
+            redirectAttributes.addFlashAttribute("error", "So dien thoai khong dung dinh dang.");
+            return "redirect:/student-tracking/classes/" + classId;
+        }
 
         User student = new User();
         student.setId(cleanUsername);
@@ -409,7 +428,7 @@ public class StudentTrackingController {
         student.setRePassWord(student.getPassWord());
         student.setFullName(cleanFullName);
         student.setEmail(studentEmail);
-        student.setPhoneNumber(phoneNumber != null && !phoneNumber.trim().isEmpty() ? phoneNumber.trim() : "0900000000");
+        student.setPhoneNumber(studentPhone);
         student.setAddress("Học sinh lớp " + trackingClass.getClassName());
         student.setImg("/img/avatar/default.jpg");
         student.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
@@ -425,12 +444,19 @@ public class StudentTrackingController {
 
         if (roleService != null) {
             var roleStudent = roleService.findByName("ROLE_USER");
-            if (roleStudent != null) {
-                student.setRoles(java.util.Set.of(roleStudent));
+            if (roleStudent == null) {
+                redirectAttributes.addFlashAttribute("error", "He thong chua co role hoc sinh.");
+                return "redirect:/student-tracking/classes/" + classId;
             }
+            student.setRoles(java.util.Set.of(roleStudent));
         }
         if (userService != null) {
-            userService.save(student);
+            try {
+                userService.save(student);
+            } catch (RuntimeException ex) {
+                redirectAttributes.addFlashAttribute("error", "Khong the tao tai khoan. Vui long kiem tra lai thong tin va thu lai.");
+                return "redirect:/student-tracking/classes/" + classId;
+            }
         }
 
         try {
@@ -440,6 +466,10 @@ public class StudentTrackingController {
 
         redirectAttributes.addFlashAttribute("message", "Đã cấp tài khoản học sinh [" + cleanUsername + "] thành công và thêm vào lớp " + trackingClass.getClassName() + "!");
         return "redirect:/student-tracking/classes/" + classId;
+    }
+
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9][A-Za-z0-9_.-]*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$");
     }
 
     @PostMapping("/classes/{classId}/assignments")

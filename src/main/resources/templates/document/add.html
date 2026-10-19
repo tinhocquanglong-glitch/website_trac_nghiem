@@ -102,6 +102,16 @@
                                     </div>
                                 </div>
                                 <div class="form-group row mg-16-auto">
+                                    <label class="col-sm-3 col-form-label">Khối</label>
+                                    <div class="col-sm-8 pt-2">
+                                        <select id="grade" class="form-control" th:field="*{grade}">
+                                            <option value="">-- Tài liệu chung --</option>
+                                            <option th:each="item : ${grades}" th:value="${item.grade}"
+                                                    th:text="${item.displayName}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row mg-16-auto">
                                     <label class="col-sm-3 col-form-label">Hình ảnh</label>
                                     <div class="col-sm-8 pt-2">
                                         <div class="profile-information__avatar">
@@ -235,12 +245,14 @@
         var author = $('#author').val();
         var createDate = $('#the-date').val();
         var subject = $("#subject").val();
+        var grade = $("#grade").val();
 
         var document = new FormData();
         document.append("title", title);
         document.append("content", content);
-        document.append("users", author);
-        document.append("subject", subject);
+        document.append("users.id", author);
+        document.append("subject.id", subject);
+        if (grade) document.append("grade", grade);
         document.append("createDate", createDate);
 
         if (upload.files[0] !== undefined) {

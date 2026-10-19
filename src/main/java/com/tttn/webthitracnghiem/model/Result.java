@@ -17,7 +17,7 @@ public class Result {
     private Timestamp startTime;
     private Timestamp endTime;
 
-    @OneToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class)
     @JoinColumn(name = "username",referencedColumnName = "id" )
     @JsonBackReference
     private User users;
@@ -27,6 +27,9 @@ public class Result {
     @JoinColumn(name = "id_exam",referencedColumnName = "id")
     @JsonBackReference
     private Exam exam;
+
+    @Column(name = "score_month")
+    private Integer scoreMonth;
 
     public Result() {
     }
@@ -87,4 +90,7 @@ public class Result {
     public void setMark(double mark) {
         this.mark = mark;
     }
+
+    public Integer getScoreMonth() { return scoreMonth; }
+    public void setScoreMonth(Integer scoreMonth) { this.scoreMonth = scoreMonth; }
 }

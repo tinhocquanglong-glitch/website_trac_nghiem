@@ -93,8 +93,8 @@
             <div class="row">
                 <div class="container-fluid" style="margin-bottom: 150px">
                     <div class="h4 text-center mb-4">
-                        <p id="de">Chỉnh sửa chương <span style="text-transform: uppercase"
-                                                            th:text="' '+${chapter.serial} + ' - '+${subjectClasses.subject.name} +' '+${subjectClasses.classes.nameClass}"></span>
+                        <p id="de">Chỉnh sửa chủ đề <span style="text-transform: uppercase"
+                                                            th:text="' '+${chapter.serial} + ' - '+${subjectClasses.subject.name} +' '+${subjectClasses.classes.displayName}"></span>
                         </p>
                     </div>
                     <div class="alert alert-primary alert-dismissible fade show" role="alert"
@@ -115,7 +115,7 @@
                             <input type="text" th:field="*{subjectClasses}" style="display: none">
                             <div class="border border-secondary rounded p-3 pt-5">
                                 <div class="form-group row mg-16-auto">
-                                    <label class="col-sm-3 col-form-label">Chương học</label>
+                                    <label class="col-sm-3 col-form-label">Chủ đề học</label>
                                     <div class="col-sm-8 row">
                                         <div class="list-chapter col-md-12">
                                             <div id="chapter" class="col-md-8">

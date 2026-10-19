@@ -1,0 +1,984 @@
+HTTP/1.1 200 
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Type: text/html;charset=UTF-8
+Content-Language: en-US
+Transfer-Encoding: chunked
+Date: Fri, 16 Oct 2026 10:10:17 GMT
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <title>Website Trắc nghiệm</title>
+    <link rel="icon" href=
+            "https://aztest.vn/uploads/news/2019/1_6.jpg"
+          type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/loader.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/slick.css">
+    <link rel="stylesheet" href="/css/blog.css">
+    <link href="/css/default-page.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dropdown.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="../../assets/styles/custom.css"/>
+    <link rel="stylesheet" href="/css/quiz.css">
+    <style>
+        input[type=radio] {
+            cursor: pointer;
+        }
+
+        .form-exam img {
+            height: 300px !important;
+            width: 100% !important;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+<div><header>
+
+    <div class="container-fluid">
+
+        <div class="navb-logo">
+            <img src="/img/logo.png" alt="Logo">
+        </div>
+
+        <div class="navb-items d-none d-xl-flex">
+
+            <div class="item">
+                <a href="/">Trang chủ</a>
+            </div>
+
+            <div class="item">
+                <a href="/default">Tạo bài kiểm tra</a>
+            </div>
+
+            <div class="item">
+                <a href="/tin-tuc">Tin tức</a>
+            </div>
+
+            <div class="item">
+                <a href="/tai-lieu">Tài liệu</a>
+            </div>
+            
+            
+            
+            <div class="item">
+                <a href="/student/exams" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-clipboard-check me-1"></i>Bài thi được giao</a>
+            </div>
+            <div class="item">
+                <a href="/practice" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-flask me-1"></i>Thi thử</a>
+            </div>
+            
+            <div class="item">
+                <a href="/aboutus">Về chúng tôi</a>
+            </div>
+            <div class="item-button">
+                <div>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span>Xin Chào,</span> <span style="color: red">demo_hs_61_1</span>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="/view">Profile <span><i class="fa-solid fa-address-card"></i></span></a>
+                            <a class="dropdown-item" href="/logout">Logout <span><i class="fa-solid fa-right-from-bracket"></i></span></a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Button trigger modal -->
+        <div class="mobile-toggler d-lg-none">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#navbModal">
+                <i class="fa-solid fa-bars"></i>
+            </a>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="navbModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <img src="/img/logo.png" alt="Logo">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i
+                                class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-house"></i><a href="/">Trang chủ</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-bell-concierge"></i><a href="/services">Tạo bài kiểm tra</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-file-lines"></i> <a href="/cases">Tin tức</a>
+                        </div>
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-circle-info"></i><a href="/tai-lieu">Tài liệu</a>
+                        </div>
+
+                        
+
+                        
+
+                        
+
+                        <div class="modal-line">
+                            <i class="fa-solid fa-clipboard-check"></i><a href="/student/exams">Bài thi được giao</a>
+                        </div>
+                        <div class="modal-line">
+                            <i class="fa-solid fa-flask"></i><a href="/practice">Thi thử</a>
+                        </div>
+
+                        
+
+                        
+                        <div>
+                            <a href="/logout" class="navb-button" type="button">Đăng xuất</a>
+                        </div>
+                    </div>
+
+                    <div class="mobile-modal-footer">
+
+                        <a target="_blank" href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-youtube"></i></a>
+                        <a target="_blank" href="#"><i class="fa-brands fa-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</header></div>
+
+<div class="container py-5 px-4">
+    <h1 id="title" class="bg-info text-light"><span style="font-weight: bold">Lấy điểm số 2 - Tập hợp các số tự nhiên - Toán Khối 6</span>
+    </h1>
+    <form class="form-question" action="/submit1/2" method="POST" id="formQuestion">
+        <div class="form-question-time align-content-lg-center">
+            <div class="col-lg-12">
+                <div class="rounded bg-gradient text-white shadow p-5 text-center mb-5">
+                    <p id="isFree" style="display: none">true</p>
+                    <div id="clock" class="countdown pt-4"></div>
+                    <button type="submit" class="btn btn-info d-block mx-auto">Nộp bài</button>
+                </div>
+            </div>
+        </div>
+        <div class="form-question-success align-content-lg-center">
+            <div class="col-lg-12">
+                <div class="rounded text-center mb-5">
+                    <div class="question-more">
+                        <span class="success" id="number">0</span>
+                        <span>&nbsp;/&nbsp;</span>
+                        <span class="total">18</span>
+                    </div>
+                    <div class="tag-question">
+                        <div>
+                            <a class="question-link" href="#question1">1</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question2">2</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question3">3</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question4">4</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question5">5</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question6">6</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question7">7</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question8">8</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question9">9</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question10">10</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question11">11</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question12">12</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question13">13</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question14">14</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question15">15</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question16">16</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question17">17</a>
+                        </div>
+                        <div>
+                            <a class="question-link" href="#question18">18</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content">
+            <div class="form-exam ques-box bg-dark text-light" id="question1">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 1: Số nào là số nguyên tố?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question1.id)"
+                           name="questions[0].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 1</p>
+                </div>
+                <input type="text" value="false" id="check1" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question1.id)"
+                           name="questions[0].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 21</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question1.id)"
+                           name="questions[0].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 29</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question1.id)"
+                           name="questions[0].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 35</p>
+                </div>
+                <input type="hidden" name="questions[0].quesId" value="51"/>
+                <input type="hidden" name="questions[0].title" value="Số nào là số nguyên tố?"/>
+                <input type="hidden" name="questions[0].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question2">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 2: ƯCLN của 18 và 30 bằng:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question2.id)"
+                           name="questions[1].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 2</p>
+                </div>
+                <input type="text" value="false" id="check2" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question2.id)"
+                           name="questions[1].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 3</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question2.id)"
+                           name="questions[1].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 6</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question2.id)"
+                           name="questions[1].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 9</p>
+                </div>
+                <input type="hidden" name="questions[1].quesId" value="52"/>
+                <input type="hidden" name="questions[1].title" value="ƯCLN của 18 và 30 bằng:"/>
+                <input type="hidden" name="questions[1].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question3">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 3: BCNN của 12 và 18 bằng:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question3.id)"
+                           name="questions[2].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 6</p>
+                </div>
+                <input type="text" value="false" id="check3" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question3.id)"
+                           name="questions[2].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 18</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question3.id)"
+                           name="questions[2].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 24</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question3.id)"
+                           name="questions[2].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 36</p>
+                </div>
+                <input type="hidden" name="questions[2].quesId" value="53"/>
+                <input type="hidden" name="questions[2].title" value="BCNN của 12 và 18 bằng:"/>
+                <input type="hidden" name="questions[2].ans" value="4"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question4">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 4: Số nào vừa là bội của 6 vừa là bội của 8 nhỏ nhất?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question4.id)"
+                           name="questions[3].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 12</p>
+                </div>
+                <input type="text" value="false" id="check4" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question4.id)"
+                           name="questions[3].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 18</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question4.id)"
+                           name="questions[3].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 24</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question4.id)"
+                           name="questions[3].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 48</p>
+                </div>
+                <input type="hidden" name="questions[3].quesId" value="54"/>
+                <input type="hidden" name="questions[3].title" value="Số nào vừa là bội của 6 vừa là bội của 8 nhỏ nhất?"/>
+                <input type="hidden" name="questions[3].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question5">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 5: Số đối của -7 là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question5.id)"
+                           name="questions[4].chose" value="1"/>
+                    <p style="margin-top: 13px">A. -7</p>
+                </div>
+                <input type="text" value="false" id="check5" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question5.id)"
+                           name="questions[4].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 0</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question5.id)"
+                           name="questions[4].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 7</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question5.id)"
+                           name="questions[4].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 14</p>
+                </div>
+                <input type="hidden" name="questions[4].quesId" value="55"/>
+                <input type="hidden" name="questions[4].title" value="Số đối của -7 là:"/>
+                <input type="hidden" name="questions[4].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question6">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 6: Kết quả của -8 + 13 là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question6.id)"
+                           name="questions[5].chose" value="1"/>
+                    <p style="margin-top: 13px">A. -21</p>
+                </div>
+                <input type="text" value="false" id="check6" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question6.id)"
+                           name="questions[5].chose" value="2"/>
+                    <p style="margin-top: 13px">B. -5</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question6.id)"
+                           name="questions[5].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 5</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question6.id)"
+                           name="questions[5].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 21</p>
+                </div>
+                <input type="hidden" name="questions[5].quesId" value="56"/>
+                <input type="hidden" name="questions[5].title" value="Kết quả của -8 + 13 là:"/>
+                <input type="hidden" name="questions[5].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question7">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 7: Bỏ ngoặc trong biểu thức 12 - (5 - 8) được kết quả:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question7.id)"
+                           name="questions[6].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 12 - 5 - 8</p>
+                </div>
+                <input type="text" value="false" id="check7" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question7.id)"
+                           name="questions[6].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 12 - 5 + 8</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question7.id)"
+                           name="questions[6].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 12 + 5 - 8</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question7.id)"
+                           name="questions[6].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 12 + 5 + 8</p>
+                </div>
+                <input type="hidden" name="questions[6].quesId" value="57"/>
+                <input type="hidden" name="questions[6].title" value="Bỏ ngoặc trong biểu thức 12 - (5 - 8) được kết quả:"/>
+                <input type="hidden" name="questions[6].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question8">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 8: Kết quả của (-6) x (-4) là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question8.id)"
+                           name="questions[7].chose" value="1"/>
+                    <p style="margin-top: 13px">A. -24</p>
+                </div>
+                <input type="text" value="false" id="check8" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question8.id)"
+                           name="questions[7].chose" value="2"/>
+                    <p style="margin-top: 13px">B. -10</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question8.id)"
+                           name="questions[7].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 10</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question8.id)"
+                           name="questions[7].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 24</p>
+                </div>
+                <input type="hidden" name="questions[7].quesId" value="58"/>
+                <input type="hidden" name="questions[7].title" value="Kết quả của (-6) x (-4) là:"/>
+                <input type="hidden" name="questions[7].ans" value="4"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question9">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 9: Số nào là ước của -24?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question9.id)"
+                           name="questions[8].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 5</p>
+                </div>
+                <input type="text" value="false" id="check9" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question9.id)"
+                           name="questions[8].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 6</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question9.id)"
+                           name="questions[8].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 7</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question9.id)"
+                           name="questions[8].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 9</p>
+                </div>
+                <input type="hidden" name="questions[8].quesId" value="59"/>
+                <input type="hidden" name="questions[8].title" value="Số nào là ước của -24?"/>
+                <input type="hidden" name="questions[8].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question10">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 10: Giá trị của (-3) x 5 + 20 là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question10.id)"
+                           name="questions[9].chose" value="1"/>
+                    <p style="margin-top: 13px">A. -35</p>
+                </div>
+                <input type="text" value="false" id="check10" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question10.id)"
+                           name="questions[9].chose" value="2"/>
+                    <p style="margin-top: 13px">B. -5</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question10.id)"
+                           name="questions[9].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 5</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question10.id)"
+                           name="questions[9].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 35</p>
+                </div>
+                <input type="hidden" name="questions[9].quesId" value="60"/>
+                <input type="hidden" name="questions[9].title" value="Giá trị của (-3) x 5 + 20 là:"/>
+                <input type="hidden" name="questions[9].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question11">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 11: Cho A = {1; 3; 5; 7}. Số nào thuộc A?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question11.id)"
+                           name="questions[10].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 2</p>
+                </div>
+                <input type="text" value="false" id="check11" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question11.id)"
+                           name="questions[10].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 4</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question11.id)"
+                           name="questions[10].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 5</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question11.id)"
+                           name="questions[10].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 8</p>
+                </div>
+                <input type="hidden" name="questions[10].quesId" value="41"/>
+                <input type="hidden" name="questions[10].title" value="Cho A = {1; 3; 5; 7}. Số nào thuộc A?"/>
+                <input type="hidden" name="questions[10].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question12">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 12: Một hình vuông có cạnh 5 cm. Chu vi hình vuông là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question12.id)"
+                           name="questions[11].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 10 cm</p>
+                </div>
+                <input type="text" value="false" id="check12" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question12.id)"
+                           name="questions[11].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 15 cm</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question12.id)"
+                           name="questions[11].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 20 cm</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question12.id)"
+                           name="questions[11].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 25 cm</p>
+                </div>
+                <input type="hidden" name="questions[11].quesId" value="61"/>
+                <input type="hidden" name="questions[11].title" value="Một hình vuông có cạnh 5 cm. Chu vi hình vuông là:"/>
+                <input type="hidden" name="questions[11].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question13">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 13: Diện tích hình chữ nhật dài 8 cm, rộng 3 cm là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question13.id)"
+                           name="questions[12].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 11 cm2</p>
+                </div>
+                <input type="text" value="false" id="check13" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question13.id)"
+                           name="questions[12].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 22 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question13.id)"
+                           name="questions[12].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 24 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question13.id)"
+                           name="questions[12].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 48 cm2</p>
+                </div>
+                <input type="hidden" name="questions[12].quesId" value="62"/>
+                <input type="hidden" name="questions[12].title" value="Diện tích hình chữ nhật dài 8 cm, rộng 3 cm là:"/>
+                <input type="hidden" name="questions[12].ans" value="3"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question14">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 14: Hình bình hành có đáy 9 cm và chiều cao 4 cm. Diện tích là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question14.id)"
+                           name="questions[13].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 13 cm2</p>
+                </div>
+                <input type="text" value="false" id="check14" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question14.id)"
+                           name="questions[13].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 18 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question14.id)"
+                           name="questions[13].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 26 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question14.id)"
+                           name="questions[13].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 36 cm2</p>
+                </div>
+                <input type="hidden" name="questions[13].quesId" value="63"/>
+                <input type="hidden" name="questions[13].title" value="Hình bình hành có đáy 9 cm và chiều cao 4 cm. Diện tích là:"/>
+                <input type="hidden" name="questions[13].ans" value="4"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question15">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 15: Hình thoi có hai đường chéo dài 6 cm và 8 cm. Diện tích là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question15.id)"
+                           name="questions[14].chose" value="1"/>
+                    <p style="margin-top: 13px">A. 14 cm2</p>
+                </div>
+                <input type="text" value="false" id="check15" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question15.id)"
+                           name="questions[14].chose" value="2"/>
+                    <p style="margin-top: 13px">B. 24 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question15.id)"
+                           name="questions[14].chose" value="3"/>
+                    <p style="margin-top: 13px">C. 28 cm2</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question15.id)"
+                           name="questions[14].chose" value="4"/>
+                    <p style="margin-top: 13px">D. 48 cm2</p>
+                </div>
+                <input type="hidden" name="questions[14].quesId" value="64"/>
+                <input type="hidden" name="questions[14].title" value="Hình thoi có hai đường chéo dài 6 cm và 8 cm. Diện tích là:"/>
+                <input type="hidden" name="questions[14].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question16">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 16: Hình nào sau đây có trục đối xứng?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question16.id)"
+                           name="questions[15].chose" value="1"/>
+                    <p style="margin-top: 13px">A. Một đường thẳng bất kỳ</p>
+                </div>
+                <input type="text" value="false" id="check16" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question16.id)"
+                           name="questions[15].chose" value="2"/>
+                    <p style="margin-top: 13px">B. Hình vuông</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question16.id)"
+                           name="questions[15].chose" value="3"/>
+                    <p style="margin-top: 13px">C. Một tam giác thường</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question16.id)"
+                           name="questions[15].chose" value="4"/>
+                    <p style="margin-top: 13px">D. Một hình bất kỳ</p>
+                </div>
+                <input type="hidden" name="questions[15].quesId" value="65"/>
+                <input type="hidden" name="questions[15].title" value="Hình nào sau đây có trục đối xứng?"/>
+                <input type="hidden" name="questions[15].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question17">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 17: Hình nào có tâm đối xứng?</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question17.id)"
+                           name="questions[16].chose" value="1"/>
+                    <p style="margin-top: 13px">A. Tam giác đều</p>
+                </div>
+                <input type="text" value="false" id="check17" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question17.id)"
+                           name="questions[16].chose" value="2"/>
+                    <p style="margin-top: 13px">B. Hình bình hành</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question17.id)"
+                           name="questions[16].chose" value="3"/>
+                    <p style="margin-top: 13px">C. Hình thang cân</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question17.id)"
+                           name="questions[16].chose" value="4"/>
+                    <p style="margin-top: 13px">D. Tam giác thường</p>
+                </div>
+                <input type="hidden" name="questions[16].quesId" value="66"/>
+                <input type="hidden" name="questions[16].title" value="Hình nào có tâm đối xứng?"/>
+                <input type="hidden" name="questions[16].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+            <div class="form-exam ques-box bg-dark text-light" id="question18">
+                <span style="position: absolute;right: 15px;top: 10px;font-size: 15px;" type="button" onclick="Popup()"><i class="fa-solid fa-print"></i></span>
+                <p class="title">Câu 18: Một hình vừa có trục đối xứng vừa có tâm đối xứng là:</p>
+                <div class="option">
+                    <input type="radio" onchange="choose(question18.id)"
+                           name="questions[17].chose" value="1"/>
+                    <p style="margin-top: 13px">A. Hình bình hành bất kỳ</p>
+                </div>
+                <input type="text" value="false" id="check18" style="display: none">
+                <div class="option">
+                    <input type="radio" onchange="choose(question18.id)"
+                           name="questions[17].chose" value="2"/>
+                    <p style="margin-top: 13px">B. Hình chữ nhật</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question18.id)"
+                           name="questions[17].chose" value="3"/>
+                    <p style="margin-top: 13px">C. Tam giác thường</p>
+                </div>
+                <div class="option">
+                    <input type="radio" onchange="choose(question18.id)"
+                           name="questions[17].chose" value="4"/>
+                    <p style="margin-top: 13px">D. Hình thang thường</p>
+                </div>
+                <input type="hidden" name="questions[17].quesId" value="67"/>
+                <input type="hidden" name="questions[17].title" value="Một hình vừa có trục đối xứng vừa có tâm đối xứng là:"/>
+                <input type="hidden" name="questions[17].ans" value="2"/>
+                <!--            <p class="alert alert-danger d-none" th:id="${'alert' + i.index}" role="alert">-->
+                <!--                Chọn một đáp án!-->
+                <!--            </p>-->
+            </div>
+        </div>
+    </form>
+</div>
+<!-- Footer -->
+<footer class="text-center text-lg-start bg-white text-muted">
+    <!-- Section: Social media -->
+    <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
+        <!-- Left -->
+        <div class="me-5 d-none d-lg-block">
+            <span>Get connected with us on social networks:</span>
+        </div>
+        <!-- Left -->
+
+        <!-- Right -->
+        <div>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-google"></i>
+            </a>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="" class="me-4 link-secondary">
+                <i class="fab fa-github"></i>
+            </a>
+        </div>
+        <!-- Right -->
+    </section>
+    <!-- Section: Social media -->
+
+    <!-- Section: Links  -->
+    <section class="">
+        <div class="container text-center text-md-start mt-5">
+            <!-- Grid row -->
+            <div class="row mt-3">
+                <!-- Grid column -->
+                <div class="col-md-6 col-lg-4 col-xl-3 mx-auto mb-4">
+                    <!-- Content -->
+                    <h6 class="text-uppercase fw-bold mb-4">
+                        <i class="fas fa-gem me-3 text-secondary"></i>Website trắc nghiệm
+                    </h6>
+                    <p>
+                        Website thi trắc nghiệm miễn phí, với ngân hàng câu hỏi và đề thi được chọn lọc kỹ càng, chính
+                        xác, mang đến trải nghiệm thực tế cho học viên.
+                    </p>
+                </div>
+                <div class="col-md-6 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+                    <!-- Links -->
+                    <h6 class="text-uppercase fw-bold mb-4">Contact</h6>
+                    <p><i class="fas fa-home me-3 text-secondary"></i>Đăk Lăk, Việt Nam</p>
+                    <p>
+                        <i class="fas fa-envelope me-3 text-secondary"></i>
+                        tinhocquanglong@gmail.com
+                    </p>
+                    <p><i class="fas fa-phone me-3 text-secondary"></i> 0847302345</p>
+                </div>
+                <!-- Grid column -->
+            </div>
+            <!-- Grid row -->
+        </div>
+    </section>
+    <!-- Section: Links  -->
+
+    <!-- Copyright -->
+    <div class="text-center p-4" style="background-color: rgba(0, 0, 0, 0.025);">
+        © 2023 Copyright by
+        <span class="text-reset fw-bold">Dương Vũ Long</span>
+    </div>
+    <!-- Copyright -->
+</footer>
+<!-- Footer -->
+<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+<script src="/js/slider.js"></script>
+<script>
+    let isFree = $("#isFree");
+    if (isFree.text() === 'true') {
+        $("#clock").css("display", "none");
+    } else {
+        let futureValue = null;
+        let futureDate = new Date(futureValue.toString());
+        countdown();
+
+        function countdown() {
+            let now = new Date().getTime();
+            let distance = futureDate - now;
+            distance = distance + 1000;
+            // let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            // let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            let display = (minutes < 10 ? '0' + minutes : '' + minutes) + ':' + (seconds < 10 ? '0' + seconds : '' + seconds);
+            $('#clock').text(display);
+            if (minutes <= 0) {
+                $('#clock').addClass('text-danger');
+            }
+
+            if (seconds <= 0 && minutes <= 0) {
+                clearInterval(timer);
+                $('#formQuestion').submit();
+            }
+        }
+
+        let timer = setInterval(function () {
+            countdown();
+        }, 1000);
+    }
+    function choose(obj) {
+        var anchor = document.querySelectorAll(".tag-question a");
+        var ind = parseInt(obj.toString().substring(8));
+        var check = document.getElementById("check" + ind);
+        if (check.value === "false") {
+            for (var i = 0; i < anchor.length; i++) {
+                var str = anchor[i].href;
+                if (str.toString().substring(str.toString().indexOf("#") + 1) === obj.toString()) {
+                    document.getElementById("number").textContent = parseInt(document.getElementById("number").textContent) + 1;
+                    check.value = "true";
+                    anchor[i].classList.add("choose");
+                }
+            }
+        }
+    }
+
+    $(window).on("scroll", function () {
+        $('.form-question-time').css("top", window.scrollY);
+        $('.form-question-success').css("top", window.scrollY);
+    });
+    function Popup() {
+        var data = $("#content").html();
+        var myWindow = window.open('', 'content');
+        myWindow.document.write('<html><head><title>Website thi trắc nghiệm</title>');
+        myWindow.document.write('<link rel="stylesheet" href="/css/quiz.css" type="text/css" />');
+        myWindow.document.write('</head>');
+        myWindow.document.write('<body>');
+        myWindow.document.write('<h1>'+$("#title").html()+'</h1>')
+        myWindow.document.write(data);
+        myWindow.document.write('</body></html>');
+        myWindow.document.close();
+        myWindow.onload=function(){ // necessary if the div contain images
+            myWindow.focus(); // necessary for IE >= 10
+            myWindow.print();
+            myWindow.close();
+        };
+    }
+</script>
+</body>
+</html>

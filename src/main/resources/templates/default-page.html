@@ -59,6 +59,18 @@
             <div class="item" sec:authorize="hasRole('ROLE_ADMIN')">
                 <a href="/user/list">Quản lý</a>
             </div>
+            <div class="item" sec:authorize="hasRole('ROLE_SCHOOL_ADMIN')">
+                <a href="/school-admin/users">Quản lý</a>
+            </div>
+            <div class="item" sec:authorize="hasRole('ROLE_USER')">
+                <a href="/student/exams" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-clipboard-check me-1"></i>Bài thi được giao</a>
+            </div>
+            <div class="item" sec:authorize="hasRole('ROLE_USER')">
+                <a href="/practice" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-flask me-1"></i>Thi thử</a>
+            </div>
+            <div class="item" sec:authorize="hasRole('ROLE_USER')">
+                <a href="/student/statistics" style="color:#0d8bba;font-weight:600;"><i class="fa-solid fa-chart-line me-1"></i>Thống kê điểm</a>
+            </div>
             <div class="item" sec:authorize="hasRole('ROLE_TEACHER')">
                 <a href="/exam/list">Quản trị</a>
             </div>
@@ -85,7 +97,7 @@
         </div>
 
         <!-- Button trigger modal -->
-        <div class="mobile-toggler d-lg-none">
+        <div class="mobile-toggler d-xl-none">
             <a href="#" data-bs-toggle="modal" data-bs-target="#navbModal">
                 <i class="fa-solid fa-bars"></i>
             </a>
@@ -127,6 +139,17 @@
 
                         <div class="modal-line" sec:authorize="hasRole('ROLE_ADMIN')">
                             <i class="fa-solid fa-gear"></i><a href="/user/list">Quản lý</a>
+                        </div>
+
+                        <div class="modal-line" sec:authorize="hasRole('ROLE_SCHOOL_ADMIN')">
+                            <i class="fa-solid fa-gear"></i><a href="/school-admin/users">Quản lý</a>
+                        </div>
+
+                        <div class="modal-line" sec:authorize="hasRole('ROLE_USER')">
+                            <i class="fa-solid fa-clipboard-check"></i><a href="/student/exams">Bài thi được giao</a>
+                        </div>
+                        <div class="modal-line" sec:authorize="hasRole('ROLE_USER')">
+                            <i class="fa-solid fa-flask"></i><a href="/practice">Thi thử</a>
                         </div>
 
                         <div class="modal-line" sec:authorize="hasRole('ROLE_TEACHER')">
@@ -188,9 +211,37 @@
                         <br>
                     </a>
                 </div>
+                <div class="card border-info mt-3" th:if="${studentScope == true}">
+                    <div class="card-body">
+                        <h6 class="text-info"><i class="fa fa-users mr-1"></i>Lop hoc cua ban</h6>
+                        <p class="mb-2" th:if="${studentClass != null}">
+                            <strong th:text="${studentClass.className}">Lop</strong>
+                            <span th:if="${studentClass.grade != null}" th:text="' - Khoi ' + ${studentClass.grade}"></span>
+                        </p>
+                        <p class="small mb-1" th:if="${homeroomTeacher != null}">
+                            GVCN: <strong th:text="${homeroomTeacher.fullName}">Giao vien</strong>
+                        </p>
+                        <p class="small mb-0" th:if="${subjectTeachers != null and !subjectTeachers.isEmpty()}">
+                            Mon bo mon:
+                            <span th:each="assignment, stat : ${subjectTeachers}">
+                                <span th:text="${assignment.subject.name + ' - ' + assignment.teacher.fullName}">Mon - Giao vien</span><span th:if="${!stat.last}">, </span>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="card border-warning mt-3" th:if="${studentScope == true and studentNotifications != null and !studentNotifications.isEmpty()}">
+                    <div class="card-body">
+                        <h6 class="text-warning"><i class="fa fa-bell mr-1"></i>Thong bao bai kiem tra</h6>
+                        <a class="d-block small mb-2" th:each="notification : ${studentNotifications}"
+                           th:href="@{/quiz1/{id}(id=${notification.exam.id})}">
+                            <span th:text="${notification.message}">Co bai kiem tra moi</span>
+                            <span class="text-muted d-block" th:text="${notification.createdAt}">Thoi gian</span>
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="d-flex justify-content-center mb-100">
-                <nav aria-label="Page navigation example">
+                <nav aria-label="Page navigation example" th:if="${studentScope != true}">
                     <ul class="pagination">
                         <li class="page-item">
                             <a class="page-link" th:href="@{''(page=0)}"

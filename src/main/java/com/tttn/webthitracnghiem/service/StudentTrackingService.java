@@ -372,7 +372,8 @@ public class StudentTrackingService {
         if (!students.isEmpty()) {
             records = monthlyRecordRepository
                     .findByStudentIdInAndSemesterAndMonth(new ArrayList<>(students.keySet()), semester, month).stream()
-                    .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
+                    .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record,
+                            (first, duplicate) -> first));
         }
         List<TrackedStudent> changedStudents = new ArrayList<>();
         List<StudentMonthlyRecord> changedRecords = new ArrayList<>();
@@ -635,6 +636,12 @@ public class StudentTrackingService {
 
     @Transactional
     public void recordExamScore(Integer classId, String studentFullName, String scoreType, BigDecimal score) {
+        recordExamScore(classId, studentFullName, scoreType, score, null, null, null, null);
+    }
+
+    @Transactional
+    public void recordExamScore(Integer classId, String studentFullName, String scoreType, BigDecimal score,
+                                Integer gradeMonth, String teacherId, Integer subjectId, Integer examId) {
         if (classId == null || studentFullName == null || scoreType == null || score == null) return;
         TrackedStudent student = studentRepository
                 .findFirstByTrackingClassIdAndFullNameIgnoreCase(classId, studentFullName.trim())
@@ -642,11 +649,13 @@ public class StudentTrackingService {
         if (student == null) return;
 
         java.time.LocalDate now = java.time.LocalDate.now();
-        int currentMonth = now.getMonthValue();
+        int currentMonth = gradeMonth != null && gradeMonth >= 1 && gradeMonth <= 12
+                ? gradeMonth : now.getMonthValue();
         int semester = (currentMonth >= 9 || currentMonth == 1) ? 1 : 2;
 
         List<StudentMonthlyRecord> records = monthlyRecordRepository
-                .findByStudentIdInAndSemesterAndMonth(List.of(student.getId()), semester, currentMonth);
+                .findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(
+                        List.of(student.getId()), semester, currentMonth, teacherId, subjectId);
         StudentMonthlyRecord record = records.isEmpty() ? null : records.get(0);
         if (record == null) {
             record = new StudentMonthlyRecord();
@@ -654,6 +663,9 @@ public class StudentTrackingService {
             record.setSemester(semester);
             record.setMonth(currentMonth);
         }
+        record.setTeacherId(teacherId);
+        record.setSubjectId(subjectId);
+        record.setExamId(examId);
 
         switch (scoreType.toUpperCase()) {
             case "REGULAR_1":

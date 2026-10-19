@@ -219,7 +219,8 @@ public class TeacherHomeroomController {
 
         String cleanUsername = (username != null) ? username.trim() : "";
         String cleanFullName = (fullName != null) ? fullName.trim() : "";
-        if (cleanUsername.isEmpty() || cleanFullName.isEmpty() || password == null || password.trim().isEmpty()) {
+        if (cleanUsername.isEmpty() || cleanFullName.isEmpty() || password == null
+                || password.trim().length() < 6) {
             redirectAttributes.addFlashAttribute("error", "Vui lòng nhập đầy đủ thông tin: Tên đăng nhập, họ tên và mật khẩu.");
             return "redirect:/teacher/homeroom?classId=" + classId;
         }
@@ -230,9 +231,14 @@ public class TeacherHomeroomController {
         }
 
         String studentEmail = (email != null && !email.trim().isEmpty())
-                ? email.trim() : (cleanUsername + "@student.school.vn");
+                ? email.trim().toLowerCase(Locale.ROOT)
+                : (cleanUsername.toLowerCase(Locale.ROOT) + "@student.school.vn");
+        if (!isValidEmail(studentEmail)) {
+            redirectAttributes.addFlashAttribute("error", "Email khong dung dinh dang.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
         if (userService.userExistss(studentEmail)) {
-            studentEmail = cleanUsername + "_" + System.currentTimeMillis() + "@student.school.vn";
+            studentEmail = cleanUsername.toLowerCase(Locale.ROOT) + "_" + System.currentTimeMillis() + "@student.school.vn";
         }
 
         StudentTrackingClass trackingClass = trackingClassRepository.findById(classId).orElse(null);
@@ -247,7 +253,13 @@ public class TeacherHomeroomController {
         student.setRePassWord(student.getPassWord());
         student.setFullName(cleanFullName);
         student.setEmail(studentEmail);
-        student.setPhoneNumber((phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber.trim() : "0900000000");
+        String studentPhone = (phoneNumber != null && !phoneNumber.trim().isEmpty())
+                ? phoneNumber.trim() : "0900000000";
+        if (!studentPhone.matches("^((\\(84\\)\\+)|(0))[1-9][\\d]{8}$")) {
+            redirectAttributes.addFlashAttribute("error", "So dien thoai khong dung dinh dang.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+        student.setPhoneNumber(studentPhone);
         student.setAddress("Học sinh lớp " + trackingClass.getClassName());
         student.setImg("/img/avatar/default.jpg");
         student.setCreateDate(new java.sql.Date(System.currentTimeMillis()));
@@ -262,10 +274,17 @@ public class TeacherHomeroomController {
         }
 
         Role roleStudent = roleService.findByName("ROLE_USER");
-        if (roleStudent != null) {
-            student.setRoles(Set.of(roleStudent));
+        if (roleStudent == null) {
+            redirectAttributes.addFlashAttribute("error", "He thong chua co role hoc sinh.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
         }
-        userService.save(student);
+        student.setRoles(Set.of(roleStudent));
+        try {
+            userService.save(student);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", "Khong the tao tai khoan. Vui long kiem tra lai thong tin va thu lai.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
 
         try {
             trackingService.addStudent(classId, cleanFullName);
@@ -345,6 +364,10 @@ public class TeacherHomeroomController {
         }
 
         return "redirect:/teacher/homeroom?classId=" + classId;
+    }
+
+    private boolean isValidEmail(String email) {
+        return email != null && email.matches("^[A-Za-z0-9][A-Za-z0-9_.-]*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$");
     }
 
     private boolean hasManagePermission(Integer classId) {
