@@ -33,14 +33,42 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             nativeQuery = true)
     Page<Question> findAllByExams(@Param("id") int id, Pageable pageable);
 
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id",
-            countQuery = "SELECT COUNT(*) FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id",nativeQuery = true)
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where sc.subject_id = :id or lp.subject_id = :id",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "left join lesson l on q.lesson_id = l.id "
+                    + "left join chapter c on c.id = l.chapter_id "
+                    + "left join subject_classes sc on sc.id = c.subject_class_id "
+                    + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+                    + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+                    + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+                    + "where sc.subject_id = :id or lp.subject_id = :id", nativeQuery = true)
     Page<Question> findAllBySubject(@Param("id") Optional<Integer> id, Pageable pageable);
 
     Page<Question> findAllByTitleContaining(String title, Pageable pageable);
 
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name%",
-            countQuery = "select COUNT(*) from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name%",
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (sc.subject_id = :id or lp.subject_id = :id) and q.title like concat('%', :name, '%')",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "left join lesson l on q.lesson_id = l.id "
+                    + "left join chapter c on c.id = l.chapter_id "
+                    + "left join subject_classes sc on sc.id = c.subject_class_id "
+                    + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+                    + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+                    + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+                    + "where (sc.subject_id = :id or lp.subject_id = :id) and q.title like concat('%', :name, '%')",
             nativeQuery = true)
     Page<Question> findAllBySubjectAndTitleContaining(@Param("id") int id, @Param("name") String name, Pageable pageable);
     @Query(nativeQuery = true,value = "SELECT * FROM question WHERE lesson_id = :id")
@@ -48,68 +76,141 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     List<Question> findByLessonPlanLesson_Id(Integer id);
     @Query(nativeQuery = true,value = "SELECT * FROM question JOIN exam_question ON exam_question.ques_id = question.ques_id WHERE exam_question.exam_id = :examId")
     List<Question> findByExam(@Param("examId") int examId);
-    @Query(nativeQuery = true,value = "SELECT * FROM question JOIN lesson ON lesson.id = question.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subId AND subject_classes.class_id = :classId")
+    @Query(nativeQuery = true,value = "SELECT DISTINCT q.* FROM question q "
+            + "LEFT JOIN lesson l ON l.id = q.lesson_id "
+            + "LEFT JOIN chapter c ON c.id = l.chapter_id "
+            + "LEFT JOIN subject_classes sc ON sc.id = c.subject_class_id "
+            + "LEFT JOIN lesson_plan_custom_lesson pll ON pll.id = q.lesson_plan_lesson_id "
+            + "LEFT JOIN lesson_plan_custom_chapter plc ON plc.id = pll.chapter_id "
+            + "LEFT JOIN lesson_plan lp ON lp.id = plc.lesson_plan_id "
+            + "WHERE sc.subject_id = :subId AND sc.class_id = :classId "
+            + "OR lp.subject_id = :subId AND lp.grade_id = :classId")
     List<Question> findBySubAndClass(@Param("subId") int subId, @Param("classId") int classId);
-    @Query(nativeQuery = true,value = "SELECT * FROM question JOIN lesson ON lesson.id = question.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :subId")
+    @Query(nativeQuery = true,value = "SELECT DISTINCT q.* FROM question q "
+            + "LEFT JOIN lesson l ON l.id = q.lesson_id "
+            + "LEFT JOIN chapter c ON c.id = l.chapter_id "
+            + "LEFT JOIN subject_classes sc ON sc.id = c.subject_class_id "
+            + "LEFT JOIN lesson_plan_custom_lesson pll ON pll.id = q.lesson_plan_lesson_id "
+            + "LEFT JOIN lesson_plan_custom_chapter plc ON plc.id = pll.chapter_id "
+            + "LEFT JOIN lesson_plan lp ON lp.id = plc.lesson_plan_id "
+            + "WHERE sc.subject_id = :subId OR lp.subject_id = :subId")
     List<Question> findBySubject(@Param("subId") int subId);
 
     // Lọc câu hỏi cho giáo viên: câu hỏi công khai HOẶC của cùng trường
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id AND (question.is_public = true OR question.school_id = :schoolId)",
-            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id AND (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (sc.subject_id = :id or lp.subject_id = :id) "
+            + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "left join lesson l on q.lesson_id = l.id "
+                    + "left join chapter c on c.id = l.chapter_id "
+                    + "left join subject_classes sc on sc.id = c.subject_class_id "
+                    + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+                    + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+                    + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+                    + "where (sc.subject_id = :id or lp.subject_id = :id) "
+                    + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)", nativeQuery = true)
     Page<Question> findAllBySubjectAndSchool(@Param("id") Optional<Integer> id, @Param("schoolId") int schoolId, Pageable pageable);
 
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where (question.is_public = true OR question.school_id = :schoolId)",
-            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where q.is_public = true or q.is_public is null or q.school_id = :schoolId",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "where q.is_public = true or q.is_public is null or q.school_id = :schoolId", nativeQuery = true)
     Page<Question> findAllBySchool(@Param("schoolId") int schoolId, Pageable pageable);
 
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
-            countQuery = "SELECT COUNT(*) FROM question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id WHERE question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",nativeQuery = true)
+    @Query(value = "select distinct q.* from question q "
+            + "where q.title like concat('%', :name, '%') "
+            + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "where q.title like concat('%', :name, '%') "
+                    + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)", nativeQuery = true)
     Page<Question> findAllByTitleContainingAndSchool(@Param("name") String name, @Param("schoolId") int schoolId, Pageable pageable);
 
-    @Query(value = "select question.* from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
-            countQuery = "select COUNT(*) from question join lesson on question.lesson_id = lesson.id join chapter on chapter.id = lesson.chapter_id join subject_classes on subject_classes.id = chapter.subject_class_id where subject_classes.subject_id = :id and question.title like %:name% AND (question.is_public = true OR question.school_id = :schoolId)",
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (sc.subject_id = :id or lp.subject_id = :id) "
+            + "and q.title like concat('%', :name, '%') "
+            + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
+            countQuery = "select count(distinct q.ques_id) from question q "
+                    + "left join lesson l on q.lesson_id = l.id "
+                    + "left join chapter c on c.id = l.chapter_id "
+                    + "left join subject_classes sc on sc.id = c.subject_class_id "
+                    + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+                    + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+                    + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+                    + "where (sc.subject_id = :id or lp.subject_id = :id) "
+                    + "and q.title like concat('%', :name, '%') "
+                    + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
             nativeQuery = true)
     Page<Question> findAllBySubjectAndTitleContainingAndSchool(@Param("id") int id, @Param("name") String name, @Param("schoolId") int schoolId, Pageable pageable);
 
-    @Query(value = "select question.* from question "
-            + "join lesson on question.lesson_id = lesson.id "
-            + "join chapter on chapter.id = lesson.chapter_id "
-            + "join subject_classes on subject_classes.id = chapter.subject_class_id "
-            + "where (:subjectId is null or subject_classes.subject_id = :subjectId) "
-            + "and (:classId is null or subject_classes.class_id = :classId) "
-            + "and (:chapterId is null or chapter.id = :chapterId) "
-            + "and (:title is null or question.title like concat('%', :title, '%'))",
-            countQuery = "select count(*) from question "
-            + "join lesson on question.lesson_id = lesson.id "
-            + "join chapter on chapter.id = lesson.chapter_id "
-            + "join subject_classes on subject_classes.id = chapter.subject_class_id "
-            + "where (:subjectId is null or subject_classes.subject_id = :subjectId) "
-            + "and (:classId is null or subject_classes.class_id = :classId) "
-            + "and (:chapterId is null or chapter.id = :chapterId) "
-            + "and (:title is null or question.title like concat('%', :title, '%'))",
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
+            + "and (:title is null or q.title like concat('%', :title, '%'))",
+            countQuery = "select count(distinct q.ques_id) from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
+            + "and (:title is null or q.title like concat('%', :title, '%'))",
             nativeQuery = true)
     Page<Question> findByFilters(@Param("subjectId") Integer subjectId, @Param("classId") Integer classId,
                                  @Param("chapterId") Integer chapterId, @Param("title") String title,
                                  Pageable pageable);
 
-    @Query(value = "select question.* from question "
-            + "join lesson on question.lesson_id = lesson.id "
-            + "join chapter on chapter.id = lesson.chapter_id "
-            + "join subject_classes on subject_classes.id = chapter.subject_class_id "
-            + "where (:subjectId is null or subject_classes.subject_id = :subjectId) "
-            + "and (:classId is null or subject_classes.class_id = :classId) "
-            + "and (:chapterId is null or chapter.id = :chapterId) "
-            + "and (:title is null or question.title like concat('%', :title, '%')) "
-            + "and (question.is_public = true or question.school_id = :schoolId)",
-            countQuery = "select count(*) from question "
-            + "join lesson on question.lesson_id = lesson.id "
-            + "join chapter on chapter.id = lesson.chapter_id "
-            + "join subject_classes on subject_classes.id = chapter.subject_class_id "
-            + "where (:subjectId is null or subject_classes.subject_id = :subjectId) "
-            + "and (:classId is null or subject_classes.class_id = :classId) "
-            + "and (:chapterId is null or chapter.id = :chapterId) "
-            + "and (:title is null or question.title like concat('%', :title, '%')) "
-            + "and (question.is_public = true or question.school_id = :schoolId)",
+    @Query(value = "select distinct q.* from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
+            + "and (:title is null or q.title like concat('%', :title, '%')) "
+            + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
+            countQuery = "select count(distinct q.ques_id) from question q "
+            + "left join lesson l on q.lesson_id = l.id "
+            + "left join chapter c on c.id = l.chapter_id "
+            + "left join subject_classes sc on sc.id = c.subject_class_id "
+            + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
+            + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
+            + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
+            + "and (:title is null or q.title like concat('%', :title, '%')) "
+            + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
             nativeQuery = true)
     Page<Question> findByFiltersAndSchool(@Param("subjectId") Integer subjectId, @Param("classId") Integer classId,
                                            @Param("chapterId") Integer chapterId, @Param("title") String title,

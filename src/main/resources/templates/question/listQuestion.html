@@ -60,6 +60,39 @@
             height: 150px;
             object-fit: contain;
         }
+
+        .question-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .question-table-scroll table {
+            min-width: 1000px;
+        }
+
+        @media (max-width: 767.98px) {
+            .btn-group,
+            .btn-group > div,
+            .btn-group form,
+            .btn-group form > div {
+                flex-wrap: wrap;
+                width: 100%;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            .btn-group form input,
+            .btn-group form select,
+            .btn-group form button {
+                flex: 1 1 180px;
+                max-width: 100%;
+            }
+
+            .btn-group > div:last-child {
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body class="nav-md">
@@ -124,7 +157,8 @@
                             </a>
                         </div>
                     </div>
-                    <table class="table table-striped table-bordered table-hover table-responsive-md">
+                    <div class="question-table-scroll">
+                    <table class="table table-striped table-bordered table-hover">
                         <thead>
                         <tr style="background-color: #27c9ff;">
                             <th>Mã câu hỏi</th>
@@ -151,7 +185,7 @@
                         <tr th:each="question: ${questions}">
                             <td th:text="${question.quesId}"></td>
                             <td style="text-transform: uppercase"
-                                th:text="${question.lesson.chapter.subjectClasses.subject.name} + ' '+${question.lesson.chapter.subjectClasses.classes.displayName}+': '+${question.lesson.nameLesson}"></td>
+                                th:text="${question.lessonPlanLesson != null ? (question.lessonPlanLesson.chapter.lessonPlan.subject.name + ' ' + question.lessonPlanLesson.chapter.lessonPlan.grade.displayName + ': ' + question.lessonPlanLesson.name) : (question.lesson != null ? question.lesson.chapter.subjectClasses.subject.name + ' ' + question.lesson.chapter.subjectClasses.classes.displayName + ': ' + question.lesson.nameLesson : '')}"></td>
                             <td th:utext="${question.title}"></td>
                             <td th:text="${question.optionA}"></td>
                             <td th:text="${question.optionB}"></td>
@@ -173,7 +207,7 @@
                                 </span>
                             </td>
                             <td class="text-center wt-nowrap">
-                                <a th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
+                                <a th:if="${question.lesson != null}" th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
                                         class="fas fa-edit text-primary"></i></a>
                                 <a type="button" th:onclick="|remove(${question.quesId})|" id="deleteButton"><i
                                         class="far fa-trash-alt text-danger"></i></a>
@@ -181,6 +215,7 @@
                         </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 <div class="table-pagination d-flex justify-content-center " style="margin : 0 auto">

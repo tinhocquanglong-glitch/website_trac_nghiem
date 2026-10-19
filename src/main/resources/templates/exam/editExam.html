@@ -87,6 +87,81 @@
             margin: 0;
             font-size: 15px;
         }
+
+        #wrapFormQuestion {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #wrapFormQuestion > div:first-child {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+        }
+
+        #wrapFormQuestion select {
+            max-width: 100%;
+            min-width: 150px;
+        }
+
+        .question-table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #dee2e6;
+        }
+
+        #questForm {
+            min-width: 1040px;
+            margin-bottom: 0;
+        }
+
+        #questForm th,
+        #questForm td {
+            vertical-align: middle;
+            white-space: normal;
+        }
+
+        #questForm th:nth-child(2),
+        #questForm td:nth-child(2) {
+            min-width: 280px;
+        }
+
+        #questForm th:nth-child(n+7):nth-child(-n+10),
+        #questForm td:nth-child(n+7):nth-child(-n+10) {
+            min-width: 150px;
+        }
+
+        @media (max-width: 767.98px) {
+            .right_col,
+            .container-fluid {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            #wrapFormQuestion > div:first-child {
+                justify-content: stretch;
+            }
+
+            #wrapFormQuestion select {
+                flex: 1 1 190px;
+                width: 100%;
+            }
+
+            #random .form-outline {
+                flex-wrap: wrap;
+                padding: 0 10px 10px;
+            }
+
+            #unchecked {
+                float: none !important;
+                display: block;
+                margin: 0 10px 10px auto;
+            }
+        }
     </style>
 </head>
 <body class="nav-md">
@@ -254,8 +329,8 @@
                                     onclick="resetChecked()">Bỏ chọn tất
                                 cả
                             </button>
-                            <table id="questForm"
-                                   class="table table-striped table-bordered table-hover table-responsive-md">
+                            <div class="question-table-scroll">
+                            <table id="questForm" class="table table-striped table-bordered table-hover">
                                 <thead style="    background-color: deepskyblue;">
                                 <tr>
                                     <th>STT</th>
@@ -279,10 +354,10 @@
                                 <tr th:each="question ,i: ${questions}">
                                     <td th:text="${i.count}"></td>
                                     <td th:utext="${question.title}"></td>
-                                    <td th:text="${question.lesson.chapter.subjectClasses.subject.name}"></td>
-                                    <td th:text="${question.lesson.chapter.subjectClasses.classes.nameClass}"></td>
-                                    <td th:text="${question.lesson.nameLesson}"></td>
-                                    <td style="display:none;" th:text="${question.lesson.chapter.id}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null && question.lessonPlanLesson.chapter.lessonPlan.subject != null ? question.lessonPlanLesson.chapter.lessonPlan.subject.name : (question.lesson != null && question.lesson.chapter.subjectClasses.subject != null ? question.lesson.chapter.subjectClasses.subject.name : '')}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null && question.lessonPlanLesson.chapter.lessonPlan.grade != null ? question.lessonPlanLesson.chapter.lessonPlan.grade.displayName : (question.lesson != null && question.lesson.chapter.subjectClasses.classes != null ? question.lesson.chapter.subjectClasses.classes.displayName : '')}"></td>
+                                    <td th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.name : (question.lesson != null ? question.lesson.nameLesson : '')}"></td>
+                                    <td style="display:none;" th:text="${question.lessonPlanLesson != null ? question.lessonPlanLesson.chapter.id : (question.lesson != null ? question.lesson.chapter.id : '')}"></td>
                                     <td th:text="${question.optionA}"></td>
                                     <td th:text="${question.optionB}"></td>
                                     <td th:text="${question.optionC}"></td>
@@ -300,6 +375,7 @@
                                 </tr>
                                 </tbody>
                             </table>
+                            </div>
                             <div class="text-center">
                                 <button type="button" id="saveExam" class="btn m-2" style="background-color: #3bceff">
                                     Cập
