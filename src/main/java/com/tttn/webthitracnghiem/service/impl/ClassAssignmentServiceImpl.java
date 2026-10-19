@@ -74,8 +74,31 @@ public class ClassAssignmentServiceImpl implements IClassAssignmentService {
 
     @Override
     @Transactional
+    public int assignTeacherToClasses(List<Integer> classIds, Integer subjectId, String teacherId) {
+        if (classIds == null || classIds.isEmpty()) {
+            return 0;
+        }
+        int assigned = 0;
+        for (Integer classId : classIds) {
+            if (classId != null) {
+                assignTeacher(classId, subjectId, teacherId);
+                assigned++;
+            }
+        }
+        return assigned;
+    }
+
+    @Override
+    @Transactional
     public void removeAssignment(Integer assignmentId) {
         assignmentRepository.deleteById(assignmentId);
+    }
+
+    @Override
+    @Transactional
+    public void removeAssignment(Integer classId, Integer subjectId) {
+        assignmentRepository.findByTrackingClassIdAndSubjectId(classId, subjectId)
+                .ifPresent(assignmentRepository::delete);
     }
 
     @Override

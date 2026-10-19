@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Thống kê nhà trường</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/school-admin-operations.css}" rel="stylesheet">
+</head>
+<body class="nav-md">
+<div class="container body"><div class="main_container">
+    <div th:insert="~{index.html :: navbarAdmin}"></div>
+    <div th:insert="~{index.html :: topnavAdmin}"></div>
+    <main class="right_col" role="main">
+        <div class="operations-shell analytics-shell">
+            <header class="operations-hero analytics-hero">
+                <div><span class="operations-eyebrow">BẢNG ĐIỀU HÀNH NHÀ TRƯỜNG</span><h1>Thống kê nhà trường</h1><p>Nhìn nhanh tình hình học tập, kiểm tra và mức độ hoàn thiện phân công giảng dạy.</p></div>
+                <div class="operations-hero-mark"><i class="fa fa-line-chart" aria-hidden="true"></i></div>
+            </header>
+            <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+            <section class="operations-filter">
+                <div class="section-heading"><div><span class="section-kicker">BỘ LỌC THỐNG KÊ</span><h2>Phạm vi báo cáo</h2></div><span class="context-chip" th:text="${targetSchool != null ? targetSchool.name : 'Chưa chọn trường'}">Chưa chọn trường</span></div>
+                <form method="get" th:action="@{/school-admin/statistics}" class="filter-grid">
+                    <div class="field" th:if="${isAdmin}"><label for="statsSchoolId">Trường học</label><select id="statsSchoolId" name="schoolId" class="form-control"><option th:each="school : ${allSchools}" th:value="${school.id}" th:text="${school.name}" th:selected="${targetSchool != null and school.id == targetSchool.id}"></option></select></div>
+                    <div class="field"><label for="statsSchoolYear">Năm học</label><input id="statsSchoolYear" name="schoolYear" class="form-control" placeholder="2026-2027" th:value="${schoolYear}"></div>
+                    <div class="field"><label for="statsGrade">Khối</label><select id="statsGrade" name="grade" class="form-control"><option value="">Toàn trường</option><option th:each="item : ${availableGrades}" th:value="${item}" th:text="|Khối ${item}|" th:selected="${grade != null and grade == item}"></option></select></div>
+                    <button class="btn btn-primary filter-submit" type="submit"><i class="fa fa-refresh" aria-hidden="true"></i> Cập nhật báo cáo</button>
+                </form>
+            </section>
+            <div th:if="${statistics != null}">
+                <section class="stats-kpi-grid">
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon teal"><i class="fa fa-users"></i></span><span class="stats-kpi-label">Học sinh</span><strong th:text="${statistics.studentCount}">0</strong><small>Trong phạm vi lọc</small></div>
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon blue"><i class="fa fa-graduation-cap"></i></span><span class="stats-kpi-label">Giáo viên</span><strong th:text="${statistics.teacherCount}">0</strong><small>Đang thuộc trường</small></div>
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon purple"><i class="fa fa-th-large"></i></span><span class="stats-kpi-label">Lớp học</span><strong th:text="${statistics.classCount}">0</strong><small th:text="|${statistics.classesWithoutHomeroom} lớp thiếu GVCN|">0 lớp thiếu GVCN</small></div>
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon orange"><i class="fa fa-sitemap"></i></span><span class="stats-kpi-label">Phân công</span><strong th:text="|${#numbers.formatDecimal(statistics.assignmentCoverage, 1, 1)}%|">0%</strong><small th:text="|${statistics.assignmentCount} lượt đã gán|">0 lượt đã gán</small></div>
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon green"><i class="fa fa-check-square-o"></i></span><span class="stats-kpi-label">Thi thật</span><strong th:text="${statistics.realExamCount}">0</strong><small th:text="|${statistics.realAttempts} lượt làm bài|">0 lượt làm bài</small></div>
+                    <div class="stats-kpi-card"><span class="stats-kpi-icon gold"><i class="fa fa-flask"></i></span><span class="stats-kpi-label">Thi thử</span><strong th:text="${statistics.practiceExamCount}">0</strong><small th:text="|${statistics.practiceAttempts} lượt luyện tập|">0 lượt luyện tập</small></div>
+                </section>
+
+                <section class="analytics-grid">
+                    <div class="analytics-panel analytics-panel-wide"><div class="panel-heading"><div><span class="section-kicker">KẾT QUẢ HỌC TẬP</span><h2>Điểm thi thật theo khối</h2></div><span class="score-highlight" th:text="|TB ${#numbers.formatDecimal(statistics.realAverageScore, 1, 1)}|">TB 0,0</span></div><div class="grade-bars" th:if="${!statistics.gradeScores.isEmpty()}"><div class="grade-bar" th:each="item : ${statistics.gradeScores}"><div class="grade-bar-label"><strong th:text="|Khối ${item.grade}|">Khối 6</strong><span th:text="|${#numbers.formatDecimal(item.average, 1, 1)} điểm · ${item.attempts} lượt|">0 điểm</span></div><div class="bar-track"><span th:style="|width: ${item.average * 10}%;|" class="bar-fill"></span></div></div></div><div class="empty-state compact" th:if="${statistics.gradeScores.isEmpty()}"><i class="fa fa-bar-chart"></i><span>Chưa có kết quả thi thật trong phạm vi này.</span></div></div>
+                    <div class="analytics-panel"><div class="panel-heading"><div><span class="section-kicker">PHÂN BỐ ĐIỂM</span><h2>Mức điểm thi thật</h2></div></div><div class="score-band-list"><div class="score-band" th:each="item : ${statistics.scoreBands}"><span class="score-band-dot"></span><span th:text="${item.label}">Dưới 5</span><strong th:text="${item.count}">0</strong></div></div><div class="average-pair"><div><small>Điểm TB thi thật</small><strong th:text="${#numbers.formatDecimal(statistics.realAverageScore, 1, 1)}">0,0</strong></div><div><small>Điểm TB thi thử</small><strong th:text="${#numbers.formatDecimal(statistics.practiceAverageScore, 1, 1)}">0,0</strong></div></div></div>
+                </section>
+
+                <section class="analytics-panel"><div class="panel-heading"><div><span class="section-kicker">PHÂN CÔNG GIẢNG DẠY</span><h2>Mức độ hoàn thiện theo lớp</h2><p>Những lớp thiếu phân công được đưa lên đầu để xử lý.</p></div><a class="btn btn-outline-primary btn-sm" th:href="@{/school-admin/teaching-assignments}"><i class="fa fa-external-link"></i> Mở ma trận</a></div><div class="table-responsive"><table class="analytics-table"><thead><tr><th>Lớp</th><th>Học sinh</th><th>Môn đã phân công</th><th>GVCN</th><th>Trạng thái</th></tr></thead><tbody><tr th:each="item : ${statistics.classCoverage}"><td><strong th:text="${item.trackingClass.className}">6A1</strong><small th:text="|Khối ${item.trackingClass.grade} · ${item.trackingClass.schoolYear}|">Khối 6</small></td><td th:text="${item.studentCount}">0</td><td th:text="${item.assignmentCount}">0</td><td><span th:if="${item.hasHomeroom}" class="status good">Đã có</span><span th:unless="${item.hasHomeroom}" class="status danger">Thiếu</span></td><td><span th:if="${item.assignmentCount > 0}" class="status good">Có phân công</span><span th:unless="${item.assignmentCount > 0}" class="status danger">Chưa phân công</span></td></tr></tbody></table></div><div class="empty-state compact" th:if="${statistics.classCoverage.isEmpty()}"><i class="fa fa-inbox"></i><span>Chưa có lớp trong phạm vi đã chọn.</span></div></section>
+
+                <section class="analytics-grid">
+                    <div class="analytics-panel"><div class="panel-heading"><div><span class="section-kicker">TÌNH HÌNH KIỂM TRA</span><h2>Bài thi có tỷ lệ tham gia thấp</h2></div></div><div class="exam-list" th:if="${!statistics.examActivities.isEmpty()}"><div class="exam-row" th:each="item : ${statistics.examActivities}"><div class="exam-row-main"><strong th:text="${item.exam.nameExam}">Bài thi</strong><small th:text="${item.exam.practice ? 'Thi thử' : 'Thi thật'}">Thi thật</small></div><div class="exam-row-meta"><span th:text="|${item.takenCount}/${item.eligibleCount} học sinh|">0/0 học sinh</span><strong th:text="|${item.participationPercent}%|">0%</strong></div></div></div><div class="empty-state compact" th:if="${statistics.examActivities.isEmpty()}"><i class="fa fa-clipboard"></i><span>Chưa có bài thi thuộc phạm vi này.</span></div></div>
+                    <div class="analytics-panel"><div class="panel-heading"><div><span class="section-kicker">NHÂN SỰ GIẢNG DẠY</span><h2>Tải phân công giáo viên</h2></div></div><div class="teacher-list" th:if="${!statistics.teacherWorkloads.isEmpty()}"><div class="teacher-row" th:each="item : ${statistics.teacherWorkloads}"><div class="avatar-placeholder" th:text="${#strings.substring(item.teacher.fullName, 0, 1)}">N</div><div><strong th:text="${item.teacher.fullName}">Nguyễn Văn A</strong><small th:text="|${item.classCount} lớp · ${item.subjectCount} môn|">0 lớp</small></div><div class="teacher-count" th:text="${item.classCount}">0</div></div></div><div class="empty-state compact" th:if="${statistics.teacherWorkloads.isEmpty()}"><i class="fa fa-users"></i><span>Chưa có giáo viên trong trường.</span></div></div>
+                </section>
+
+                <section class="analytics-grid">
+                    <div class="analytics-panel alerts-panel"><div class="panel-heading"><div><span class="section-kicker">CẦN XỬ LÝ</span><h2>Cảnh báo nhà trường</h2></div></div><div class="alert-list" th:if="${!statistics.alerts.isEmpty()}"><div class="school-alert" th:each="alert : ${statistics.alerts}"><i class="fa fa-exclamation-triangle"></i><span th:text="${alert}">Cảnh báo</span></div></div><div class="empty-state compact" th:if="${statistics.alerts.isEmpty()}"><i class="fa fa-check-circle"></i><span>Chưa có cảnh báo cần xử lý.</span></div></div>
+                    <div class="analytics-panel"><div class="panel-heading"><div><span class="section-kicker">HỌC SINH CẦN QUAN TÂM</span><h2>Điểm thi thật dưới 5</h2></div></div><div class="risk-list" th:if="${!statistics.atRiskStudents.isEmpty()}"><div class="risk-row" th:each="item : ${statistics.atRiskStudents}"><div><strong th:text="${item.student.fullName}">Học sinh</strong><small th:text="|${item.student.trackingClass != null ? item.student.trackingClass.className : 'Chưa xếp lớp'} · ${item.attempts} lượt|">Lớp</small></div><span th:text="${#numbers.formatDecimal(item.average, 1, 1)}">0,0</span></div></div><div class="empty-state compact" th:if="${statistics.atRiskStudents.isEmpty()}"><i class="fa fa-smile-o"></i><span>Chưa có học sinh nào dưới ngưỡng 5.</span></div></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div></div>
+</body>
+</html>

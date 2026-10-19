@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phân công giảng dạy</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link th:href="@{/css/school-admin-operations.css}" rel="stylesheet">
+</head>
+<body class="nav-md">
+<div class="container body"><div class="main_container">
+    <div th:insert="~{index.html :: navbarAdmin}"></div>
+    <div th:insert="~{index.html :: topnavAdmin}"></div>
+    <main class="right_col" role="main">
+        <div class="operations-shell">
+            <header class="operations-hero">
+                <div>
+                    <span class="operations-eyebrow">QUẢN TRỊ NHÀ TRƯỜNG</span>
+                    <h1>Phân công giảng dạy</h1>
+                    <p>Thiết lập giáo viên bộ môn cho nhiều lớp nhanh chóng và theo dõi toàn bộ ma trận phân công.</p>
+                </div>
+                <div class="operations-hero-mark"><i class="fa fa-sitemap" aria-hidden="true"></i></div>
+            </header>
+
+            <div class="alert alert-success" role="status" th:if="${message}" th:text="${message}"></div>
+            <div class="alert alert-danger" role="alert" th:if="${error}" th:text="${error}"></div>
+
+            <section class="operations-filter" aria-labelledby="assignment-filter-title">
+                <div class="section-heading"><div><span class="section-kicker">PHẠM VI LÀM VIỆC</span><h2 id="assignment-filter-title">Chọn phạm vi phân công</h2></div><span class="context-chip" th:text="${targetSchool != null ? targetSchool.name : 'Chưa chọn trường'}">Chưa chọn trường</span></div>
+                <form method="get" th:action="@{/school-admin/teaching-assignments}" class="filter-grid">
+                    <div class="field" th:if="${isAdmin}"><label for="schoolId">Trường học</label><select id="schoolId" name="schoolId" class="form-control"><option th:each="school : ${allSchools}" th:value="${school.id}" th:text="${school.name}" th:selected="${targetSchool != null and school.id == targetSchool.id}"></option></select></div>
+                    <div class="field"><label for="schoolYear">Năm học</label><input id="schoolYear" name="schoolYear" class="form-control" placeholder="2026-2027" th:value="${schoolYear}"></div>
+                    <div class="field"><label for="grade">Khối</label><select id="grade" name="grade" class="form-control"><option value="">Tất cả khối</option><option th:each="item : ${availableGrades}" th:value="${item}" th:text="|Khối ${item}|" th:selected="${grade != null and grade == item}"></option></select></div>
+                    <div class="field field-wide"><label for="keyword">Tìm lớp</label><input id="keyword" name="keyword" class="form-control" placeholder="Ví dụ: 6A1" th:value="${keyword}"></div>
+                    <button class="btn btn-primary filter-submit" type="submit"><i class="fa fa-filter" aria-hidden="true"></i> Lọc dữ liệu</button>
+                </form>
+            </section>
+
+            <nav class="operations-tabs" aria-label="Các chế độ phân công">
+                <a href="#bulk-assignment" class="operations-tab active"><i class="fa fa-th-large" aria-hidden="true"></i><span><strong>Phân công theo nhóm lớp</strong><small>Gán một môn cho nhiều lớp</small></span></a>
+                <a href="#teaching-matrix" class="operations-tab"><i class="fa fa-table" aria-hidden="true"></i><span><strong>Ma trận giảng dạy</strong><small>Điều chỉnh nhiều môn theo lớp</small></span></a>
+            </nav>
+
+            <section id="bulk-assignment" class="operations-section">
+                <div class="section-heading"><div><span class="section-kicker">THAO TÁC NHANH</span><h2>Phân công theo nhóm lớp</h2><p>Chọn một môn, một giáo viên và áp dụng cho nhiều lớp cùng lúc.</p></div><span class="metric-badge"><strong th:text="${classes.size()}">0</strong> lớp trong phạm vi</span></div>
+                <form method="post" th:action="@{/school-admin/teaching-assignments/bulk}" id="bulkAssignmentForm">
+                    <input type="hidden" name="schoolId" th:value="${targetSchool != null ? targetSchool.id : ''}"><input type="hidden" name="grade" th:value="${grade != null ? grade : ''}"><input type="hidden" name="schoolYear" th:value="${schoolYear}"><input type="hidden" name="keyword" th:value="${keyword}">
+                    <div class="assignment-controls"><div class="field"><label for="bulkSubject">Môn học</label><select id="bulkSubject" name="subjectId" class="form-control" required><option value="">Chọn môn học</option><option th:each="subject : ${allSubjects}" th:value="${subject.id}" th:text="${subject.name}"></option></select></div><div class="field"><label for="bulkTeacher">Giáo viên phụ trách</label><select id="bulkTeacher" name="teacherId" class="form-control" required><option value="">Chọn giáo viên</option><option th:each="teacher : ${schoolTeachers}" th:value="${teacher.id}" th:text="|${teacher.fullName} (${teacher.id})|"></option></select></div><div class="bulk-action"><span id="selectedClassCount">0 lớp được chọn</span><button class="btn btn-primary" type="submit"><i class="fa fa-user-plus" aria-hidden="true"></i> Áp dụng phân công</button></div></div>
+                    <div class="class-picker-head"><div><h3>Danh sách lớp</h3><p>Chỉ các lớp thuộc phạm vi đã lọc được hiển thị.</p></div><label class="select-all"><input type="checkbox" id="selectAllClasses"> Chọn tất cả</label></div>
+                    <div class="class-picker" th:if="${!classes.isEmpty()}"><label class="class-option" th:each="item : ${classes}"><input type="checkbox" name="classIds" th:value="${item.id}" class="class-checkbox"><span><strong th:text="${item.className}">6A1</strong><small th:text="|Khối ${item.grade} · ${item.schoolYear}|">Khối 6 · 2026-2027</small></span><em th:text="|${assignmentCountByClass.get(item.id) != null ? assignmentCountByClass.get(item.id) : 0} môn đã phân công|">0 môn đã phân công</em></label></div>
+                    <div class="empty-state" th:if="${classes.isEmpty()}"><i class="fa fa-inbox" aria-hidden="true"></i><strong>Không có lớp phù hợp</strong><span>Hãy thay đổi bộ lọc để tiếp tục phân công.</span></div>
+                </form>
+            </section>
+
+            <section id="teaching-matrix" class="operations-section matrix-section">
+                <div class="section-heading"><div><span class="section-kicker">TỔNG HỢP VÀ ĐIỀU CHỈNH</span><h2>Ma trận giảng dạy</h2><p>Mỗi ô là giáo viên phụ trách một môn trong một lớp. Chọn “Chưa phân công” để bỏ phân công.</p></div><span class="metric-badge"><strong th:text="${allSubjects.size()}">0</strong> môn</span></div>
+                <form method="post" th:action="@{/school-admin/teaching-assignments/matrix}">
+                    <input type="hidden" name="schoolId" th:value="${targetSchool != null ? targetSchool.id : ''}"><input type="hidden" name="grade" th:value="${grade != null ? grade : ''}"><input type="hidden" name="schoolYear" th:value="${schoolYear}"><input type="hidden" name="keyword" th:value="${keyword}">
+                    <div class="matrix-wrap" th:if="${!classes.isEmpty() and !allSubjects.isEmpty()}"><table class="matrix-table"><thead><tr><th class="class-column">Lớp</th><th th:each="subject : ${allSubjects}" th:text="${subject.name}">Môn</th></tr></thead><tbody><tr th:each="item : ${classes}"><th><strong th:text="${item.className}">6A1</strong><small th:text="|Khối ${item.grade} · ${item.schoolYear}|">Khối 6</small></th><td th:each="subject : ${allSubjects}"><select class="matrix-select" th:name="|assignment_${item.id}_${subject.id}|"><option value="">Chưa phân công</option><option th:each="teacher : ${schoolTeachers}" th:value="${teacher.id}" th:text="${teacher.fullName}" th:selected="${assignmentByKey[item.id + '_' + subject.id] != null and assignmentByKey[item.id + '_' + subject.id].teacher != null and assignmentByKey[item.id + '_' + subject.id].teacher.id == teacher.id}"></option></select></td></tr></tbody></table></div>
+                    <div class="empty-state" th:if="${classes.isEmpty() or allSubjects.isEmpty()}"><i class="fa fa-table" aria-hidden="true"></i><strong>Chưa đủ dữ liệu để tạo ma trận</strong><span>Cần có lớp và môn học trong phạm vi đã chọn.</span></div>
+                    <div class="matrix-footer" th:if="${!classes.isEmpty() and !allSubjects.isEmpty()}"><span><i class="fa fa-info-circle" aria-hidden="true"></i> Thay đổi chỉ được lưu sau khi bấm nút bên phải.</span><button class="btn btn-primary" type="submit"><i class="fa fa-save" aria-hidden="true"></i> Lưu ma trận</button></div>
+                </form>
+            </section>
+        </div>
+    </main>
+</div></div>
+<script>
+    (function () {
+        const selectAll = document.getElementById('selectAllClasses');
+        const boxes = Array.from(document.querySelectorAll('.class-checkbox'));
+        const counter = document.getElementById('selectedClassCount');
+        function updateCount() { if (counter) counter.textContent = boxes.filter(box => box.checked).length + ' lớp được chọn'; }
+        if (selectAll) selectAll.addEventListener('change', function () { boxes.forEach(box => box.checked = selectAll.checked); updateCount(); });
+        boxes.forEach(box => box.addEventListener('change', function () { selectAll.checked = boxes.length > 0 && boxes.every(item => item.checked); updateCount(); }));
+        updateCount();
+    }());
+</script>
+</body>
+</html>

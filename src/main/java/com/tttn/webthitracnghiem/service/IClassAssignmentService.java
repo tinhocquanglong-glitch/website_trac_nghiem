@@ -13,7 +13,9 @@ public interface IClassAssignmentService {
     List<ClassSubjectAssignment> findByTeacherId(String teacherId);
     List<ClassSubjectAssignment> findBySchoolId(Integer schoolId);
     ClassSubjectAssignment assignTeacher(Integer classId, Integer subjectId, String teacherId);
+    int assignTeacherToClasses(List<Integer> classIds, Integer subjectId, String teacherId);
     void removeAssignment(Integer assignmentId);
+    void removeAssignment(Integer classId, Integer subjectId);
     boolean isTeacherAssignedToClass(Integer classId, String teacherId);
     boolean isTeacherAssignedToClassAndSubject(Integer classId, Integer subjectId, String teacherId);
 }

@@ -108,6 +108,13 @@
                                 </ul>
                             </li>
                             <li><a th:href="@{/student-tracking}"><i class="fa fa-table"></i>Sổ theo dõi học sinh</a></li>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
+                                <a><i class="fa fa-sitemap"></i> Phân công giảng dạy <span class="fa fa-chevron-down"></span></a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/school-admin/teaching-assignments}">Theo nhóm lớp / Ma trận</a></li>
+                                    <li><a th:href="@{/school-admin/statistics}">Thống kê nhà trường</a></li>
+                                </ul>
+                            </li>
                             <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
                                 <a th:href="@{/chat}"><i class="fa fa-comments"></i> Chat nội bộ</a>
                             </li>
