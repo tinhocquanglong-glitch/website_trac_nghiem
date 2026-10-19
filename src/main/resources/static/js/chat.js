@@ -20,6 +20,9 @@
     let rooms = [];
     let activeRoom = null;
     let socket = null;
+    let reconnectTimer = null;
+    let pollTimer = null;
+    let pollInFlight = false;
 
     function setStatus(text, cssClass) {
         connectionStatus.textContent = text;
@@ -28,6 +31,39 @@
 
     function showError(text) {
         errorBox.textContent = text || '';
+    }
+
+    function messageUrl(roomId) {
+        return '/api/chat/rooms/' + encodeURIComponent(roomId) + '/messages?size=50&page=0';
+    }
+
+    function stopPolling() {
+        if (pollTimer) {
+            window.clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    function pollActiveRoom() {
+        if (!activeRoom || pollInFlight) return;
+        pollInFlight = true;
+        loadMessages(activeRoom, false)
+            .catch(function () { /* Retry on the next poll. */ })
+            .finally(function () { pollInFlight = false; });
+    }
+
+    function startPolling() {
+        if (pollTimer || !activeRoom) return;
+        pollActiveRoom();
+        pollTimer = window.setInterval(pollActiveRoom, 3000);
+    }
+
+    function scheduleReconnect() {
+        if (reconnectTimer) return;
+        reconnectTimer = window.setTimeout(function () {
+            reconnectTimer = null;
+            connectSocket();
+        }, 2500);
     }
 
     function roleLabel(role) {
@@ -69,25 +105,48 @@
     }
 
     function connectSocket() {
+        if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
+            return;
+        }
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        socket = new WebSocket(protocol + '//' + window.location.host + '/ws');
-        socket.addEventListener('open', function () {
+        try {
+            socket = new WebSocket(protocol + '//' + window.location.host + '/ws');
+        } catch (error) {
+            setStatus('Đang dùng kết nối dự phòng', 'is-offline');
+            startPolling();
+            scheduleReconnect();
+            return;
+        }
+
+        const currentSocket = socket;
+        currentSocket.addEventListener('open', function () {
             setStatus('Đang hoạt động', 'is-online');
+            stopPolling();
             if (activeRoom) subscribe(activeRoom.id);
         });
-        socket.addEventListener('close', function () {
-            setStatus('Mất kết nối', 'is-offline');
-            window.setTimeout(connectSocket, 2500);
+        currentSocket.addEventListener('close', function () {
+            if (socket !== currentSocket) return;
+            socket = null;
+            setStatus('Đang dùng kết nối dự phòng', 'is-offline');
+            startPolling();
+            scheduleReconnect();
         });
-        socket.addEventListener('error', function () {
-            setStatus('Không kết nối được', 'is-offline');
+        currentSocket.addEventListener('error', function () {
+            if (socket === currentSocket) {
+                setStatus('Đang dùng kết nối dự phòng', 'is-offline');
+                startPolling();
+            }
         });
-        socket.addEventListener('message', function (event) {
-            const payload = JSON.parse(event.data);
-            if (payload.type === 'message' && activeRoom && payload.roomId === activeRoom.id) {
-                appendMessage(payload.message);
-            } else if (payload.type === 'error') {
-                showError(payload.message);
+        currentSocket.addEventListener('message', function (event) {
+            try {
+                const payload = JSON.parse(event.data);
+                if (payload.type === 'message' && activeRoom && payload.roomId === activeRoom.id) {
+                    appendMessage(payload.message);
+                } else if (payload.type === 'error') {
+                    showError(payload.message);
+                }
+            } catch (error) {
+                showError('Không thể đọc dữ liệu chat.');
             }
         });
     }
@@ -108,18 +167,26 @@
         schoolName.textContent = room.schoolName || '';
         messageList.textContent = '';
         showError('');
-        fetch('/api/chat/rooms/' + encodeURIComponent(room.id) + '/messages?size=50&page=0')
+        loadMessages(room, true)
+            .catch(function (error) { showError(error.message); });
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            startPolling();
+        }
+    }
+
+    function loadMessages(room, focusInput) {
+        return fetch(messageUrl(room.id))
             .then(function (response) {
                 if (!response.ok) throw new Error('Không thể tải lịch sử tin nhắn.');
                 return response.json();
             })
             .then(function (data) {
+                if (!activeRoom || activeRoom.id !== room.id) return;
                 data.messages.forEach(appendMessage);
                 messageList.scrollTop = messageList.scrollHeight;
                 subscribe(room.id);
-                messageInput.focus();
-            })
-            .catch(function (error) { showError(error.message); });
+                if (focusInput) messageInput.focus();
+            });
     }
 
     function appendMessage(message) {
@@ -157,13 +224,36 @@
         const content = messageInput.value.trim();
         if (!activeRoom || !content) return;
         if (!socket || socket.readyState !== WebSocket.OPEN) {
-            showError('Kết nối chat chưa sẵn sàng.');
+            sendMessageOverHttp(content);
             return;
         }
         socket.send(JSON.stringify({ type: 'message', roomId: activeRoom.id, content: content }));
         messageInput.value = '';
         messageInput.focus();
     });
+
+    function sendMessageOverHttp(content) {
+        fetch('/api/chat/rooms/' + encodeURIComponent(activeRoom.id) + '/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ content: content })
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    return response.text().then(function () {
+                        throw new Error('Không thể gửi tin nhắn qua kết nối dự phòng.');
+                    });
+                }
+                return response.json();
+            })
+            .then(function (message) {
+                appendMessage(message);
+                messageInput.value = '';
+                messageInput.focus();
+                showError('');
+            })
+            .catch(function (error) { showError(error.message); });
+    }
 
     fetch('/api/chat/rooms')
         .then(function (response) {
