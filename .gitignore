@@ -35,3 +35,6 @@ build/
 
 ### Codebase Memory ###
 .codebase-memory/
+
+# Runtime logs generated while starting the backend locally
+tmp/*.log
