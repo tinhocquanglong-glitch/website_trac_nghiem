@@ -1,134 +1,134 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
-    <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
-    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
-    <script th:src="@{https://code.jquery.com/jquery-3.5.1.min.js}"></script>
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <link rel="preconnect" th:href="@{https://fonts.googleapis.com}">
-    <link rel="preconnect" th:href="@{https://fonts.gstatic.com}" crossorigin>
-    <link th:href="@{https://fonts.googleapis.com/css2?family=Poppins&display=swap}" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <title>Tin tức giáo dục & Khảo thí - Thi Trắc Nghiệm</title>
+    <link rel="icon" href="/img/logo.png" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.2.0 & FontAwesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/navbar.css}">
-    <link rel="stylesheet" th:href="@{/css/slick.css}">
-    <link rel="stylesheet" th:href="@{/css/blog.css}">
-    <link href="../static/css/default-page.css" rel="stylesheet" th:href="@{/css/default-page.css}">
     <link rel="stylesheet" th:href="@{/css/news.css}">
-    <link rel="stylesheet" th:href="@{/css/dropdown.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
 <body>
-<div id="preloader"></div>
+
+<!-- Header / Navigation -->
 <div th:replace="~{default-page :: navbar}"></div>
-<div th:replace="~{default-page :: banner}"></div>
-<!-- Main Container Start -->
-<div class="container-fluid mt-3">
-    <div class="row" style="margin: 0 5%">
-        <div class="col-md-12">
-            <div class="container-fluid">
-                <div style="background: #e5e5e5;padding: 5px 10px;margin-bottom: 20px;">
-                    <span><a href="/"><i class="fa-solid fa-house"></i></a> <span style="color: #b6af96">›</span> <a href="/tin-tuc">Tin tức</a></span>
+
+<!-- ════════════════════ MAIN CONTAINER ════════════════════ -->
+<main class="container-fluid px-lg-5 mb-5">
+    <!-- Subpage Hero Banner (Riêng biệt, không lẫn với banner trang chủ) -->
+    <section class="subpage-hero">
+        <div class="subpage-eyebrow">
+            <i class="fa-solid fa-newspaper"></i>
+            <span>Bản Tin Học Đường</span>
+        </div>
+        <h1 class="subpage-title">Tin tức giáo dục &amp; Khảo thí</h1>
+        <p class="subpage-desc">
+            Cập nhật những thông báo mới nhất về các kỳ thi, quy chế học đường, hoạt động chuyên môn và tin tức giáo dục nổi bật.
+        </p>
+    </section>
+
+    <!-- Modern Breadcrumb -->
+    <nav class="modern-breadcrumb" aria-label="breadcrumb">
+        <a href="/"><i class="fa-solid fa-house me-1"></i>Trang chủ</a>
+        <span class="separator">/</span>
+        <span class="text-dark">Tin tức giáo dục</span>
+    </nav>
+
+    <!-- Danh sách thẻ tin tức -->
+    <div class="row g-4" th:if="${!newses.isEmpty()}">
+        <div class="col-sm-12 col-md-6 col-lg-4" th:each="news : ${newses}">
+            <article class="content-card">
+                <div class="content-card-img-wrap">
+                    <img class="content-card-img"
+                         th:src="${news.image != null and !news.image.isEmpty() ? news.image : '/img/default-news.png'}"
+                         alt="Ảnh bài viết tin tức"
+                         onerror="this.src='/img/default-news.png'">
+                    <span class="content-card-badge">Tin tức</span>
                 </div>
-                <div class="row">
-                    <div class="mid_card card-block col-sm-12 col-lg-4 mb-2 rounded btn" th:each="news : ${newses}">
-                        <div class="news">
-                            <a th:href="@{/tin-tuc/__${news.id}__}">
-                                <img th:src="@{${news.image}}" alt="Ảnh">
-                            </a>
-                            <div class="news-info">
-                                <h2 th:text="${news.title}"></h2>
-                                <div class="view-time">
-                                    <span th:text="${news.view + ' lượt xem | '+#dates.format(news.createDate,'dd/MM/yyyy')}"></span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="content-card-body">
+                    <div class="content-card-meta">
+                        <span><i class="fa-regular fa-calendar"></i> <span th:text="${#dates.format(news.createDate, 'dd/MM/yyyy')}"></span></span>
+                        <span><i class="fa-regular fa-eye"></i> <span th:text="${news.view}">0</span> lượt xem</span>
+                    </div>
+                    <h2 class="content-card-title">
+                        <a th:href="@{/tin-tuc/{id}(id=${news.id})}" th:text="${news.title}">Tiêu đề bài viết tin tức</a>
+                    </h2>
+                    <div class="content-card-footer">
+                        <span class="small text-muted" th:if="${news.users != null}">
+                            <i class="fa-regular fa-user me-1"></i><span th:text="${news.users.fullName}">Ban Biên Tập</span>
+                        </span>
+                        <a class="btn-read-more" th:href="@{/tin-tuc/{id}(id=${news.id})}" style="margin-left: auto;">
+                            <span>Đọc tiếp</span><i class="fa-solid fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
-            </div>
-            <div th:if="${newses.isEmpty()}" class="text-center">
-                <span>Không có tin tức nào.</span>
-            </div>
-            <div class="d-flex justify-content-center mb-100" th:if="${!newses.isEmpty()}">
-                <nav aria-label="Page navigation example">
-                    <ul class="pagination">
-                        <li class="page-item">
-                            <a class="page-link" th:href="@{'/tin-tuc'(page=0)}"
-                               th:if="${newses.hasPrevious()}" aria-label="Previous">
-                                <span aria-hidden="true">‹‹</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.number - 1})}"
-                               th:if="${newses.hasPrevious()}" aria-label="Previous">
-                                <span aria-hidden="true">‹</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" th:text="${newses.number}" th:if="${newses.hasPrevious()}"
-                               th:href="@{'/tin-tuc'(page=${newses.number - 1})}">
-                            </a>
-                        </li>
-                        <li class="page-item active">
-                            <a class="page-link" th:text="${newses.number + 1}"
-                               th:href="@{'/tin-tuc'(page=${newses.number})}">
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" th:text="${newses.number + 2}" th:if="${newses.hasNext()}"
-                               th:href="@{'/tin-tuc'(page=${newses.number + 1})}">
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.number + 1})}"
-                               th:if="${newses.hasNext()}" aria-label="Next">
-                                <span aria-hidden="true">›</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.totalPages - 1})}"
-                               th:if="${newses.hasNext()}" aria-label="Next">
-                                <span aria-hidden="true">››</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            </article>
         </div>
     </div>
-</div>
+
+    <!-- Empty State khi chưa có tin tức -->
+    <div class="modern-empty-state" th:if="${newses.isEmpty()}">
+        <div class="empty-icon">
+            <i class="fa-regular fa-newspaper"></i>
+        </div>
+        <h3>Chưa có tin tức nào được đăng tải</h3>
+        <p>Ban biên tập và nhà trường đang chuẩn bị các bản tin và bài viết giáo dục mới. Bạn vui lòng quay lại sau nhé!</p>
+        <a href="/" class="btn btn-outline-primary rounded-pill px-4 py-2 font-weight-bold">
+            <i class="fa-solid fa-house me-1"></i> Quay về trang chủ
+        </a>
+    </div>
+
+    <!-- Phân trang (Pagination) -->
+    <div class="modern-pagination d-flex justify-content-center" th:if="${!newses.isEmpty() and newses.totalPages > 1}">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${!newses.hasPrevious()} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{'/tin-tuc'(page=0)}" aria-label="First">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </a>
+                </li>
+                <li class="page-item" th:classappend="${!newses.hasPrevious()} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.number - 1})}" aria-label="Previous">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+                <li class="page-item" th:if="${newses.hasPrevious()}">
+                    <a class="page-link" th:text="${newses.number}" th:href="@{'/tin-tuc'(page=${newses.number - 1})}">1</a>
+                </li>
+                <li class="page-item active">
+                    <a class="page-link" th:text="${newses.number + 1}" href="#">1</a>
+                </li>
+                <li class="page-item" th:if="${newses.hasNext()}">
+                    <a class="page-link" th:text="${newses.number + 2}" th:href="@{'/tin-tuc'(page=${newses.number + 1})}">2</a>
+                </li>
+                <li class="page-item" th:classappend="${!newses.hasNext()} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.number + 1})}" aria-label="Next">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item" th:classappend="${!newses.hasNext()} ? 'disabled' : ''">
+                    <a class="page-link" th:href="@{'/tin-tuc'(page=${newses.totalPages - 1})}" aria-label="Last">
+                        <i class="fa-solid fa-angles-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</main>
 
 <!-- Footer -->
 <div th:replace="~{default-page :: footer}"></div>
-<!-- Footer -->
 
-<!-- Bootstrap JS -->
-<script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
-<script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
-<script type="text/javascript" th:src="@{//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js}"></script>
-<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-<script type="module" th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js}"></script>
-<script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
-<script th:src="@{/js/loader.js}"></script>
-<script th:src="@{/js/slider.js}"></script>
-<script>
-    var url = window.location.href;
-    var a = document.getElementsByClassName("item");
-    for(var i = 0; i<a.length;i++){
-        if(a[i].children[0].href === url){
-            a[i].classList.add("active");
-        }
-    }
-</script>
+<!-- Bootstrap 5 Bundle JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
