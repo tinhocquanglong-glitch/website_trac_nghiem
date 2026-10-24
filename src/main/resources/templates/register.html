@@ -101,6 +101,11 @@
             gap: 16px;
         }
         .field-row.full { grid-template-columns: 1fr; }
+        .field-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
 
         .field-group {
             display: flex; flex-direction: column; gap: 5px;
@@ -188,6 +193,9 @@
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .field-row-3 { grid-template-columns: 1fr; }
+        }
         @media (max-width: 640px) {
             .register-body { padding: 24px 20px 24px; }
             .register-header { padding: 22px 20px; flex-wrap: wrap; }
@@ -300,7 +308,7 @@
 
                 <!-- ── ĐỊA PHƯƠNG & TRƯỜNG ── -->
                 <div class="section-label" style="margin-top:32px"><i class="fa-solid fa-school" style="color:#3b82f6"></i> Địa phương &amp; Trường học</div>
-                <div class="field-row">
+                <div class="field-row-3">
                     <div class="field-group">
                         <label>Tỉnh / Thành phố</label>
                         <div class="input-wrap">
@@ -317,6 +325,15 @@
                             <i class="fa-solid fa-location-dot fi"></i>
                             <select id="districtSelect">
                                 <option value="">-- Chọn Quận / Huyện --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Xã / Phường</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-house-chimney-window fi"></i>
+                            <select id="wardSelect">
+                                <option value="">-- Chọn Xã / Phường --</option>
                             </select>
                         </div>
                     </div>
@@ -337,7 +354,7 @@
                                 </option>
                             </select>
                         </div>
-                        <p class="field-helper"><i class="fa-solid fa-circle-info"></i> Chọn tỉnh/huyện ở trên để lọc nhanh danh sách trường. Nếu chưa có trường của bạn, chọn "Thí sinh tự do / Khác".</p>
+                        <p class="field-helper"><i class="fa-solid fa-circle-info"></i> Chọn tỉnh/huyện/xã ở trên để lọc nhanh danh sách trường. Nếu chưa có trường của bạn, chọn "Thí sinh tự do / Khác".</p>
                     </div>
                 </div>
 
@@ -441,13 +458,15 @@
         }
     }
 
-    // Province → District → Schools
+    // Province → District → Ward → Schools
     $(document).ready(function () {
         function loadSchools() {
             var p = $('#provinceSelect').val();
             var d = $('#districtSelect').val();
+            var w = $('#wardSelect').val();
             var url = '/api/location/schools?';
-            if (d) url += 'districtCode=' + d;
+            if (w) url += 'wardCode=' + w;
+            else if (d) url += 'districtCode=' + d;
             else if (p) url += 'provinceCode=' + p;
 
             $.get(url, function (schools) {
@@ -469,6 +488,7 @@
         $('#provinceSelect').change(function () {
             var code = $(this).val();
             $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
+            $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
             if (code) {
                 $.get('/api/location/districts?provinceCode=' + code, function (data) {
                     $.each(data, function (i, d) {
@@ -479,7 +499,22 @@
             loadSchools();
         });
 
-        $('#districtSelect').change(function () { loadSchools(); });
+        $('#districtSelect').change(function () {
+            var distCode = $(this).val();
+            $('#wardSelect').empty().append('<option value="">-- Chọn Xã / Phường --</option>');
+            if (distCode) {
+                $.get('/api/location/wards?districtCode=' + distCode, function (data) {
+                    $.each(data, function (i, w) {
+                        $('#wardSelect').append('<option value="' + w.code + '">' + w.name + '</option>');
+                    });
+                });
+            }
+            loadSchools();
+        });
+
+        $('#wardSelect').change(function () {
+            loadSchools();
+        });
     });
 </script>
 </body>
