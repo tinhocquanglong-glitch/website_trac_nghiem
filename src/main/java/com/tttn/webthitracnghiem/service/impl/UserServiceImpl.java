@@ -141,23 +141,26 @@ public class UserServiceImpl implements IUserService {
             user = modelMapper.map(userRequest,User.class);
             oldUrl = findUser.get().getImg();
         }
-        String realUrl = new File(".").getAbsolutePath();
-        if(userRequest.getImg() != null){
-            if(!oldUrl.equals("/img/avatar/default.jpg")) {
-                // Xóa file cũ
-                File file = new File(realUrl + "\\src\\main\\resources\\static\\img\\avatar\\"
-                        + oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
-                File target = new File(realUrl + "\\target\\classes\\static\\img\\avatar\\" +
-                        oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
-                file.delete();
-                target.delete();
+        String realUrl = new File(".").getAbsolutePath().replace('\\', File.separatorChar).replace('/', File.separatorChar);
+        if (userRequest.getImg() != null && userRequest.getImg().getOriginalFilename() != null && !userRequest.getImg().getOriginalFilename().isEmpty()) {
+            if (oldUrl != null && !oldUrl.equals("/img/avatar/default.jpg")) {
+                try {
+                    String oldFileName = oldUrl.substring(oldUrl.lastIndexOf("/") + 1);
+                    File file = new File(realUrl + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "static" + File.separator + "img" + File.separator + "avatar" + File.separator + oldFileName);
+                    File target = new File(realUrl + File.separator + "target" + File.separator + "classes" + File.separator + "static" + File.separator + "img" + File.separator + "avatar" + File.separator + oldFileName);
+                    file.delete();
+                    target.delete();
+                } catch (Exception ignored) {}
             }
-            // Thêm file mới được chọn
-            String pathFile = realUrl+"\\src\\main\\resources\\static\\img\\avatar";
-            File fileSaved = fileService.uploadFile(userRequest.getImg(), pathFile);
-            avatarPath = "/img/avatar/" + fileSaved.getName();
-            File targetAvatar = new File(realUrl+"\\target\\classes\\static\\img\\avatar\\" + fileSaved.getName());
-            fileService.copyFile(fileSaved, targetAvatar);
+            try {
+                String pathFile = realUrl + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "static" + File.separator + "img" + File.separator + "avatar";
+                File fileSaved = fileService.uploadFile(userRequest.getImg(), pathFile);
+                avatarPath = "/img/avatar/" + fileSaved.getName();
+                File targetAvatar = new File(realUrl + File.separator + "target" + File.separator + "classes" + File.separator + "static" + File.separator + "img" + File.separator + "avatar" + File.separator + fileSaved.getName());
+                fileService.copyFile(fileSaved, targetAvatar);
+            } catch (Exception e) {
+                avatarPath = oldUrl;
+            }
         } else {
             avatarPath = oldUrl;
         }

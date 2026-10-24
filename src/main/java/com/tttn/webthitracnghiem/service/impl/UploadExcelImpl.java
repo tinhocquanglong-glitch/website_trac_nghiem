@@ -33,9 +33,9 @@ public class UploadExcelImpl implements IUploadExcel {
 
     @Override
     public String upload(Excel excel) {
-        String realUrl = new File(".").getAbsolutePath();
+        String realUrl = new File(".").getAbsolutePath().replace('\\', File.separatorChar).replace('/', File.separatorChar);
         // Thêm file mới được chọn
-        String pathFile = realUrl + "\\src\\main\\resources\\static\\excel";
+        String pathFile = realUrl + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "static" + File.separator + "excel";
         // Đọc file
         String fileName = excel.getFile().getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
@@ -56,7 +56,7 @@ public class UploadExcelImpl implements IUploadExcel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        File targetAvatar = new File(realUrl + "\\target\\classes\\static\\excel\\" + fileSaved.getName());
+        File targetAvatar = new File(realUrl + File.separator + "target" + File.separator + "classes" + File.separator + "static" + File.separator + "excel" + File.separator + fileSaved.getName());
         fileService.copyFile(fileSaved, targetAvatar);
         return fileSaved.getAbsolutePath();
     }
