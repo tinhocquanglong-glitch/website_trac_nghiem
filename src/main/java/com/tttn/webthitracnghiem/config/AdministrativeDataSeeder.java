@@ -381,7 +381,7 @@ public class AdministrativeDataSeeder implements CommandLineRunner {
     }
 
     private void seedAdministrativeUnits() {
-        if (provinceRepository.count() > 0) {
+        if (provinceRepository.count() > 0 && districtRepository.count() > 0 && wardRepository.count() > 0) {
             return;
         }
 
