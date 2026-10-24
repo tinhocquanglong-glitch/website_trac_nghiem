@@ -1,125 +1,455 @@
-* {
+/* Modern Exam-Taking (Quiz) Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --exam-primary: #2563eb;
+    --exam-primary-hover: #1d4ed8;
+    --exam-primary-soft: #eff6ff;
+    --exam-success: #10b981;
+    --exam-success-soft: #ecfdf5;
+    --exam-warning: #f59e0b;
+    --exam-danger: #ef4444;
+    --exam-dark: #0f172a;
+    --exam-text: #1e293b;
+    --exam-muted: #64748b;
+    --exam-border: #e2e8f0;
+    --exam-card-bg: #ffffff;
+    --exam-body-bg: #f8fafc;
+}
+
+body.exam-body {
+    background-color: var(--exam-body-bg);
+    color: var(--exam-text);
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+/* ════════════════════ EXAM SUB-HEADER / BANNER ════════════════════ */
+.exam-topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--exam-border);
+    padding: 16px 0;
+    margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.exam-title-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.exam-main-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--exam-dark);
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    line-height: 1.35;
 }
 
-body {
-    width: 100%;
-    overflow-x: hidden;
-}
-
-h1 {
-    font-size: 22px;
-    text-align: center;
-    padding: 15px 25px;
-    border-radius: 4px;
-}
-
-.ques-box {
-    width: 100%;
-    max-width: 800px;
-    padding: 15px 25px;
-    margin: 50px auto 0 auto;
-    border-radius: 4px;
-    position: relative;
-}
-
-.option {
+.exam-meta-info {
+    font-size: 0.88rem;
+    color: var(--exam-muted);
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 6px;
 }
 
-.title {
-    font-size: 18px;
-    font-weight: 500;
-    color: #28b651;
+.exam-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.option p {
-    margin-left: 15px;
+/* ════════════════════ QUESTION CARD ════════════════════ */
+.question-card {
+    background: var(--exam-card-bg);
+    border: 1px solid var(--exam-border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+    transition: all 0.25s ease;
     position: relative;
-    margin-top: -6px;
+    scroll-margin-top: 90px;
 }
-.form-question {
-    position: relative;
+
+.question-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
-.form-question-time {
-    position: absolute;
-    top: 0;
-    right: 0;
+
+.question-card.highlight-focus {
+    border-color: var(--exam-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
-.form-question-success {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 16%;
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--exam-border);
+}
+
+.question-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: var(--exam-primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid #dbeafe;
+}
+
+.question-actions button {
+    background: none;
+    border: none;
+    color: var(--exam-muted);
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.question-actions button:hover {
+    color: var(--exam-primary);
+    background: #f1f5f9;
+}
+
+.question-prompt {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--exam-dark);
+    line-height: 1.65;
+    margin-bottom: 20px;
+}
+
+.question-prompt img {
     max-width: 100%;
-    background: antiquewhite;
-    border-radius: 1rem;
-    padding: 10px 5px;
+    height: auto;
+    max-height: 350px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 12px 0;
+    display: block;
+    border: 1px solid var(--exam-border);
 }
-.form-question-success .question-more {
-    padding: 10px 0;
-    font-size: 30px;
-    font-weight: bold;
-}
-.form-question-success .question-more .success {
-    color: green;
-}
-.form-question-success .question-more .total {
-    color: red;
-}
-.form-question-time .rounded {
+
+/* ════════════════════ OPTIONS (ANSWERS) ════════════════════ */
+.options-grid {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
-.form-question-time .rounded .countdown {
-    font-size: 30px;
-}
-.question-link {
-    margin: 0 5px;
-    display: inline-block;
-    float: left;
-    margin-bottom: 10px;
-    padding: 6px 3px;
-    box-sizing: border-box;
-    text-align: center;
-    font-weight: bold;
-    background: #ccc;
+
+.option-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f8fafc;
+    border: 1.5px solid var(--exam-border);
+    border-radius: 12px;
+    padding: 14px 18px;
     cursor: pointer;
-    transition: 0.5s;
-    width: calc(25% - 10px);
-    color: black;
-}
-.choose {
-    background: #26bd35;
-    color: white;
-    transition: all linear .2s;
-}
-.tag-question {
-    max-height: 315px;
-    overflow-y: scroll;
-    margin-bottom: 25px;
+    transition: all 0.2s ease;
+    user-select: none;
+    margin: 0;
 }
 
-/* SCROLL BAR CUSTOM */
-.tag-question::-webkit-scrollbar {
-    width: 5px;
+.option-card:hover {
+    background: #ffffff;
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
 }
 
-/* Track */
-.tag-question::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.option-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* Handle */
-.tag-question::-webkit-scrollbar-thumb {
-    background: #888;
+.option-letter {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: var(--exam-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
 }
 
-/* Handle on hover */
-.tag-question::-webkit-scrollbar-thumb:hover {
-    background: #555;
+.option-text {
+    font-size: 0.96rem;
+    color: var(--exam-text);
+    line-height: 1.5;
+    margin-top: 3px;
+    word-break: break-word;
+}
+
+/* Selected Option State */
+.option-card.selected,
+.option-card:has(input[type="radio"]:checked) {
+    background: #eff6ff;
+    border-color: var(--exam-primary);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+}
+
+.option-card.selected .option-letter,
+.option-card:has(input[type="radio"]:checked) .option-letter {
+    background: var(--exam-primary);
+    border-color: var(--exam-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.option-card.selected .option-text,
+.option-card:has(input[type="radio"]:checked) .option-text {
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
+/* ════════════════════ STICKY SIDEBAR (PALETTE & TIMER) ════════════════════ */
+.exam-sidebar-card {
+    background: var(--exam-card-bg);
+    border: 1px solid var(--exam-border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+    position: sticky;
+    top: 90px;
+    z-index: 10;
+}
+
+.timer-box {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.15);
+}
+
+.timer-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.timer-countdown {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
+    color: #38bdf8;
+    line-height: 1.1;
+}
+
+.timer-countdown.warning {
+    color: #f59e0b;
+}
+
+.timer-countdown.danger {
+    color: #ef4444;
+    animation: pulse-danger 1s infinite alternate;
+}
+
+@keyframes pulse-danger {
+    from { transform: scale(1); }
+    to { transform: scale(1.04); }
+}
+
+/* Progress Section */
+.exam-progress-wrap {
+    margin-bottom: 20px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--exam-muted);
+}
+
+.progress-info strong {
+    color: var(--exam-primary);
+}
+
+.exam-progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.exam-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3b82f6, #10b981);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+/* Question Palette Grid */
+.palette-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--exam-dark);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.palette-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--exam-muted);
+    margin-bottom: 14px;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-dot.done {
+    background: var(--exam-primary);
+}
+
+.legend-dot.empty {
+    background: #cbd5e1;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 20px;
+}
+
+.palette-grid::-webkit-scrollbar {
+    width: 4px;
+}
+
+.palette-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.palette-btn {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border: 1px solid var(--exam-border);
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.palette-btn:hover {
+    background: #e2e8f0;
+    color: var(--exam-dark);
+    transform: translateY(-1px);
+}
+
+.palette-btn.active,
+.palette-btn.done {
+    background: var(--exam-primary);
+    border-color: var(--exam-primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+/* Submit Action Button */
+.btn-submit-exam {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-submit-exam:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    color: #ffffff;
+}
+
+/* Modal Confirmation */
+.modal-submit .modal-content {
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: none !important;
+    height: auto !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+.modal-submit .modal-header {
+    border-bottom: 1px solid var(--exam-border);
+    padding: 20px 24px;
+}
+
+.modal-submit .modal-body {
+    padding: 24px;
+    color: var(--exam-text);
+}
+
+.modal-submit .modal-footer {
+    border-top: 1px solid var(--exam-border);
+    padding: 16px 24px;
 }

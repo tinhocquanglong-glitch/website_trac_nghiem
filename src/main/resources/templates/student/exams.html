@@ -3,93 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bài thi được giao</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" th:href="@{/css/navbar.css}">
+    <title>Bài thi được giao - Học sinh</title>
+    <link rel="icon" href="/img/logo.png" type="image/x-icon">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.2.0 & FontAwesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/navbar.css}">
     <style>
-        :root { --ink: #153243; --muted: #607884; --line: #d8e5e9; --accent: #147d7b; --done: #237c58; --done-soft: #f0faf5; }
-        body { background: #f5f8f9; color: var(--ink); font-family: Inter, Arial, sans-serif; }
-        .exam-shell { max-width: 1180px; margin: 0 auto; padding: 34px 18px 64px; }
-        .exam-hero { background: #123e4d; color: #fff; padding: 28px 30px; border-radius: 10px; box-shadow: 0 10px 24px rgba(21, 50, 67, .12); }
-        .exam-hero__eyebrow { color: #9ad9d0; letter-spacing: .08em; font-size: .72rem; }
-        .exam-hero h1 { font-size: clamp(1.65rem, 3vw, 2.35rem); font-weight: 800; margin-bottom: 8px; }
-        .exam-hero p { color: #d4e5e8; max-width: 680px; }
-        .exam-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-        .summary-item { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: #fff; font-size: .86rem; }
-        .summary-item i { color: #9ad9d0; }
-        .exam-legend { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; color: var(--muted); font-size: .82rem; padding: 15px 2px 4px; }
-        .legend-item { display: inline-flex; align-items: center; gap: 7px; }
-        .legend-dot { width: 9px; height: 9px; border-radius: 50%; background: #b5c8ce; }
-        .legend-dot--done { background: var(--done); }
-        .exam-card { background: #fff; height: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 20px; box-shadow: 0 4px 13px rgba(28, 70, 90, .05); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-        .exam-card:hover { border-color: #9accc6; box-shadow: 0 8px 20px rgba(28, 70, 90, .09); transform: translateY(-2px); }
-        .exam-card--completed { background: var(--done-soft); border-color: #9ed2b6; }
-        .exam-card--completed:hover { border-color: #65ae88; }
-        .exam-card h2 { font-size: 1.08rem; line-height: 1.45; font-weight: 750; min-height: 48px; }
-        .exam-status { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 5px 8px; font-size: .75rem; font-weight: 700; }
-        .exam-status--done { color: var(--done); background: #d9f1e3; }
-        .exam-status--pending { color: #55707b; background: #edf2f4; }
-        .exam-score { color: var(--done); font-weight: 700; }
-        .meta { color: var(--muted); font-size: .88rem; }
-        .empty { background: #fff; border: 1px dashed #9ebbc7; border-radius: 8px; padding: 44px; text-align: center; }
-        @media (max-width: 575px) { .exam-shell { padding-top: 18px; } .exam-hero { padding: 22px 20px; } .summary-item { flex: 1 1 130px; } }
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff;
+            --bg-page: #f8fafc;
+            --done: #10b981;
+            --done-soft: #f0fdf4;
+            --pending: #3b82f6;
+            --pending-soft: #eff6ff;
+        }
+
+        body {
+            background: var(--bg-page);
+            color: var(--ink);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+        }
+
+        .exam-shell {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 32px 20px 64px;
+        }
+
+        /* ─── Hero Banner ─── */
+        .exam-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
+            color: #ffffff;
+            padding: 36px 36px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .exam-hero::after {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .exam-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #7dd3fc;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .exam-hero h1 {
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .exam-hero p {
+            color: #cbd5e1;
+            max-width: 650px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        /* ─── Summary / Filter Tabs ─── */
+        .exam-filter-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .filter-tabs {
+            display: inline-flex;
+            background: #ffffff;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+            gap: 4px;
+        }
+
+        .filter-btn {
+            border: none;
+            background: none;
+            padding: 8px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--muted);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            color: var(--ink);
+            background: #f1f5f9;
+        }
+
+        .filter-btn.active {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+        }
+
+        .filter-btn .badge {
+            font-size: 0.72rem;
+            padding: 3px 7px;
+            border-radius: 999px;
+        }
+
+        /* ─── Exam Cards ─── */
+        .exam-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+            transition: all 0.25s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .exam-card:hover {
+            border-color: #93c5fd;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        }
+
+        .exam-card.completed-card {
+            border-color: #bbf7d0;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 40%);
+        }
+
+        .exam-card.completed-card:hover {
+            border-color: #86efac;
+        }
+
+        .card-top-tags {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .badge-target {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            letter-spacing: 0.4px;
+        }
+
+        .badge-target-class {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .badge-target-grade {
+            background: #fdf4ff;
+            color: #9333ea;
+            border: 1px solid #f0abfc;
+        }
+
+        .badge-target-school {
+            background: #fefce8;
+            color: #a16207;
+            border: 1px solid #fef08a;
+        }
+
+        .class-name-tag {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--muted);
+            background: #f8fafc;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .exam-card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.4;
+            margin-bottom: 12px;
+            min-height: 48px;
+        }
+
+        .exam-meta-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.88rem;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .exam-meta-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .exam-meta-line i {
+            width: 16px;
+            color: #94a3b8;
+        }
+
+        /* Score Badge */
+        .score-pill-card {
+            background: #ecfdf5;
+            border: 1.5px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .score-pill-card .score-icon {
+            font-size: 1.4rem;
+            color: #059669;
+        }
+
+        .score-pill-card .score-number {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #065f46;
+            line-height: 1;
+        }
+
+        .score-pill-card .score-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #047857;
+            margin-bottom: 2px;
+        }
+
+        .btn-exam-action {
+            margin-top: auto;
+            border-radius: 12px;
+            padding: 11px 16px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-start-exam {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-start-exam:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+            color: #ffffff;
+        }
+
+        .btn-retake-exam {
+            background: #ffffff;
+            color: #059669;
+            border: 1.5px solid #10b981;
+        }
+
+        .btn-retake-exam:hover {
+            background: #ecfdf5;
+            border-color: #059669;
+            color: #047857;
+            transform: translateY(-1px);
+        }
+
+        /* ─── Empty State ─── */
+        .empty-state {
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 56px 24px;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            font-size: 0.92rem;
+            max-width: 450px;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
+
+<!-- Header / Navbar -->
 <div th:insert="~{default-page :: navbar}"></div>
+
+<!-- ════════════════════ MAIN CONTENT ════════════════════ -->
 <main class="exam-shell">
-    <section class="exam-hero mb-4">
-        <div class="small text-uppercase font-weight-bold mb-2">Khu vực học sinh</div>
-        <h1><i class="fa-solid fa-clipboard-check mr-2"></i>Bài thi được giao</h1>
-        <p class="mb-0">Các bài kiểm tra giáo viên giao cho lớp, khối hoặc trường của bạn.</p>
+    <!-- Hero Banner -->
+    <section class="exam-hero">
+        <div class="exam-hero__eyebrow">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Không gian Học Sinh</span>
+        </div>
+        <h1><i class="fa-solid fa-clipboard-check me-2"></i>Bài thi được giao</h1>
+        <p>Các bài kiểm tra trắc nghiệm do thầy cô giáo giao cho lớp, khối hoặc trường học của bạn.</p>
     </section>
-    <div class="exam-summary" aria-label="Exam summary">
-        <span class="summary-item"><i class="fa-solid fa-layer-group"></i><strong th:text="${assignedExams.size()}">0</strong> b&#224;i thi</span>
-        <span class="summary-item"><i class="fa-solid fa-circle-check"></i><strong th:text="${completedAssignedCount}">0</strong> &#272;&#227; thi</span>
-        <span class="summary-item"><i class="fa-regular fa-circle"></i><strong th:text="${pendingAssignedCount}">0</strong> Ch&#432;a thi</span>
-    </div>
-    <div class="exam-legend">
-        <span class="legend-item"><span class="legend-dot"></span>Ch&#432;a ho&#224;n th&#224;nh</span>
-        <span class="legend-item"><span class="legend-dot legend-dot--done"></span>&#272;&#227; ho&#224;n th&#224;nh</span>
+
+    <!-- Filter & Summary Bar -->
+    <div class="exam-filter-wrap">
+        <!-- Interactive Filter Tabs -->
+        <div class="filter-tabs" role="tablist">
+            <button type="button" class="filter-btn active" onclick="filterExams('all', this)">
+                <i class="fa-solid fa-layer-group"></i> Tất cả
+                <span class="badge bg-primary text-white" th:text="${assignedExams.size()}">0</span>
+            </button>
+            <button type="button" class="filter-btn" onclick="filterExams('pending', this)">
+                <i class="fa-regular fa-clock"></i> Chưa thi
+                <span class="badge bg-secondary text-white" th:text="${pendingAssignedCount}">0</span>
+            </button>
+            <button type="button" class="filter-btn" onclick="filterExams('completed', this)">
+                <i class="fa-solid fa-circle-check"></i> Đã thi
+                <span class="badge bg-success text-white" th:text="${completedAssignedCount}">0</span>
+            </button>
+        </div>
+
+        <!-- Legend Information -->
+        <div class="d-none d-md-flex align-items-center gap-3 text-muted small">
+            <span><i class="fa-solid fa-circle text-primary me-1" style="font-size: 0.6rem;"></i> Chưa hoàn thành</span>
+            <span><i class="fa-solid fa-circle text-success me-1" style="font-size: 0.6rem;"></i> Đã nộp bài</span>
+        </div>
     </div>
 
-    <section class="row" th:if="${!assignedExams.isEmpty()}">
-        <div class="col-md-6 col-lg-4 mb-4" th:each="exam : ${assignedExams}">
-            <article class="exam-card d-flex flex-column"
-                     th:classappend="${completedExamIds.contains(exam.id)} ? ' exam-card--completed' : ''">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="badge badge-primary" th:text="${exam.targetType == 'CLASS' ? 'LỚP' : (exam.targetType == 'GRADE' ? 'KHỐI' : 'TRƯỜNG')}">LỚP</span>
-                    <span class="meta" th:text="${exam.targetClass != null ? exam.targetClass.className : (exam.targetGrade != null ? 'Khối ' + exam.targetGrade : 'Toàn trường')}">6A1</span>
+    <!-- Danh sách bài thi -->
+    <section class="row g-4" th:if="${!assignedExams.isEmpty()}" id="examCardGrid">
+        <div class="col-md-6 col-lg-4 exam-card-item"
+             th:each="exam : ${assignedExams}"
+             th:data-status="${completedExamIds.contains(exam.id)} ? 'completed' : 'pending'">
+            
+            <article class="exam-card" th:classappend="${completedExamIds.contains(exam.id)} ? ' completed-card' : ''">
+                <!-- Top Tags (Phạm vi & Lớp) -->
+                <div class="card-top-tags">
+                    <span class="badge-target"
+                          th:classappend="${exam.targetType == 'CLASS' ? ' badge-target-class' : (exam.targetType == 'GRADE' ? ' badge-target-grade' : ' badge-target-school')}"
+                          th:text="${exam.targetType == 'CLASS' ? 'GIAO CHO LỚP' : (exam.targetType == 'GRADE' ? 'GIAO THEO KHỐI' : 'TOÀN TRƯỜNG')}">
+                        GIAO CHO LỚP
+                    </span>
+                    <span class="class-name-tag"
+                          th:text="${exam.targetClass != null ? exam.targetClass.className : (exam.targetGrade != null ? 'Khối ' + exam.targetGrade : 'Toàn trường')}">
+                        6A1
+                    </span>
                 </div>
-                <h2 th:text="${exam.nameExam}">Tên bài thi</h2>
-                <div class="mb-2">
-                    <span th:if="${completedExamIds.contains(exam.id)}" class="exam-status exam-status--done"><i class="fa-solid fa-check"></i> &#272;&#227; thi</span>
-                    <span th:unless="${completedExamIds.contains(exam.id)}" class="exam-status exam-status--pending"><i class="fa-regular fa-clock"></i> Ch&#432;a thi</span>
+
+                <!-- Tiêu đề bài thi -->
+                <h2 class="exam-card-title" th:text="${exam.nameExam}">Đề kiểm tra giữa kỳ 1</h2>
+
+                <!-- Trạng thái hoàn thành & Điểm số nếu đã thi -->
+                <div th:if="${completedExamIds.contains(exam.id)}">
+                    <div class="score-pill-card">
+                        <div class="score-icon"><i class="fa-solid fa-award"></i></div>
+                        <div>
+                            <div class="score-label">Điểm số đạt được</div>
+                            <div class="score-number" th:if="${completedResults[exam.id] != null}">
+                                <span th:text="${#numbers.formatDecimal(completedResults[exam.id].mark, 1, 'COMMA', 2, 'POINT')}">8.33</span>
+                                <span class="text-muted fw-normal fs-6">/ 10</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p class="meta mb-1" th:if="${exam.lessonPlanLesson != null}"
-                   th:text="${exam.lessonPlanLesson.chapter.lessonPlan.subject.name + ' · ' + exam.lessonPlanLesson.chapter.name}"></p>
-                <p class="meta mb-1" th:if="${exam.lesson != null}"
-                   th:text="${exam.lesson.chapter.subjectClasses.subject.name + ' · ' + exam.lesson.chapter.chapterName}"></p>
-                <p class="meta mb-3" th:text="${exam.scoreType == 'MIDTERM' ? 'Giữa kỳ' : (exam.scoreType == 'FINAL' ? 'Cuối kỳ' : (exam.scoreType == 'REGULAR_1' ? 'ĐGTX 1' : (exam.scoreType == 'REGULAR_2' ? 'ĐGTX 2' : 'Bài kiểm tra')))}"></p>
-                <p class="exam-score small mb-3" th:if="${completedResults[exam.id] != null}">
-                    <i class="fa-solid fa-award mr-1"></i>&#272;i&#7875;m: <span th:text="${completedResults[exam.id].mark}">0</span>
-                </p>
-                <div class="small text-muted mb-3" th:if="${exam.startTime != null and exam.startTime.after(now)}">
-                    <i class="fa-regular fa-clock mr-1"></i>Chưa mở: <span th:text="${#dates.format(exam.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+
+                <div th:unless="${completedExamIds.contains(exam.id)}" class="mb-3">
+                    <span class="badge bg-primary-subtle text-primary py-2 px-3 rounded-pill fw-semibold">
+                        <i class="fa-regular fa-clock me-1"></i> Chưa làm bài
+                    </span>
                 </div>
-                <a class="btn btn-primary mt-auto" th:classappend="${completedExamIds.contains(exam.id)} ? ' btn-outline-success' : ''" th:href="@{/quiz1/{id}(id=${exam.id})}">
-                    <i class="fa-solid fa-play mr-1"></i>Bắt đầu làm bài
+
+                <!-- Metadata bài học, môn học, loại điểm -->
+                <div class="exam-meta-block">
+                    <div class="exam-meta-line" th:if="${exam.lessonPlanLesson != null}">
+                        <i class="fa-solid fa-book"></i>
+                        <span th:text="${exam.lessonPlanLesson.chapter.lessonPlan.subject.name + ' · ' + exam.lessonPlanLesson.chapter.name}">Môn học</span>
+                    </div>
+                    <div class="exam-meta-line" th:if="${exam.lesson != null}">
+                        <i class="fa-solid fa-book"></i>
+                        <span th:text="${exam.lesson.chapter.subjectClasses.subject.name + ' · ' + exam.lesson.chapter.chapterName}">Môn học</span>
+                    </div>
+                    <div class="exam-meta-line">
+                        <i class="fa-solid fa-tag"></i>
+                        <span th:text="${exam.scoreType == 'MIDTERM' ? 'Kiểm tra Giữa kỳ' : (exam.scoreType == 'FINAL' ? 'Kiểm tra Cuối kỳ' : (exam.scoreType == 'REGULAR_1' ? 'Đánh giá thường xuyên 1 (ĐGTX 1)' : (exam.scoreType == 'REGULAR_2' ? 'Đánh giá thường xuyên 2 (ĐGTX 2)' : 'Khảo sát / Luyện tập')))}">Loại điểm</span>
+                    </div>
+                    <div class="exam-meta-line" th:if="${!exam.isFree()}">
+                        <i class="fa-regular fa-hourglass-half"></i>
+                        <span th:text="${exam.time} + ' phút làm bài'">45 phút</span>
+                    </div>
+                </div>
+
+                <!-- Cảnh báo thời gian mở đề -->
+                <div class="alert alert-warning py-2 px-3 rounded-3 small mb-3" th:if="${exam.startTime != null and exam.startTime.after(now)}">
+                    <i class="fa-regular fa-calendar-clock me-1"></i>
+                    <strong>Chưa mở:</strong> Bắt đầu từ <span th:text="${#dates.format(exam.startTime, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+
+                <!-- Nút hành động -->
+                <a th:if="${completedExamIds.contains(exam.id)}"
+                   class="btn-exam-action btn-retake-exam"
+                   th:href="@{/quiz1/{id}(id=${exam.id})}">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Làm lại / Xem lại bài</span>
+                </a>
+
+                <a th:unless="${completedExamIds.contains(exam.id)}"
+                   class="btn-exam-action btn-start-exam"
+                   th:href="@{/quiz1/{id}(id=${exam.id})}">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Bắt đầu làm bài</span>
                 </a>
             </article>
         </div>
     </section>
 
-    <section class="empty" th:if="${assignedExams.isEmpty()}">
-        <i class="fa-regular fa-folder-open fa-2x text-info mb-3"></i>
+    <!-- Empty State -->
+    <section class="empty-state" th:if="${assignedExams.isEmpty()}">
+        <i class="fa-regular fa-folder-open"></i>
         <h3>Chưa có bài thi được giao</h3>
-        <p class="text-muted mb-0">Khi giáo viên giao bài cho lớp của bạn, bài thi sẽ xuất hiện tại đây.</p>
+        <p>Hiện tại chưa có bài kiểm tra nào được giáo viên giao cho lớp của bạn. Khi có bài mới, bạn sẽ thấy xuất hiện ngay tại đây.</p>
     </section>
 </main>
+
+<!-- Footer -->
+<div th:replace="~{default-page :: footer}"></div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function filterExams(type, btn) {
+        // Cập nhật tab active
+        document.querySelectorAll('.filter-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+
+        // Lọc các cards
+        let items = document.querySelectorAll('.exam-card-item');
+        items.forEach(function(item) {
+            let status = item.getAttribute('data-status');
+            if (type === 'all' || status === type) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -66,8 +66,11 @@ public class StudentExamController {
 
         model.addAttribute("assignedExams", assignedExams);
         Set<Integer> completedExamIds = new LinkedHashSet<>(completedResults.keySet());
+        long completedCount = assignedExams.stream().filter(e -> completedExamIds.contains(e.getId())).count();
         model.addAttribute("completedExamIds", completedExamIds);
         model.addAttribute("completedResults", completedResults);
+        model.addAttribute("completedAssignedCount", completedCount);
+        model.addAttribute("pendingAssignedCount", assignedExams.size() - completedCount);
         model.addAttribute("student", student);
         model.addAttribute("now", new Timestamp(System.currentTimeMillis()));
         return "student/exams";
