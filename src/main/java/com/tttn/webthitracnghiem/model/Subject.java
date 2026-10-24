@@ -1,5 +1,6 @@
 package com.tttn.webthitracnghiem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
@@ -20,6 +21,11 @@ public class Subject {
     @JsonManagedReference
     private Set<SubjectClasses> subjectClasses;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id")
+    @JsonIgnore
+    private School school;
+
     public Subject() {
     }
 
@@ -29,6 +35,18 @@ public class Subject {
         this.image = image;
         this.documents = documents;
         this.subjectClasses = subjectClasses;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public boolean isGlobal() {
+        return this.school == null;
     }
 
     public Set<SubjectClasses> getSubjectClasses() {
@@ -71,4 +89,3 @@ public class Subject {
         this.documents = documents;
     }
 }
-

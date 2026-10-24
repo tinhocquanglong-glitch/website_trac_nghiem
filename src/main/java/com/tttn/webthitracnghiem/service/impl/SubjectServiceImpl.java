@@ -1,30 +1,19 @@
 package com.tttn.webthitracnghiem.service.impl;
 
+import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.Subject;
 import com.tttn.webthitracnghiem.model.SubjectRequest;
+import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.repository.SubjectRepository;
 import com.tttn.webthitracnghiem.service.IFileService;
 import com.tttn.webthitracnghiem.service.ISubjectService;
-import org.apache.tomcat.util.http.fileupload.FileItem;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
-import org.apache.tomcat.util.http.fileupload.RequestContext;
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,49 +47,112 @@ public class SubjectServiceImpl implements ISubjectService {
     }
 
     @Override
+    public Page<Subject> findBySchoolOrGlobal(Integer schoolId, Pageable pageable) {
+        if (schoolId == null) {
+            return subjectRepository.findAll(pageable);
+        }
+        return subjectRepository.findAllBySchoolOrGlobal(schoolId, pageable);
+    }
+
+    @Override
+    public Page<Subject> findByNameAndSchoolOrGlobal(String name, Integer schoolId, Pageable pageable) {
+        if (schoolId == null) {
+            return subjectRepository.findAllByName(name, pageable);
+        }
+        return subjectRepository.findByNameAndSchoolOrGlobal(name, schoolId, pageable);
+    }
+
+    @Override
+    public List<Subject> getBySchoolOrGlobal(Integer schoolId) {
+        if (schoolId == null) {
+            return subjectRepository.findAll();
+        }
+        return subjectRepository.findBySchoolIdOrGlobal(schoolId);
+    }
+
+    @Override
     public Subject findById(int id) {
         return subjectRepository.findById(id).orElse(null);
     }
 
     @Override
     public Subject save(SubjectRequest subjectRequest) {
+        return save(subjectRequest, null);
+    }
+
+    @Override
+    public Subject save(SubjectRequest subjectRequest, School school) {
         String avatarPath;
         String oldUrl;
         Subject subject;
-        if(subjectRequest.getId() == null){
-            subject = modelMapper.map(subjectRequest,Subject.class);
+        if (subjectRequest.getId() == null) {
+            subject = modelMapper.map(subjectRequest, Subject.class);
+            subject.setSchool(school);
             oldUrl = "/img/default.jpg";
         } else {
             Optional<Subject> findSubject = subjectRepository.findById(subjectRequest.getId());
-            subject = modelMapper.map(subjectRequest,Subject.class);
-            oldUrl = findSubject.get().getImage();
+            subject = modelMapper.map(subjectRequest, Subject.class);
+            if (findSubject.isPresent()) {
+                subject.setSchool(findSubject.get().getSchool());
+                oldUrl = findSubject.get().getImage();
+            } else {
+                subject.setSchool(school);
+                oldUrl = "/img/default.jpg";
+            }
         }
         String realUrl = new File(".").getAbsolutePath();
-        if(subjectRequest.getImage() != null){
-            if(!oldUrl.equals("/img/default.jpg")) {
-                // Xóa file cũ
-                File file = new File(realUrl + "\\src\\main\\resources\\static\\img\\"
-                        + oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
-
-                File target = new File(realUrl + "\\target\\classes\\static\\img\\" +
-                        oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
-
-                file.delete();
-                target.delete();
+        if (subjectRequest.getImage() != null && subjectRequest.getImage().getOriginalFilename() != null
+                && !subjectRequest.getImage().getOriginalFilename().isEmpty()) {
+            if (oldUrl != null && !oldUrl.equals("/img/default.jpg")) {
+                try {
+                    File file = new File(realUrl + "\\src\\main\\resources\\static\\img\\"
+                            + oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
+                    File target = new File(realUrl + "\\target\\classes\\static\\img\\" +
+                            oldUrl.substring(oldUrl.lastIndexOf("/") + 1));
+                    file.delete();
+                    target.delete();
+                } catch (Exception ignored) {
+                }
             }
 
-            // Thêm file mới được chọn
-            String pathFile = realUrl+"\\src\\main\\resources\\static\\img";
-            File fileSaved = fileService.uploadFile(subjectRequest.getImage(), pathFile);
-            avatarPath = "/img/" + fileSaved.getName();
-            File targetAvatar = new File(realUrl+"\\target\\classes\\static\\img\\" + fileSaved.getName());
-            fileService.copyFile(fileSaved, targetAvatar);
+            try {
+                String pathFile = realUrl + "\\src\\main\\resources\\static\\img";
+                File fileSaved = fileService.uploadFile(subjectRequest.getImage(), pathFile);
+                avatarPath = "/img/" + fileSaved.getName();
+                File targetAvatar = new File(realUrl + "\\target\\classes\\static\\img\\" + fileSaved.getName());
+                fileService.copyFile(fileSaved, targetAvatar);
+            } catch (Exception e) {
+                avatarPath = oldUrl;
+            }
         } else {
             avatarPath = oldUrl;
         }
         subject.setImage(avatarPath);
-        subject = subjectRepository.save(subject);
-        return subject;
+        return subjectRepository.save(subject);
+    }
+
+    @Override
+    public Subject copyToSchool(int subjectId, School school) {
+        Subject original = findById(subjectId);
+        if (original == null || school == null) {
+            return null;
+        }
+        Subject copy = new Subject();
+        copy.setName(original.getName());
+        copy.setImage(original.getImage());
+        copy.setSchool(school);
+        return subjectRepository.save(copy);
+    }
+
+    @Override
+    public boolean canManage(Subject subject, User currentUser, boolean isAdmin) {
+        if (isAdmin) {
+            return true;
+        }
+        if (subject == null || currentUser == null || currentUser.getSchool() == null) {
+            return false;
+        }
+        return subject.getSchool() != null && subject.getSchool().getId().equals(currentUser.getSchool().getId());
     }
 
     @Override

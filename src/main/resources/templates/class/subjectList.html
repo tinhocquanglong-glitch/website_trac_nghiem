@@ -9,9 +9,7 @@
     <link rel="stylesheet" type="text/css"
           href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
     <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
     <!-- Bootstrap -->
     <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
     <!-- Font Awesome -->
@@ -31,7 +29,6 @@
     <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/loader.css}">
     <link rel="stylesheet" th:href="@{/css/curriculum.css}">
-
 
     <!-- Custom Theme Style -->
     <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
@@ -72,6 +69,13 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                         th:if="${error != null}">
+                        <strong th:text="${error}"></strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
 
                     <div class="curriculum-toolbar">
                         <p class="curriculum-toolbar-label"><i class="fas fa-book-open mr-2"></i>Danh mục môn học của khối</p>
@@ -97,13 +101,14 @@
                             <th class="index-cell">STT</th>
                             <th>Hình ảnh</th>
                             <th>Tên môn học</th>
+                            <th class="text-center">Phạm vi</th>
                             <th class="text-center">Số chủ đề</th>
                             <th class="curriculum-actions">Xem / quản trị</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:if="${subjects.isEmpty()}">
-                            <td colspan="5" class="curriculum-empty"><i class="fas fa-book"></i>Chưa có môn học cho khối này.</td>
+                            <td colspan="6" class="curriculum-empty"><i class="fas fa-book"></i>Chưa có môn học cho khối này.</td>
                         </tr>
                         <tr th:each="subject, i :${subjects}">
                             <td class="index-cell" th:text="${i.count}"></td>
@@ -111,11 +116,15 @@
                                 <img class="curriculum-thumb" th:src="@{${subject.subject.image}}" alt="Ảnh môn học">
                             </td>
                             <td class="name-cell" th:text="${subject.subject.name}"></td>
+                            <td class="text-center">
+                                <span th:if="${subject.school == null}" class="badge badge-info" style="font-size: 11px;">Môn chung</span>
+                                <span th:if="${subject.school != null}" class="badge badge-success" style="font-size: 11px;" th:text="${subject.school.name}"></span>
+                            </td>
                             <td class="text-center" th:text="${subject.chapters.size() +' chủ đề'}"></td>
                             <td class="curriculum-actions">
                                 <a class="curriculum-icon-button text-primary" th:href="@{/chapter/list/__${subject.id}__}"
                                    title="Xem chủ đề" aria-label="Xem chủ đề"><i class="fas fa-arrow-right"></i></a>
-                                <a sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')" class="curriculum-icon-button text-danger"
+                                <a th:if="${isAdmin or (isSchoolAdmin and subject.school != null)}" class="curriculum-icon-button text-danger"
                                    id="deleteButton" th:href="@{/subject/class/__${class.id}__/__${subject.subject.id}__}"
                                    title="Xóa môn khỏi khối" aria-label="Xóa môn khỏi khối"><i class="fas fa-trash"></i></a>
                             </td>
@@ -164,7 +173,6 @@
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>
-
 
 <div class="modal fade" tabindex="-1" role="dialog" id="deleteModal" sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')">
     <div class="modal-dialog" role="document">
@@ -234,8 +242,8 @@
             var href = $(this).attr('href');
             $('#deleteModal #delRef').attr('href', href);
             $('#deleteModal').modal();
-        })
-    })
+        });
+    });
 
     $("#showExam").click(function () {
         $("#question").toggle();

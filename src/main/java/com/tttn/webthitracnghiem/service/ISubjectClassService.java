@@ -16,4 +16,8 @@ public interface ISubjectClassService {
     SubjectClasses findByClassAndSubject(int classId, int subjectId);
     void remove(SubjectClasses subjectClasses);
     List<SubjectClasses> findBySubject(int id);
+
+    List<SubjectClasses> findByClassIdAndSchoolOrGlobal(int classId, Integer schoolId);
+    Page<SubjectClasses> findByClassIdAndSchoolOrGlobal(int classId, Integer schoolId, Pageable pageable);
+    SubjectClasses findByClassAndSubjectAndSchool(int classId, int subjectId, Integer schoolId);
 }

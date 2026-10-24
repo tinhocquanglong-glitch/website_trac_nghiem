@@ -9,9 +9,7 @@
     <link rel="stylesheet" type="text/css"
           href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
     <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
     <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
     <!-- Font Awesome -->
     <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
@@ -67,16 +65,17 @@
         .list-subject {
             display: flex;
             align-items: center;
-            gap: 20px;
-            margin: 10px;
+            gap: 10px;
+            margin: 8px;
             background: antiquewhite;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
         }
 
         .list-subject label {
             margin: 0;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -90,7 +89,7 @@
             <div class="row">
                 <div class="container-fluid" style="margin-bottom: 150px">
                     <div class="h4 text-center mb-4">
-                        <p id="de">Thêm Môn Học</p>
+                        <p id="de">Thêm Môn Học Vào Khối</p>
                     </div>
                     <div class="alert alert-primary alert-dismissible fade show" role="alert"
                          th:if="${message != null}">
@@ -112,9 +111,10 @@
                                     <label class="col-sm-3 col-form-label">Chọn môn học</label>
                                     <div class="col-sm-8 row">
                                         <div class="list-subject" th:each="subject : ${subjects}" th:if="${!subjectOfClass.contains(subject)}">
-                                            <input type="checkbox" th:field="*{subjectClasses}"
-                                                   th:value="${subject.id}" >
+                                            <input type="checkbox" th:field="*{subjectClasses}" th:value="${subject.id}">
                                             <label th:text="${subject.name}"></label>
+                                            <span th:if="${subject.school == null}" class="badge badge-info" style="font-size: 11px;">Môn chung</span>
+                                            <span th:if="${subject.school != null}" class="badge badge-success" style="font-size: 11px;" th:text="${subject.school.name}"></span>
                                         </div>
                                     </div>
                                 </div>

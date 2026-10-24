@@ -71,7 +71,18 @@ public class CurriculumService {
     // ---------------------------------------------------------------- reading
 
     public Optional<SubjectClasses> findSubjectClass(int subjectId, int gradeId) {
-        return subjectClassRepository.findByClassesAndSubject(gradeId, subjectId);
+        return findSubjectClass(subjectId, gradeId, null);
+    }
+
+    public Optional<SubjectClasses> findSubjectClass(int subjectId, int gradeId, Integer schoolId) {
+        if (schoolId != null) {
+            Optional<SubjectClasses> sc = subjectClassRepository.findByClassAndSubjectAndSchool(gradeId, subjectId, schoolId);
+            if (sc.isPresent()) {
+                return sc;
+            }
+        }
+        return subjectClassRepository.findByClassAndSubjectAndSchoolIsNull(gradeId, subjectId)
+                .or(() -> subjectClassRepository.findByClassesAndSubject(gradeId, subjectId));
     }
 
     /** School a user works or studies in; null for accounts without a school (e.g. the system admin). */

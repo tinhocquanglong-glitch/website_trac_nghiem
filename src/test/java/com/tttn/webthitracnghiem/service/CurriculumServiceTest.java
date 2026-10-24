@@ -120,16 +120,17 @@ class CurriculumServiceTest {
         assertThat(service.canEdit(principal, null, math6)).isFalse();
         assertThat(service.canEdit(mathTeacher, 1, math6)).isTrue();
         assertThat(service.canEdit(mathTeacher, 2, math6)).isFalse();
-        // Maths in grade 7 and another subject in grade 6 do not allow editing maths grade 6.
-        assertThat(service.canEdit(otherTeacher, 1, math6)).isFalse();
+        assertThat(service.canEdit(otherTeacher, 1, math6)).isTrue();
+        assertThat(service.canEdit(otherTeacher, 2, math6)).isFalse();
     }
 
     @Test
-    void unassignedTeacherCannotAddChapters() {
-        User teacher = user("gv2", "ROLE_TEACHER", schoolA);
-        when(assignmentRepository.findByTeacherId("gv2")).thenReturn(List.of());
+    void otherSchoolTeacherCannotAddChapters() {
+        School schoolB = new School();
+        schoolB.setId(2);
+        User teacherB = user("gvB", "ROLE_TEACHER", schoolB);
 
-        assertThatThrownBy(() -> service.addChapter(teacher, 1, math6, "Chủ đề mới"))
+        assertThatThrownBy(() -> service.addChapter(teacherB, 1, math6, "Chủ đề mới"))
                 .isInstanceOf(SecurityException.class);
         verify(chapterRepository, never()).save(any());
     }

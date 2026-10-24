@@ -183,7 +183,7 @@ public class TeachingAssignmentController {
                         .thenComparing(StudentTrackingClass::getClassName,
                                 Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .collect(Collectors.toList());
-        List<Subject> subjects = subjectService.getAll().stream()
+        List<Subject> subjects = subjectService.getBySchoolOrGlobal(school.getId()).stream()
                 .sorted(Comparator.comparing(Subject::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .collect(Collectors.toList());
         List<User> teachers = userRepository.findTeachersBySchool(school.getId());

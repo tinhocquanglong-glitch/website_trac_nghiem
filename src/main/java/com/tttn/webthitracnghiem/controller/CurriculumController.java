@@ -28,7 +28,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Curriculum editor: one subject-grade at a time, for the viewer's school (or the shared curriculum for admin). */
@@ -66,17 +69,38 @@ public class CurriculumController {
                         Model model) {
         User user = currentUser();
         boolean admin = isAdmin();
+        Integer targetSchoolId = admin ? schoolId : curriculumService.schoolIdOf(user);
         List<Classes> grades = lessonPlanService.findGrades(user, admin);
         Classes grade = grades.stream().filter(item -> item.getId().equals(gradeId)).findFirst().orElse(null);
-        List<SubjectClasses> subjectClasses = grade == null ? List.of()
-                : subjectClassRepository.findByClassId(grade.getId()).stream()
-                .sorted(Comparator.comparing(item -> item.getSubject().getName(),
-                        Comparator.nullsLast(String::compareToIgnoreCase)))
-                .collect(Collectors.toList());
+        List<SubjectClasses> subjectClasses;
+        if (grade == null) {
+            subjectClasses = List.of();
+        } else if (admin && targetSchoolId == null) {
+            subjectClasses = subjectClassRepository.findByClassId(grade.getId()).stream()
+                    .sorted(Comparator.comparing(item -> item.getSubject().getName(),
+                            Comparator.nullsLast(String::compareToIgnoreCase)))
+                    .collect(Collectors.toList());
+        } else {
+            List<SubjectClasses> rawList = subjectClassRepository.findByClassIdAndSchoolOrGlobal(grade.getId(), targetSchoolId);
+            Map<Integer, SubjectClasses> map = new LinkedHashMap<>();
+            for (SubjectClasses sc : rawList) {
+                if (sc.getSchool() == null) {
+                    map.put(sc.getSubject().getId(), sc);
+                }
+            }
+            for (SubjectClasses sc : rawList) {
+                if (sc.getSchool() != null && Objects.equals(sc.getSchool().getId(), targetSchoolId)) {
+                    map.put(sc.getSubject().getId(), sc);
+                }
+            }
+            subjectClasses = map.values().stream()
+                    .sorted(Comparator.comparing(item -> item.getSubject().getName(),
+                            Comparator.nullsLast(String::compareToIgnoreCase)))
+                    .collect(Collectors.toList());
+        }
         SubjectClasses selected = subjectClasses.stream()
                 .filter(item -> subjectId != null && item.getSubject().getId() == subjectId)
                 .findFirst().orElse(null);
-        Integer targetSchoolId = admin ? schoolId : curriculumService.schoolIdOf(user);
 
         model.addAttribute("grades", grades);
         model.addAttribute("gradeId", grade == null ? null : grade.getId());
