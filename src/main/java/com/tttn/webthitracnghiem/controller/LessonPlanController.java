@@ -10,6 +10,8 @@ import com.tttn.webthitracnghiem.model.LessonPlanLesson;
 import com.tttn.webthitracnghiem.model.LessonPlanRequest;
 import com.tttn.webthitracnghiem.model.SubjectClasses;
 import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.service.CurriculumMatcher;
+import com.tttn.webthitracnghiem.service.CurriculumService;
 import com.tttn.webthitracnghiem.service.ILessonPlanService;
 import com.tttn.webthitracnghiem.service.IUserService;
 import com.tttn.webthitracnghiem.service.LessonPlanDocumentService;
@@ -18,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -49,6 +52,12 @@ public class LessonPlanController {
     private IUserService userService;
     @Autowired
     private LessonPlanDocumentService documentService;
+    @Autowired
+    private CurriculumService curriculumService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.ai.QuestionGenerationService generationService;
+    @Autowired
+    private com.tttn.webthitracnghiem.repository.QuestionRepository questionRepository;
 
     @GetMapping({"", "/"})
     public String list(@RequestParam(required = false) String q,
@@ -85,11 +94,13 @@ public class LessonPlanController {
 
     @GetMapping("/catalog")
     @ResponseBody
+    @Transactional(readOnly = true)
     public List<LessonPlanCatalog> catalog(@RequestParam(required = false) Integer subjectId,
                                            @RequestParam(required = false) Integer grade) {
         User user = currentUser();
         List<LessonPlanCatalog> result = new ArrayList<>();
-        for (LessonPlan plan : lessonPlanService.findVisible(user.getId(), isPrivileged())) {
+        for (LessonPlan plan : lessonPlanService.findVisible(user.getId(), isPrivileged(), null,
+                subjectId, null, null, null, true, "ALL")) {
             if (plan.getSubject() == null || (subjectId != null && !subjectId.equals(plan.getSubject().getId()))) continue;
             if (plan.getGrade() == null || (grade != null && !grade.equals(plan.getGrade().getGrade()))) continue;
             LessonPlanCatalog item = new LessonPlanCatalog(plan.getId(), plan.getName(),
@@ -115,7 +126,39 @@ public class LessonPlanController {
         }
         model.addAttribute("plan", plan);
         model.addAttribute("canEdit", isOwner(plan));
+        // Question-bank size of each linked curriculum lesson, and whether drafts can be generated here.
+        java.util.Map<Integer, Long> questionCounts = new java.util.HashMap<>();
+        for (LessonPlanChapter chapter : plan.getPlanChapters()) {
+            for (LessonPlanLesson lesson : chapter.getLessons()) {
+                if (lesson.getCurriculumLesson() != null) {
+                    int lessonId = lesson.getCurriculumLesson().getId();
+                    questionCounts.put(lessonId, questionRepository.countByLesson_Id(lessonId));
+                }
+            }
+        }
+        model.addAttribute("questionCounts", questionCounts);
+        model.addAttribute("aiAvailable", generationService.isAvailable());
+        model.addAttribute("canGenerate", generationService.canGenerate(plan, currentUser()));
         return "lesson-plan/detail";
+    }
+
+    @PostMapping("/lesson/{lessonId}/generate-questions")
+    public String generateQuestions(@PathVariable int lessonId,
+                                    @RequestParam(defaultValue = "10") int count,
+                                    RedirectAttributes ra) {
+        LessonPlanLesson lesson = lessonPlanService.findLesson(lessonId);
+        if (lesson == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy bài trong giáo án.");
+            return "redirect:/lesson-plans";
+        }
+        try {
+            int stored = generationService.generateDrafts(lessonId, count, currentUser());
+            ra.addFlashAttribute("message", "Đã sinh " + stored + " câu hỏi cho bài \"" + lesson.getName()
+                    + "\". Câu hỏi ở trạng thái chờ duyệt trong Ngân hàng câu hỏi.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/lesson-plans/" + lesson.getChapter().getLessonPlan().getId();
     }
 
     @GetMapping("/lesson/{lessonId}/attachment")
@@ -157,10 +200,21 @@ public class LessonPlanController {
     @PostMapping("/save")
     public String save(@Validated @ModelAttribute("lessonPlan") LessonPlanRequest request,
                        BindingResult bindingResult, Model model, RedirectAttributes ra) {
-        try {
-            documentService.importInto(request);
-        } catch (IllegalArgumentException ex) {
-            addFormModel(model, request, request.getId() != null, ex.getMessage());
+        // An uploaded file is split and matched to the curriculum, then shown for review; nothing is saved yet.
+        if (request.getDocumentFile() != null && !request.getDocumentFile().isEmpty()) {
+            try {
+                documentService.importInto(request);
+                int linked = linkToCurriculum(request);
+                int lessons = request.getChapters().stream().mapToInt(chapter -> chapter.getLessons().size()).sum();
+                request.setDocumentFile(null);
+                addFormModel(model, request, request.getId() != null, null);
+                model.addAttribute("message", "Đã chia file thành " + request.getChapters().size() + " chủ đề, "
+                        + lessons + " bài; " + linked + " bài khớp với chương trình học. "
+                        + "Kiểm tra lại, chọn bài chương trình cho các bài chưa khớp rồi bấm Lưu giáo án.");
+                model.addAttribute("previewMode", true);
+            } catch (IllegalArgumentException | SecurityException ex) {
+                addFormModel(model, request, request.getId() != null, ex.getMessage());
+            }
             return "lesson-plan/form";
         }
         if (bindingResult.hasErrors()) {
@@ -205,6 +259,29 @@ public class LessonPlanController {
             ra.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/lesson-plans";
+    }
+
+    /** Fills curriculum links on parsed topics/lessons from the user's school curriculum; returns linked lessons. */
+    private int linkToCurriculum(LessonPlanRequest request) {
+        if (request.getSubjectId() == null || request.getGradeId() == null) {
+            return 0;
+        }
+        SubjectClasses subjectClass = curriculumService.findSubjectClass(request.getSubjectId(), request.getGradeId())
+                .orElse(null);
+        if (subjectClass == null) {
+            return 0;
+        }
+        List<CurriculumMatcher.Node> tree = new ArrayList<>();
+        for (Chapter chapter : curriculumService.schoolChapters(curriculumService.schoolIdOf(currentUser()), subjectClass)) {
+            List<CurriculumMatcher.Node> lessons = new ArrayList<>();
+            for (Lesson lesson : curriculumService.lessonsOf(chapter)) {
+                lessons.add(new CurriculumMatcher.Node(lesson.getId(), lesson.getNameLesson(), List.of()));
+            }
+            tree.add(new CurriculumMatcher.Node(chapter.getId(), chapter.getChapterName(), lessons));
+        }
+        CurriculumMatcher.link(request.getChapters(), tree);
+        return (int) request.getChapters().stream().flatMap(chapter -> chapter.getLessons().stream())
+                .filter(lesson -> lesson.getCurriculumLessonId() != null).count();
     }
 
     private void addFormModel(Model model, LessonPlanRequest request, boolean editMode, String error) {
@@ -252,6 +329,8 @@ public class LessonPlanController {
             LessonPlanChapterRequest chapterRequest = new LessonPlanChapterRequest();
             chapterRequest.setId(chapter.getId());
             chapterRequest.setName(chapter.getName());
+            chapterRequest.setCurriculumChapterId(chapter.getCurriculumChapter() == null ? null
+                    : chapter.getCurriculumChapter().getId());
             List<LessonPlanLessonRequest> lessonRequests = new ArrayList<>();
             for (com.tttn.webthitracnghiem.model.LessonPlanLesson lesson : chapter.getLessons() == null
                     ? java.util.Collections.<com.tttn.webthitracnghiem.model.LessonPlanLesson>emptyList()
@@ -261,6 +340,10 @@ public class LessonPlanController {
                 lessonRequest.setName(lesson.getName());
                 lessonRequest.setContent(lesson.getContent());
                 lessonRequest.setAttachmentOriginalName(lesson.getAttachmentOriginalName());
+                lessonRequest.setCurriculumLessonId(lesson.getCurriculumLesson() == null ? null
+                        : lesson.getCurriculumLesson().getId());
+                lessonRequest.setPeriods(lesson.getPeriods());
+                lessonRequest.setObjectives(lesson.getObjectives());
                 lessonRequests.add(lessonRequest);
             }
             chapterRequest.setLessons(lessonRequests);

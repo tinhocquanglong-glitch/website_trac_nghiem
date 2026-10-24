@@ -30,6 +30,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
       PORT: 8095
@@ -38,6 +40,10 @@ services:
       DB_NAME: web_tn_v1
       DB_USERNAME: root
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_API_URL: ${GEMINI_API_URL:-https://generativelanguage.googleapis.com/v1beta}
+      GEMINI_TIMEOUT_MS: ${GEMINI_TIMEOUT_MS:-30000}
     ports:
       - "8095:8095"
 

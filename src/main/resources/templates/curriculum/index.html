@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Chương trình học</title>
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <style>
+        body { background: #f7f7f7; }
+        .main_container { min-height: 100vh; }
+        main.right_col { min-height: calc(100vh - 70px); }
+        .cur-shell { max-width: 1100px; margin: 0 auto; }
+        .cur-hero { background: linear-gradient(135deg, #173042, #2a6f97); color: #fff; border-radius: 14px; padding: 24px 28px; }
+        .cur-filters { border: 1px solid #dbe6eb; border-radius: 10px; }
+        .cur-filters label { font-size: 12px; font-weight: 700; color: #526b76; text-transform: uppercase; }
+        .chapter-card { border: 1px solid #dbe6eb; border-radius: 10px; background: #fff; margin-bottom: 14px; }
+        .chapter-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #edf2f4; flex-wrap: wrap; }
+        .chapter-title { font-weight: 700; color: #173042; flex: 1 1 240px; }
+        .lesson-row { display: flex; align-items: center; gap: 8px; padding: 9px 16px 9px 34px; border-bottom: 1px dashed #edf2f4; flex-wrap: wrap; }
+        .lesson-row:last-child { border-bottom: 0; }
+        .lesson-name { flex: 1 1 220px; }
+        .usage { font-size: 12px; color: #6c7f89; white-space: nowrap; }
+        .icon-btn { border: 0; background: transparent; color: #5a7380; padding: 2px 6px; }
+        .icon-btn:hover { color: #173042; }
+        .icon-btn.danger:hover { color: #c0392b; }
+        .inline-form { display: inline; margin: 0; }
+        .rename-form { display: none; flex: 1 1 260px; gap: 6px; }
+        .rename-form.open { display: flex; }
+        .add-lesson { padding: 10px 16px 12px 34px; }
+        .badge-scope { font-size: 12px; font-weight: 600; }
+    </style>
+</head>
+<body class="nav-md">
+<div class="container body"><div class="main_container">
+    <div th:insert="~{index.html :: navbarAdmin}"></div>
+    <div th:insert="~{index.html :: topnavAdmin}"></div>
+    <main class="right_col" role="main">
+        <div class="container-fluid py-4 cur-shell">
+            <section class="cur-hero mb-4 d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <div class="text-uppercase small font-weight-bold mb-1 text-white-50">Môn → Khối → Chủ đề → Bài</div>
+                    <h1 class="h3 mb-1">Chương trình học</h1>
+                    <p class="mb-0">Khung chủ đề và bài dùng cho ngân hàng câu hỏi, đề thi và kế hoạch bài dạy (KHBD) của
+                        <strong th:text="${schoolName}">Trường</strong>.</p>
+                </div>
+                <a sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')" th:href="@{/class/list}"
+                   class="btn btn-light btn-sm mt-3 mt-md-0"><i class="fas fa-layer-group mr-1"></i> Môn học theo khối</a>
+            </section>
+
+            <div th:if="${message != null}" class="alert alert-success" role="status" th:text="${message}"></div>
+            <div th:if="${error != null}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+            <form method="get" th:action="@{/curriculum}" class="bg-white p-3 mb-4 cur-filters">
+                <div class="row">
+                    <div class="form-group col-md-4 mb-2" th:if="${isAdmin}">
+                        <label for="schoolId">Trường</label>
+                        <select id="schoolId" name="schoolId" class="form-control" onchange="this.form.submit()">
+                            <option value="">Chương trình chung (mẫu cho mọi trường)</option>
+                            <option th:each="school : ${schools}" th:value="${school.id}" th:text="${school.name}"
+                                    th:selected="${schoolId == school.id}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4 mb-2">
+                        <label for="gradeId">Khối</label>
+                        <select id="gradeId" name="gradeId" class="form-control" onchange="this.form.subjectId.value=''; this.form.submit()">
+                            <option value="">-- Chọn khối --</option>
+                            <option th:each="grade : ${grades}" th:value="${grade.id}" th:text="${grade.displayName}"
+                                    th:selected="${gradeId == grade.id}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4 mb-2">
+                        <label for="subjectId">Môn học</label>
+                        <select id="subjectId" name="subjectId" class="form-control" onchange="this.form.submit()"
+                                th:disabled="${gradeId == null}">
+                            <option value="">-- Chọn môn --</option>
+                            <option th:each="sc : ${subjectClasses}" th:value="${sc.subject.id}" th:text="${sc.subject.name}"
+                                    th:selected="${subjectId == sc.subject.id}"></option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-muted small mb-0" th:if="${gradeId != null and subjectClasses.isEmpty()}">
+                    Khối này chưa có môn học nào. Quản trị viên thêm môn vào khối ở mục Môn học.
+                </p>
+            </form>
+
+            <th:block th:if="${selected != null}">
+                <div class="d-flex align-items-center justify-content-between flex-wrap mb-3">
+                    <h2 class="h5 mb-2">
+                        <span th:text="${selected.subject.name}">Môn</span> ·
+                        <span th:text="${selected.classes.displayName}">Khối</span>
+                    </h2>
+                    <div class="mb-2">
+                        <span th:if="${usingShared}" class="badge badge-info badge-scope">Đang dùng chương trình chung</span>
+                        <span th:if="${!usingShared and schoolId != null}" class="badge badge-success badge-scope">Chương trình của trường</span>
+                        <span th:if="${schoolId == null}" class="badge badge-warning badge-scope">Chương trình chung</span>
+                        <span th:if="${canEdit}" class="badge badge-primary badge-scope ml-1">Bạn được chỉnh sửa</span>
+                        <span th:unless="${canEdit}" class="badge badge-secondary badge-scope ml-1">Chỉ xem</span>
+                    </div>
+                </div>
+                <p class="text-muted small" th:unless="${canEdit}">
+                    Thầy cô và Hiệu trưởng có quyền thêm mới, chỉnh sửa các chủ đề và bài học trong khung chương trình của trường.
+                </p>
+
+                <div th:if="${tree.isEmpty()}" class="alert alert-light border">Chưa có chủ đề nào.</div>
+
+                <div class="chapter-card" th:each="node, chapterStat : ${tree}" th:with="chapter=${node.chapter}">
+                    <div class="chapter-head">
+                        <span class="chapter-title" th:id="|chapter-title-${chapter.id}|"
+                              th:text="|${chapterStat.count}. ${chapter.chapterName}|">Chủ đề</span>
+                        <form th:if="${canEdit}" class="rename-form" th:id="|chapter-rename-${chapter.id}|" method="post"
+                              th:action="@{/curriculum/chapters/{id}/rename(id=${chapter.id})}">
+                            <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                            <input type="hidden" name="schoolId" th:value="${schoolId}">
+                            <input class="form-control form-control-sm" name="name" th:value="${chapter.chapterName}" maxlength="255" required
+                                   aria-label="Tên chủ đề">
+                            <button class="btn btn-sm btn-primary" type="submit">Lưu</button>
+                        </form>
+                        <th:block th:if="${canEdit}">
+                            <button type="button" class="icon-btn" title="Đổi tên chủ đề"
+                                    th:data-target="|chapter-rename-${chapter.id}|" onclick="toggleRename(this)">
+                                <i class="fas fa-pen"></i></button>
+                            <form class="inline-form" method="post" th:action="@{/curriculum/chapters/{id}/move(id=${chapter.id})}">
+                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                                <input type="hidden" name="schoolId" th:value="${schoolId}">
+                                <button class="icon-btn" name="direction" value="-1" title="Lên" th:disabled="${chapterStat.first}"><i class="fas fa-arrow-up"></i></button>
+                                <button class="icon-btn" name="direction" value="1" title="Xuống" th:disabled="${chapterStat.last}"><i class="fas fa-arrow-down"></i></button>
+                            </form>
+                            <form class="inline-form" method="post" th:action="@{/curriculum/chapters/{id}/delete(id=${chapter.id})}"
+                                  onsubmit="return confirm('Xóa chủ đề này và các bài trong đó? Chủ đề còn câu hỏi hoặc đề thi sẽ không xóa được.')">
+                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                                <input type="hidden" name="schoolId" th:value="${schoolId}">
+                                <button class="icon-btn danger" title="Xóa chủ đề"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </th:block>
+                    </div>
+
+                    <div class="lesson-row" th:each="item, lessonStat : ${node.lessons}" th:with="lesson=${item.lesson}">
+                        <span class="lesson-name" th:text="${lesson.nameLesson}">Bài</span>
+                        <form th:if="${canEdit}" class="rename-form" th:id="|lesson-rename-${lesson.id}|" method="post"
+                              th:action="@{/curriculum/lessons/{id}/rename(id=${lesson.id})}">
+                            <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                            <input type="hidden" name="schoolId" th:value="${schoolId}">
+                            <input class="form-control form-control-sm" name="name" th:value="${lesson.nameLesson}" maxlength="255" required
+                                   aria-label="Tên bài">
+                            <button class="btn btn-sm btn-primary" type="submit">Lưu</button>
+                        </form>
+                        <span class="usage" th:text="|${item.questionCount} câu hỏi · ${item.examCount} đề|">0 câu hỏi</span>
+                        <th:block th:if="${canEdit}">
+                            <button type="button" class="icon-btn" title="Đổi tên bài"
+                                    th:data-target="|lesson-rename-${lesson.id}|" onclick="toggleRename(this)">
+                                <i class="fas fa-pen"></i></button>
+                            <form class="inline-form" method="post" th:action="@{/curriculum/lessons/{id}/move(id=${lesson.id})}">
+                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                                <input type="hidden" name="schoolId" th:value="${schoolId}">
+                                <button class="icon-btn" name="direction" value="-1" title="Lên" th:disabled="${lessonStat.first}"><i class="fas fa-arrow-up"></i></button>
+                                <button class="icon-btn" name="direction" value="1" title="Xuống" th:disabled="${lessonStat.last}"><i class="fas fa-arrow-down"></i></button>
+                            </form>
+                            <form class="inline-form" method="post" th:action="@{/curriculum/lessons/{id}/delete(id=${lesson.id})}"
+                                  onsubmit="return confirm('Xóa bài này?')">
+                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                                <input type="hidden" name="schoolId" th:value="${schoolId}">
+                                <button class="icon-btn danger" title="Xóa bài"
+                                        th:disabled="${item.questionCount > 0 or item.examCount > 0}"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </th:block>
+                    </div>
+
+                    <form th:if="${canEdit}" class="add-lesson form-inline" method="post"
+                          th:action="@{/curriculum/chapters/{id}/lessons(id=${chapter.id})}">
+                        <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                        <input type="hidden" name="schoolId" th:value="${schoolId}">
+                        <input class="form-control form-control-sm mr-2" style="min-width: 260px;" name="name" maxlength="255" required
+                               placeholder="Tên bài mới, ví dụ: Bài 3. Phép cộng" aria-label="Tên bài mới">
+                        <button class="btn btn-sm btn-outline-primary" type="submit"><i class="fas fa-plus mr-1"></i>Thêm bài</button>
+                    </form>
+                </div>
+
+                <form th:if="${canEdit}" class="bg-white p-3 cur-filters form-inline" method="post" th:action="@{/curriculum/chapters}">
+                    <input type="hidden" name="subjectClassId" th:value="${selected.id}">
+                    <input type="hidden" name="schoolId" th:value="${schoolId}">
+                    <input class="form-control mr-2 mb-2" style="min-width: 320px;" name="name" maxlength="255" required
+                           placeholder="Tên chủ đề mới, ví dụ: Chủ đề 1. Số tự nhiên" aria-label="Tên chủ đề mới">
+                    <button class="btn btn-primary mb-2" type="submit"><i class="fas fa-plus mr-1"></i>Thêm chủ đề</button>
+                </form>
+            </th:block>
+        </div>
+    </main>
+    <div th:insert="~{index.html :: footerAdmin}"></div>
+</div></div>
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+<script>
+    function toggleRename(button) {
+        var form = document.getElementById(button.dataset.target);
+        form.classList.toggle('open');
+        if (form.classList.contains('open')) {
+            form.querySelector('input[name=name]').focus();
+        }
+    }
+</script>
+</body>
+</html>

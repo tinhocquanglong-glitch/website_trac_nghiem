@@ -49,6 +49,8 @@ public class ExamController {
     private IChapterService chapterService;
     @Autowired
     private ILessonPlanService lessonPlanService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.CurriculumService curriculumService;
 
     @ModelAttribute("subjects")
     public Iterable<Subject> subjects() {
@@ -147,7 +149,8 @@ public class ExamController {
     public String showCreateForm(Model model) {
         model.addAttribute("subjects", subjectService.findAll());
         model.addAttribute("exam", new Exam());
-        model.addAttribute("questions", questionService.findAll());
+        // Questions are loaded per chosen scope from /api/question/pool.
+        model.addAttribute("questions", List.of());
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -194,10 +197,11 @@ public class ExamController {
         }
 
         Iterable<Subject> subjects = subjectService.findAll();
-        List<Chapter> chapters = new ArrayList<>(exam.getLesson().getChapter().getSubjectClasses().getChapters());
-        Collections.sort(chapters);
-        Set<Chapter> chapters1 = new LinkedHashSet<>(chapters);
-        exam.getLesson().getChapter().getSubjectClasses().setChapters(chapters1);
+        // Only the curriculum the exam's lesson belongs to (its school's copy, or the shared one).
+        Chapter examChapter = exam.getLesson().getChapter();
+        Integer curriculumSchoolId = examChapter.getSchool() == null ? null : examChapter.getSchool().getId();
+        List<Chapter> chapters = curriculumService.readChapters(curriculumSchoolId, examChapter.getSubjectClasses());
+        exam.getLesson().getChapter().getSubjectClasses().setChapters(new LinkedHashSet<>(chapters));
         List<Lesson> lessons = new ArrayList<>(exam.getLesson().getChapter().getLessons());
         Collections.sort(lessons);
         Set<Lesson> lessons1 = new LinkedHashSet<>(lessons);
@@ -206,8 +210,7 @@ public class ExamController {
         model.addAttribute("subjects", subjects);
         model.addAttribute("classes",classesService.
                 findAllBySubject(exam.getLesson().getChapter().getSubjectClasses().getClasses().getId()));
-        model.addAttribute("chapters",chapterService.findBySubjectAndClass(exam.getLesson().getChapter().getSubjectClasses().getSubject().getId(),
-                exam.getLesson().getChapter().getSubjectClasses().getClasses().getId()));
+        model.addAttribute("chapters", chapters);
         model.addAttribute("lessons",lessonService.findByChapId(exam.getLesson().getChapter().getId()));
         return "exam/editExam";
     }

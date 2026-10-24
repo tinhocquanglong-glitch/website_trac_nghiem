@@ -24,6 +24,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.text.ParseException;
@@ -183,8 +184,8 @@ public class UserController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-        // Lấy danh sách các trường và người quản lý trường
-        List<School> schools = schoolRepository.findAllByActiveTrueOrderByNameAsc();
+        // Lấy danh sách các trường (kể cả trường đang khóa để admin mở khóa) và người quản lý trường
+        List<School> schools = schoolRepository.findAllByOrderByNameAsc();
         List<User> schoolAdmins = userRepository.findAllSchoolAdmins();
 
         Map<Integer, List<User>> schoolManagersMap = new HashMap<>();
@@ -236,6 +237,12 @@ public class UserController {
         model.addAttribute("selectedAddress", null);
         model.addAttribute("addressKeyword", addressKeyword);
         model.addAttribute("hasSchoolSearch", hasSchoolSearch);
+        // School lock/delete actions return to this same filtered list.
+        model.addAttribute("returnUrl", UriComponentsBuilder.fromPath("/user/list")
+                .queryParam("viewMode", "schools")
+                .queryParam("keyword", name.orElse(""))
+                .queryParam("address", addressKeyword)
+                .encode().build().toUriString());
         model.addAttribute("keyword", name.orElse(""));
         model.addAttribute("viewMode", viewMode);
         model.addAttribute("isAdmin", isAdmin);
@@ -389,26 +396,81 @@ public class UserController {
     }
 
     @GetMapping("/user/editMember/{id}")
-    public String editMember(@PathVariable("id") String id, Model model) {
+    public String editMember(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
         User user = userService.findById(id);
+        String denied = editPermissionError(user);
+        if (denied != null) {
+            redirectAttributes.addFlashAttribute("error", denied);
+            return "redirect:" + userManagementUrl();
+        }
         model.addAttribute("user", user);
+        model.addAttribute("backUrl", userManagementUrl());
         return "user/editMember";
     }
 
     @PostMapping("/user/update")
-    public String update(@Validated User user, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-        if (bindingResult.hasFieldErrors()) {
-            return "user/editMember";
-        } else {
-            User user1 = userService.findById(user.getId());
-            user1.setFullName(user.getFullName());
-            user1.setEmail(user.getEmail());
-            user1.setAddress(user.getAddress());
-            user1.setPhoneNumber(user.getPhoneNumber());
-            userService.save(user1);
-            redirectAttributes.addFlashAttribute("message", "Cập Nhật Thành Công !");
-            return "redirect:/user/list";
+    public String update(@Validated User user, BindingResult bindingResult, Model model,
+                         RedirectAttributes redirectAttributes) {
+        User user1 = userService.findById(user.getId());
+        String denied = editPermissionError(user1);
+        if (denied != null) {
+            redirectAttributes.addFlashAttribute("error", denied);
+            return "redirect:" + userManagementUrl();
         }
+        // The form only edits profile fields; password constraints on the entity do not apply here.
+        if (bindingResult.getFieldErrors().stream().anyMatch(error -> EDITABLE_PROFILE_FIELDS.contains(error.getField()))) {
+            model.addAttribute("backUrl", userManagementUrl());
+            return "user/editMember";
+        }
+        user1.setFullName(user.getFullName().trim());
+        user1.setEmail(user.getEmail().trim());
+        user1.setAddress(user.getAddress().trim());
+        user1.setPhoneNumber(user.getPhoneNumber().trim());
+        userService.save(user1);
+        redirectAttributes.addFlashAttribute("message", "Đã cập nhật thông tin " + user1.getFullName() + ".");
+        return "redirect:" + userManagementUrl();
+    }
+
+    private static final Set<String> EDITABLE_PROFILE_FIELDS = Set.of("fullName", "email", "address", "phoneNumber");
+
+    /**
+     * Returns why the current account may not edit {@code target}, or null when it may.
+     * A principal only edits teachers and students of their own school.
+     */
+    private String editPermissionError(User target) {
+        if (target == null) {
+            return "Không tìm thấy tài khoản.";
+        }
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (hasAuthority(auth, "ROLE_ADMIN")) {
+            return null;
+        }
+        if (!hasAuthority(auth, "ROLE_SCHOOL_ADMIN")) {
+            return "Bạn không có quyền sửa tài khoản này.";
+        }
+        Set<String> targetRoles = target.getRoles() == null ? Set.of() : target.getRoles().stream()
+                .map(com.tttn.webthitracnghiem.model.Role::getRoleName)
+                .collect(Collectors.toSet());
+        if (targetRoles.contains("ROLE_ADMIN") || targetRoles.contains("ROLE_SCHOOL_ADMIN")
+                || (!targetRoles.contains("ROLE_TEACHER") && !targetRoles.contains("ROLE_USER"))) {
+            return "Hiệu trưởng chỉ được sửa thông tin giáo viên và học sinh.";
+        }
+        User currentUser = userService.findById(auth.getName());
+        Integer currentSchoolId = currentUser != null && currentUser.getSchool() != null
+                ? currentUser.getSchool().getId() : null;
+        if (currentSchoolId == null || !Objects.equals(currentSchoolId, schoolIdForUser(target))) {
+            return "Hiệu trưởng chỉ được sửa tài khoản thuộc trường mình.";
+        }
+        return null;
+    }
+
+    private String userManagementUrl() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return hasAuthority(auth, "ROLE_ADMIN") ? "/user/list" : "/school-admin/users";
+    }
+
+    private static boolean hasAuthority(Authentication auth, String authority) {
+        return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority(authority));
     }
 
     @GetMapping("/user/delete/{id}")

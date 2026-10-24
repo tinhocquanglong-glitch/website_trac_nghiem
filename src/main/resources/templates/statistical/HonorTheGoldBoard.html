@@ -3,55 +3,113 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Website Trắc nghiệm</title>
-    <link rel = "icon" href =
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type = "image/x-icon">
-    <style>
-        .number {
-
-            display: inline;
-            border-radius: 15px;
-            padding: 3px 6px;
-            background-color: gray;
-            color: white;
-            float: right;
-           font-size: 12px;
-        }</style>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <title>Cộng Đồng Thành Viên</title>
 </head>
 <body>
-<div class="container">
-    <div  th:fragment="thong-ke-thanh-vien">
-        <div class="card-header  " style="background: #0070e9;;text-align: center;">
-            <label class="col-form-label" style="color: white;display: flex;align-items: center;justify-content: center;gap: 10px;font-weight: bold"><i class="fa-solid fa-bell"></i>Chào mừng thành viên mới</label>
-        </div>
-        <table class="table  mt-3 ml-2 mr-3 h-50 " id="tableHistory">
+<div class="container p-0">
+    <div th:fragment="thong-ke-thanh-vien">
+        <style>
+            .member-header-box {
+                background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+                color: #ffffff;
+                text-align: center;
+                padding: 12px 16px;
+                border-radius: 12px 12px 0 0;
+                font-weight: 800;
+                font-size: 0.95rem;
+                letter-spacing: 0.5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            }
+            .kpi-stat-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                padding: 12px;
+                background: #f8fafc;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .kpi-stat-item {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 10px;
+                text-align: center;
+            }
+            .kpi-stat-number {
+                font-size: 1.4rem;
+                font-weight: 800;
+                line-height: 1;
+            }
+            .kpi-stat-label {
+                font-size: 0.72rem;
+                color: #64748b;
+                margin-top: 4px;
+                text-transform: uppercase;
+                font-weight: 600;
+            }
+            .new-user-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 12px;
+                border-bottom: 1px solid #f1f5f9;
+                transition: background 0.2s;
+            }
+            .new-user-row:hover {
+                background: #f0fdf4;
+            }
+            .new-user-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #bbf7d0;
+                flex-shrink: 0;
+            }
+        </style>
 
-            <tbody>
-            <tr class="bg-light text-primary">
-                <td class="member-info" style="display: flex;justify-content: space-evenly;background: white;color: black;padding-bottom: 16px">
-                    <div class="total-member" style="display: flex;flex-direction: column;align-items: center;">
-                        <span th:text="${totalMember}" style="font-size: 30px;color: blue;"></span>
-                        <span>Thành viên</span>
+        <div class="member-header-box">
+            <i class="fas fa-users" style="color: #bae6fd;"></i>
+            <span>CỘNG ĐỒNG HỌC VIÊN</span>
+        </div>
+
+        <div class="bg-white" style="border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
+            <!-- Hai khối thống kê -->
+            <div class="kpi-stat-grid">
+                <div class="kpi-stat-item">
+                    <div class="kpi-stat-number text-primary" th:text="${totalMember}">0</div>
+                    <div class="kpi-stat-label">Học viên</div>
+                </div>
+                <div class="kpi-stat-item">
+                    <div class="kpi-stat-number text-success" th:text="'+' + ${newUsers != null ? newUsers.size() : 0}">+0</div>
+                    <div class="kpi-stat-label">Tuần này</div>
+                </div>
+            </div>
+
+            <!-- Danh sách thành viên mới -->
+            <div class="p-1">
+                <div class="px-2 pt-2 pb-1 text-muted font-weight-bold" style="font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fas fa-sparkles text-warning mr-1"></i>Thành viên mới gia nhập:
+                </div>
+                <div th:if="${newUsers == null or newUsers.isEmpty()}" class="text-center py-3 text-muted small">
+                    Chưa có thành viên mới tuần này.
+                </div>
+                <div th:each="user : ${newUsers}" class="new-user-row">
+                    <img th:src="@{${user.img != null ? user.img : '/img/avatar/default.jpg'}}" alt="Avatar" class="new-user-avatar">
+                    <div class="flex-grow-1 text-truncate">
+                        <div class="font-weight-bold text-dark text-truncate" style="font-size: 0.84rem;" th:text="${user.fullName}">Tên học viên</div>
+                        <small class="text-muted" style="font-size: 0.72rem;">
+                            <span class="badge badge-light border text-primary" th:text="'@' + ${user.id}">@user</span>
+                            <span th:if="${user.school != null}" th:text="' · ' + ${user.school.name}">Trường</span>
+                        </small>
                     </div>
-                    <div class="new-member" style="display: flex;flex-direction: column;align-items: center;">
-                        <span th:text="'+'+${newUsers.size()}" style="font-size: 30px;color: blue;"></span>
-                        <span>Tuần qua</span>
-                    </div>
-                </td>
-            </tr>
-            <tr class="table-light  text-primary" th:each="user : ${newUsers}">
-                <td class="member-new" style="display: flex;gap: 10px;background: #defbff;">
-                    <img th:src="@{${user.img}}" alt="Avatar" style="height: 45px;width: 45px;object-fit: cover;border-radius: 5px;">
-                    <span class="member-welcome" style="font-size: 15px;color: saddlebrown;">Chào mừng <span class="member-name" style="color: slateblue;font-weight: bold" th:text="${user.fullName}"></span> trở thành thành viên của Website</span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

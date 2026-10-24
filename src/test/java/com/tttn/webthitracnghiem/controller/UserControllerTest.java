@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +43,7 @@ class UserControllerTest {
         SchoolRepository schoolRepository = mock(SchoolRepository.class);
         UserRepository userRepository = mock(UserRepository.class);
         IUserService userService = mock(IUserService.class);
-        when(schoolRepository.findAllByActiveTrueOrderByNameAsc()).thenReturn(List.of(firstSchool, secondSchool, otherSchool));
+        when(schoolRepository.findAllByOrderByNameAsc()).thenReturn(List.of(firstSchool, secondSchool, otherSchool));
         when(userRepository.findAllSchoolAdmins()).thenReturn(List.of());
         when(userRepository.findTeachersBySchool(anyInt())).thenReturn(List.of());
         when(userRepository.findStudentsBySchool(anyInt())).thenReturn(List.of());
@@ -95,6 +98,92 @@ class UserControllerTest {
         controller.delete("free-student", new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap());
 
         verify(userService).delete(student);
+    }
+
+    @Test
+    void principalEditsTeacherOfOwnSchoolDespiteMissingPasswordFields() {
+        School school = school(5, "School A", "Ward", "District", "Province");
+        User principal = new User();
+        principal.setId("principal");
+        principal.setSchool(school);
+        User teacher = userWithRole("gv01", "ROLE_TEACHER", school);
+        teacher.setPassWord("$2a$10$hash");
+
+        IUserService userService = mock(IUserService.class);
+        when(userService.findById("principal")).thenReturn(principal);
+        when(userService.findById("gv01")).thenReturn(teacher);
+        UserController controller = new UserController();
+        ReflectionTestUtils.setField(controller, "userService", userService);
+        authenticate("principal", "ROLE_SCHOOL_ADMIN");
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        String view = controller.editMember("gv01", model, new RedirectAttributesModelMap());
+        assertThat(view).isEqualTo("user/editMember");
+        assertThat(model.get("backUrl")).isEqualTo("/school-admin/users");
+
+        User submitted = new User();
+        submitted.setId("gv01");
+        submitted.setFullName(" Nguyen Van Moi ");
+        submitted.setEmail("moi@example.com");
+        submitted.setAddress("Ha Noi");
+        submitted.setPhoneNumber("0912345678");
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(submitted, "user");
+        // The edit form has no password inputs, so the entity's password constraints always fail.
+        bindingResult.rejectValue("passWord", "NotBlank");
+        bindingResult.rejectValue("rePassWord", "NotBlank");
+
+        String result = controller.update(submitted, bindingResult, new ExtendedModelMap(), new RedirectAttributesModelMap());
+
+        assertThat(result).isEqualTo("redirect:/school-admin/users");
+        assertThat(teacher.getFullName()).isEqualTo("Nguyen Van Moi");
+        assertThat(teacher.getPassWord()).isEqualTo("$2a$10$hash");
+        verify(userService).save(teacher);
+    }
+
+    @Test
+    void principalCannotEditTeacherOfAnotherSchoolOrAnotherPrincipal() {
+        School ownSchool = school(5, "School A", "Ward", "District", "Province");
+        School otherSchool = school(6, "School B", "Ward", "District", "Province");
+        User principal = new User();
+        principal.setId("principal");
+        principal.setSchool(ownSchool);
+        User otherTeacher = userWithRole("gv99", "ROLE_TEACHER", otherSchool);
+        User otherPrincipal = userWithRole("principal2", "ROLE_SCHOOL_ADMIN", ownSchool);
+
+        IUserService userService = mock(IUserService.class);
+        when(userService.findById("principal")).thenReturn(principal);
+        when(userService.findById("gv99")).thenReturn(otherTeacher);
+        when(userService.findById("principal2")).thenReturn(otherPrincipal);
+        UserController controller = new UserController();
+        ReflectionTestUtils.setField(controller, "userService", userService);
+        authenticate("principal", "ROLE_SCHOOL_ADMIN");
+
+        assertThat(controller.editMember("gv99", new ExtendedModelMap(), new RedirectAttributesModelMap()))
+                .isEqualTo("redirect:/school-admin/users");
+        assertThat(controller.editMember("principal2", new ExtendedModelMap(), new RedirectAttributesModelMap()))
+                .isEqualTo("redirect:/school-admin/users");
+
+        User submitted = userWithRole("gv99", "ROLE_TEACHER", null);
+        submitted.setFullName("Bi sua");
+        controller.update(submitted, new BeanPropertyBindingResult(submitted, "user"),
+                new ExtendedModelMap(), new RedirectAttributesModelMap());
+        verify(userService, never()).save(any(User.class));
+    }
+
+    private static void authenticate(String username, String role) {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        username, "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(role))));
+    }
+
+    private static User userWithRole(String id, String roleName, School school) {
+        Role role = new Role();
+        role.setRoleName(roleName);
+        User user = new User();
+        user.setId(id);
+        user.setRoles(java.util.Set.of(role));
+        user.setSchool(school);
+        return user;
     }
 
     private School school(Integer id, String name, String ward, String district, String province) {

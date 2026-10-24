@@ -13,7 +13,28 @@ import java.util.Optional;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Integer> {
+    long countByLesson_Id(int lessonId);
+
+    List<Question> findByLesson_IdIn(java.util.Collection<Integer> lessonIds);
+
+    @Query("select q from Question q left join q.classes c "
+            + "where q.subject.id = :subjectId "
+            + "and (c.id = :classId or c.id is null) "
+            + "and q.lesson is null and q.lessonPlanLesson is null")
+    List<Question> findBySubjectAndGradeWithoutLesson(@Param("subjectId") Integer subjectId,
+                                                       @Param("classId") Integer classId);
+
+    List<Question> findByReviewStatusAndSchool_IdOrderByQuesIdDesc(String reviewStatus, Integer schoolId);
+
+    List<Question> findByReviewStatusOrderByQuesIdDesc(String reviewStatus);
+
+    long countByReviewStatusAndSchool_Id(String reviewStatus, Integer schoolId);
+
+    long countByReviewStatus(String reviewStatus);
+
     @Query("select distinct q from Question q "
+            + "left join fetch q.subject qsubject "
+            + "left join fetch q.classes qclass "
             + "left join fetch q.lesson l "
             + "left join fetch l.chapter lc "
             + "left join fetch lc.subjectClasses lsc "
@@ -40,7 +61,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where sc.subject_id = :id or lp.subject_id = :id",
+            + "where sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id",
             countQuery = "select count(distinct q.ques_id) from question q "
                     + "left join lesson l on q.lesson_id = l.id "
                     + "left join chapter c on c.id = l.chapter_id "
@@ -48,7 +69,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
                     + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
                     + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
                     + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-                    + "where sc.subject_id = :id or lp.subject_id = :id", nativeQuery = true)
+                    + "where sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id", nativeQuery = true)
     Page<Question> findAllBySubject(@Param("id") Optional<Integer> id, Pageable pageable);
 
     Page<Question> findAllByTitleContaining(String title, Pageable pageable);
@@ -60,7 +81,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (sc.subject_id = :id or lp.subject_id = :id) and q.title like concat('%', :name, '%')",
+            + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) and q.title like concat('%', :name, '%')",
             countQuery = "select count(distinct q.ques_id) from question q "
                     + "left join lesson l on q.lesson_id = l.id "
                     + "left join chapter c on c.id = l.chapter_id "
@@ -68,7 +89,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
                     + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
                     + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
                     + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-                    + "where (sc.subject_id = :id or lp.subject_id = :id) and q.title like concat('%', :name, '%')",
+                    + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) and q.title like concat('%', :name, '%')",
             nativeQuery = true)
     Page<Question> findAllBySubjectAndTitleContaining(@Param("id") int id, @Param("name") String name, Pageable pageable);
     @Query(nativeQuery = true,value = "SELECT * FROM question WHERE lesson_id = :id")
@@ -83,8 +104,9 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "LEFT JOIN lesson_plan_custom_lesson pll ON pll.id = q.lesson_plan_lesson_id "
             + "LEFT JOIN lesson_plan_custom_chapter plc ON plc.id = pll.chapter_id "
             + "LEFT JOIN lesson_plan lp ON lp.id = plc.lesson_plan_id "
-            + "WHERE sc.subject_id = :subId AND sc.class_id = :classId "
-            + "OR lp.subject_id = :subId AND lp.grade_id = :classId")
+            + "WHERE (sc.subject_id = :subId AND sc.class_id = :classId) "
+            + "OR (lp.subject_id = :subId AND lp.grade_id = :classId) "
+            + "OR (q.subject_id = :subId AND (q.class_id = :classId OR q.class_id IS NULL))")
     List<Question> findBySubAndClass(@Param("subId") int subId, @Param("classId") int classId);
     @Query(nativeQuery = true,value = "SELECT DISTINCT q.* FROM question q "
             + "LEFT JOIN lesson l ON l.id = q.lesson_id "
@@ -93,7 +115,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "LEFT JOIN lesson_plan_custom_lesson pll ON pll.id = q.lesson_plan_lesson_id "
             + "LEFT JOIN lesson_plan_custom_chapter plc ON plc.id = pll.chapter_id "
             + "LEFT JOIN lesson_plan lp ON lp.id = plc.lesson_plan_id "
-            + "WHERE sc.subject_id = :subId OR lp.subject_id = :subId")
+            + "WHERE sc.subject_id = :subId OR lp.subject_id = :subId OR q.subject_id = :subId")
     List<Question> findBySubject(@Param("subId") int subId);
 
     // Lọc câu hỏi cho giáo viên: câu hỏi công khai HOẶC của cùng trường
@@ -104,7 +126,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (sc.subject_id = :id or lp.subject_id = :id) "
+            + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) "
             + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
             countQuery = "select count(distinct q.ques_id) from question q "
                     + "left join lesson l on q.lesson_id = l.id "
@@ -113,7 +135,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
                     + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
                     + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
                     + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-                    + "where (sc.subject_id = :id or lp.subject_id = :id) "
+                    + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) "
                     + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)", nativeQuery = true)
     Page<Question> findAllBySubjectAndSchool(@Param("id") Optional<Integer> id, @Param("schoolId") int schoolId, Pageable pageable);
 
@@ -144,7 +166,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (sc.subject_id = :id or lp.subject_id = :id) "
+            + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) "
             + "and q.title like concat('%', :name, '%') "
             + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
             countQuery = "select count(distinct q.ques_id) from question q "
@@ -154,7 +176,7 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
                     + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
                     + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
                     + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-                    + "where (sc.subject_id = :id or lp.subject_id = :id) "
+                    + "where (sc.subject_id = :id or lp.subject_id = :id or q.subject_id = :id) "
                     + "and q.title like concat('%', :name, '%') "
                     + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
             nativeQuery = true)
@@ -167,8 +189,8 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
-            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId or q.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId or q.class_id = :classId) "
             + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
             + "and (:title is null or q.title like concat('%', :title, '%'))",
             countQuery = "select count(distinct q.ques_id) from question q "
@@ -178,8 +200,8 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
-            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId or q.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId or q.class_id = :classId) "
             + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
             + "and (:title is null or q.title like concat('%', :title, '%'))",
             nativeQuery = true)
@@ -194,8 +216,8 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
-            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId or q.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId or q.class_id = :classId) "
             + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
             + "and (:title is null or q.title like concat('%', :title, '%')) "
             + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",
@@ -206,8 +228,8 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             + "left join lesson_plan_custom_lesson pll on q.lesson_plan_lesson_id = pll.id "
             + "left join lesson_plan_custom_chapter plc on plc.id = pll.chapter_id "
             + "left join lesson_plan lp on lp.id = plc.lesson_plan_id "
-            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId) "
-            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId) "
+            + "where (:subjectId is null or sc.subject_id = :subjectId or lp.subject_id = :subjectId or q.subject_id = :subjectId) "
+            + "and (:classId is null or sc.class_id = :classId or lp.grade_id = :classId or q.class_id = :classId) "
             + "and (:chapterId is null or c.id = :chapterId or plc.id = :chapterId) "
             + "and (:title is null or q.title like concat('%', :title, '%')) "
             + "and (q.is_public = true or q.is_public is null or q.school_id = :schoolId)",

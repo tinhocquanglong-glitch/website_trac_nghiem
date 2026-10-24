@@ -12,4 +12,6 @@ public interface ClassesRepository extends JpaRepository<Classes, Integer> {
     @Query(nativeQuery = true,value = "SELECT classes.* FROM classes JOIN subject_classes ON classes.id = subject_classes.class_id " +
             "WHERE subject_classes.subject_id = :id")
     List<Classes> findAllBySubjectClasses(int id);
+
+    java.util.Optional<Classes> findFirstByGradeOrderByIdAsc(Integer grade);
 }

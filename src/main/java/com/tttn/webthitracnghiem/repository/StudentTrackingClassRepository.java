@@ -11,7 +11,9 @@ import java.util.Optional;
 public interface StudentTrackingClassRepository extends JpaRepository<StudentTrackingClass, Integer> {
     List<StudentTrackingClass> findAllByOrderBySchoolYearDescClassNameAsc();
 
-    Optional<StudentTrackingClass> findByClassNameIgnoreCaseAndSchoolYear(String className, String schoolYear);
+    /** Class names are unique per school and school year; a null schoolId matches classes without a school. */
+    Optional<StudentTrackingClass> findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(
+            Integer schoolId, String className, String schoolYear);
 
     List<StudentTrackingClass> findBySchoolId(Integer schoolId);
 

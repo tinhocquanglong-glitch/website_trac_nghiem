@@ -5,11 +5,13 @@ import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.service.ILocationService;
 import com.tttn.webthitracnghiem.service.IUserService;
+import com.tttn.webthitracnghiem.service.SchoolManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -29,6 +31,12 @@ public class SchoolController {
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private SchoolManagementService schoolManagementService;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @ModelAttribute("admin")
     public User currentAdmin() {
@@ -107,13 +115,46 @@ public class SchoolController {
     }
 
     @GetMapping("/toggle/{id}")
-    public String toggleStatus(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+    public String toggleStatus(@PathVariable("id") Integer id,
+                               @RequestParam(value = "returnTo", required = false) String returnTo,
+                               RedirectAttributes redirectAttributes) {
         School school = locationService.findSchoolById(id);
         if (school != null) {
             school.setActive(!school.isActive());
             locationService.saveSchool(school);
-            redirectAttributes.addFlashAttribute("message", "Đã cập nhật trạng thái trường học!");
+            redirectAttributes.addFlashAttribute("message", school.isActive()
+                    ? "Đã mở khóa trường " + school.getName() + "."
+                    : "Đã khóa trường " + school.getName() + ". Tài khoản của trường không thể đăng nhập cho đến khi mở khóa.");
         }
-        return "redirect:/school/list";
+        return "redirect:" + safeReturnUrl(returnTo);
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteSchool(@PathVariable("id") Integer id,
+                               @RequestParam(value = "adminPassword", required = false) String adminPassword,
+                               @RequestParam(value = "returnTo", required = false) String returnTo,
+                               RedirectAttributes redirectAttributes) {
+        User admin = userService.findById(SecurityContextHolder.getContext().getAuthentication().getName());
+        if (adminPassword == null || adminPassword.isEmpty() || admin == null
+                || !passwordEncoder.matches(adminPassword, admin.getPassWord())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu admin không đúng. Trường chưa bị xóa.");
+            return "redirect:" + safeReturnUrl(returnTo);
+        }
+        try {
+            School deleted = schoolManagementService.deleteSchool(id);
+            redirectAttributes.addFlashAttribute("message", "Đã xóa trường " + deleted.getName() + ".");
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:" + safeReturnUrl(returnTo);
+    }
+
+    /** Only returns to the two admin pages that list schools, never to an arbitrary URL. */
+    private static String safeReturnUrl(String returnTo) {
+        if (returnTo != null && (returnTo.startsWith("/user/list") || returnTo.startsWith("/school/list"))
+                && !returnTo.contains("//") && !returnTo.contains("\\")) {
+            return returnTo;
+        }
+        return "/school/list";
     }
 }

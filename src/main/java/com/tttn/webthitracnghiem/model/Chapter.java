@@ -1,6 +1,7 @@
 package com.tttn.webthitracnghiem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
@@ -21,6 +22,18 @@ public class Chapter implements Comparable<Chapter>  {
     @JoinColumn(name = "subject_class_id",referencedColumnName = "id")
     @JsonBackReference
     private SubjectClasses subjectClasses;
+
+    // Null school = the shared curriculum every school starts from.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id")
+    @JsonIgnore
+    private School school;
+
+    // The shared chapter this school copy was made from.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_chapter_id")
+    @JsonIgnore
+    private Chapter templateChapter;
 
     public Chapter() {
     }
@@ -67,6 +80,22 @@ public class Chapter implements Comparable<Chapter>  {
 
     public int getSerial() {
         return serial;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
+    public Chapter getTemplateChapter() {
+        return templateChapter;
+    }
+
+    public void setTemplateChapter(Chapter templateChapter) {
+        this.templateChapter = templateChapter;
     }
 
     public void setSerial(int serial) {

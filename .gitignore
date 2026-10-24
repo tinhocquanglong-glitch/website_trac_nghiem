@@ -38,3 +38,9 @@ build/
 
 # Runtime logs generated while starting the backend locally
 tmp/*.log
+
+# Local secrets and environment overrides
+.env
+.env.local
+.env.*.local
+cookies*.txt

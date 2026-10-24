@@ -7,7 +7,10 @@ public class LessonPlanChapterRequest {
     private Integer id;
     private String name;
     private List<LessonPlanLessonRequest> lessons = new ArrayList<>();
+    private Integer curriculumChapterId;
 
+    public Integer getCurriculumChapterId() { return curriculumChapterId; }
+    public void setCurriculumChapterId(Integer curriculumChapterId) { this.curriculumChapterId = curriculumChapterId; }
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public String getName() { return name; }

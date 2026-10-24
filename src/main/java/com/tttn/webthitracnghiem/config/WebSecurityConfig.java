@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -33,7 +34,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                .formLogin().loginPage("/login").failureUrl("/login?error=true")
+                .formLogin().loginPage("/login")
+                .failureHandler((request, response, exception) -> response.sendRedirect(request.getContextPath()
+                        + (exception instanceof LockedException ? "/login?locked=true" : "/login?error=true")))
                 .defaultSuccessUrl("/role", true)
                 .and()
                 .authorizeRequests()
@@ -43,6 +46,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/school-admin/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/create-teacher").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/delete/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/user/editMember/**", "/user/update").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/update-role").hasRole("ADMIN")
                 .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
                 .antMatchers("/subject/create", "/subject/edit/**", "/subject/delete/**")
@@ -50,7 +54,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/subject/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/api/subjectClasses/**", "/api/chapter/**", "/api/lesson/**", "/api/document/**")
                     .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
-                .antMatchers("/lesson-plans/**")
+                .antMatchers("/lesson-plans/**", "/curriculum", "/curriculum/**", "/api/curriculum", "/api/curriculum/**")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
+                // Question and exam APIs expose answers; only staff pages call them.
+                .antMatchers("/api/question", "/api/question/**", "/api/exam", "/api/exam/**")
                     .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/exam/**", "/question/**", "/news/**", "/document/**", "/class/**",
                         "/lesson/**", "/chapter/**", "/student-tracking/**", "/teacher/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")

@@ -1,6 +1,7 @@
 package com.tttn.webthitracnghiem.controller;
 
 import com.tttn.webthitracnghiem.model.AttendanceStatus;
+import com.tttn.webthitracnghiem.model.ClassSubjectAssignment;
 import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
@@ -299,16 +300,11 @@ public class StudentTrackingController {
     public String sheet(@PathVariable Integer classId,
                         @RequestParam(defaultValue = "1") int semester,
                         @RequestParam(required = false) Integer month,
-                        Model model) {
+                        @RequestParam(required = false) Integer subjectId,
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
         int selectedMonth = month == null ? trackingService.defaultMonth(semester) : month;
         StudentTrackingClass trackingClass = trackingService.findClass(classId);
-        model.addAttribute("trackingClass", trackingClass);
-        model.addAttribute("trackingClasses", trackingService.listClasses());
-        model.addAttribute("sheetForm", trackingService.getSheet(classId, semester, selectedMonth));
-        model.addAttribute("semester", semester);
-        model.addAttribute("month", selectedMonth);
-        model.addAttribute("months", trackingService.monthsForSemester(semester));
-        model.addAttribute("attendanceStatuses", AttendanceStatus.values());
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = (auth != null && auth.isAuthenticated() && userService != null)
@@ -319,6 +315,32 @@ public class StudentTrackingController {
         boolean isHomeroom = (currentUser != null && trackingClass.getHomeroomTeacher() != null
                 && trackingClass.getHomeroomTeacher().getId().equals(currentUser.getId()));
         boolean canManage = isAdmin || isSchoolAdmin || isHomeroom;
+
+        // Each subject teacher writes in their own book; only managers open the homeroom book.
+        List<ClassSubjectAssignment> myAssignments = assignmentsOf(currentUser, classId);
+        ClassSubjectAssignment bookAssignment = myAssignments.stream()
+                .filter(a -> subjectId != null && a.getSubject() != null && subjectId.equals(a.getSubject().getId()))
+                .findFirst()
+                .orElse(canManage || myAssignments.isEmpty() ? null : myAssignments.get(0));
+        if (bookAssignment == null && !canManage) {
+            redirectAttributes.addFlashAttribute("error", "Bạn chưa được phân công dạy môn nào ở lớp "
+                    + trackingClass.getClassName() + " nên không thể mở sổ theo dõi của lớp này.");
+            return "redirect:/student-tracking";
+        }
+        Integer bookSubjectId = bookAssignment == null ? null : bookAssignment.getSubject().getId();
+        String bookTeacherId = bookAssignment == null ? null : currentUser.getId();
+
+        model.addAttribute("trackingClass", trackingClass);
+        model.addAttribute("trackingClasses", trackingService.listClasses());
+        model.addAttribute("sheetForm", trackingService.getSheet(classId, semester, selectedMonth, bookTeacherId, bookSubjectId));
+        model.addAttribute("semester", semester);
+        model.addAttribute("month", selectedMonth);
+        model.addAttribute("months", trackingService.monthsForSemester(semester));
+        model.addAttribute("attendanceStatuses", AttendanceStatus.values());
+        model.addAttribute("myAssignments", myAssignments);
+        model.addAttribute("homeroomBook", bookAssignment == null);
+        model.addAttribute("bookSubjectId", bookSubjectId);
+        model.addAttribute("bookSubjectName", bookAssignment == null ? null : bookAssignment.getSubject().getName());
 
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("isHomeroom", isHomeroom);
@@ -631,16 +653,53 @@ public class StudentTrackingController {
     @PostMapping("/classes/{classId}/records")
     public String saveSheet(@PathVariable Integer classId,
                             @ModelAttribute TrackingSheetForm sheetForm,
+                            @RequestParam(required = false) Integer subjectId,
                             RedirectAttributes redirectAttributes) {
         int semester = sheetForm.getSemester() == null ? 1 : sheetForm.getSemester();
         int month = safeMonth(semester, sheetForm.getMonth());
         try {
-            trackingService.saveSheet(classId, sheetForm);
-            redirectAttributes.addFlashAttribute("message", "Đã lưu sổ theo dõi tháng " + month + ".");
+            if (subjectId == null) {
+                if (!checkCanManageClass(classId)) {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Chỉ GVCN hoặc Ban giám hiệu mới được ghi sổ chủ nhiệm của lớp.");
+                    return redirectToSheet(classId, semester, month);
+                }
+                trackingService.saveSheet(classId, sheetForm);
+                redirectAttributes.addFlashAttribute("message", "Đã lưu sổ chủ nhiệm tháng " + month + ".");
+            } else {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                User currentUser = auth != null && userService != null ? userService.findById(auth.getName()) : null;
+                ClassSubjectAssignment assignment = assignmentsOf(currentUser, classId).stream()
+                        .filter(a -> a.getSubject() != null && subjectId.equals(a.getSubject().getId()))
+                        .findFirst()
+                        .orElse(null);
+                if (assignment == null) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công dạy môn này ở lớp.");
+                    return redirectToSheet(classId, semester, month);
+                }
+                trackingService.saveSheet(classId, sheetForm, currentUser.getId(), subjectId);
+                redirectAttributes.addFlashAttribute("message", "Đã lưu sổ môn " + assignment.getSubject().getName()
+                        + " tháng " + month + ".");
+            }
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return redirectToSheet(classId, semester, month);
+        return redirectToSheet(classId, semester, month, subjectId);
+    }
+
+    /** Subject assignments of {@code user} in the class. */
+    private List<ClassSubjectAssignment> assignmentsOf(User user, Integer classId) {
+        if (user == null || assignmentService == null) {
+            return List.of();
+        }
+        List<ClassSubjectAssignment> assignments = assignmentService.findByClassId(classId);
+        if (assignments == null) {
+            return List.of();
+        }
+        return assignments.stream()
+                .filter(a -> a.getTeacher() != null && user.getId().equals(a.getTeacher().getId()))
+                .filter(a -> a.getSubject() != null)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @PostMapping("/classes/{classId}/students/{studentId}/delete")
@@ -675,8 +734,10 @@ public class StudentTrackingController {
             return "redirect:/student-tracking";
         }
         int selectedMonth = safeMonth(semester, month);
+        User currentUser = userService != null ? userService.findById(auth.getName()) : null;
+        Integer schoolId = currentUser != null && currentUser.getSchool() != null ? currentUser.getSchool().getId() : null;
         try {
-            StudentTrackingService.ImportSummary summary = trackingService.importWorkbook(file, semester, selectedMonth);
+            StudentTrackingService.ImportSummary summary = trackingService.importWorkbook(file, semester, selectedMonth, schoolId);
             redirectAttributes.addFlashAttribute("message", "Đã import " + summary.getClassCount()
                     + " lớp và " + summary.getStudentCount() + " học sinh vào tháng " + selectedMonth + ".");
         } catch (IllegalArgumentException ex) {
@@ -720,8 +781,13 @@ public class StudentTrackingController {
 
 
     private String redirectToSheet(Integer classId, int semester, int month) {
+        return redirectToSheet(classId, semester, month, null);
+    }
+
+    private String redirectToSheet(Integer classId, int semester, int month, Integer subjectId) {
         int safeSemester = semester == 2 ? 2 : 1;
-        return "redirect:/student-tracking/classes/" + classId + "?semester=" + safeSemester + "&month=" + month;
+        return "redirect:/student-tracking/classes/" + classId + "?semester=" + safeSemester + "&month=" + month
+                + (subjectId == null ? "" : "&subjectId=" + subjectId);
     }
 
     private int safeMonth(int semester, Integer month) {

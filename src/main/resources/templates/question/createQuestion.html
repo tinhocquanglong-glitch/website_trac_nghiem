@@ -1,40 +1,215 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Website Trắc nghiệm</title>
-    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
-    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
-          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
+    <title>Xây Dựng Ngân Hàng Câu Hỏi - Website Trắc Nghiệm</title>
     <!-- Bootstrap -->
     <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
     <!-- Font Awesome -->
     <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
-    <!-- iCheck -->
-    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
-    <!-- JQVMap -->
-    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
-    <!-- bootstrap-daterangepicker -->
-    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <link rel="stylesheet" th:href="@{/css/loader.css}">
-    <link rel="stylesheet" th:href="@{/css/switch.css}">
     <!-- Custom Theme Style -->
     <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
     <style>
-        #lesson .list-lesson {
+        body { background: #f4f6f9; }
+        .page-header-box {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 24px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.15);
+        }
+        .option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: #fff;
+            position: relative;
+            height: 100%;
+        }
+        .option-card:hover {
+            border-color: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(49, 130, 206, 0.12);
+        }
+        .option-card.active {
+            border-color: #2b6cb0;
+            background: #ebf8ff;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.25);
+        }
+        .option-card .badge-rec {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #319795;
+            color: #fff;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+        .option-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .icon-opt1 { background: #e6fffa; color: #319795; }
+        .icon-opt2 { background: #ebf8ff; color: #3182ce; }
+        .icon-opt3 { background: #fefcbf; color: #b7791f; }
+        .question-form-card {
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            padding: 30px;
+        }
+        .form-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4a5568;
+            margin-bottom: 14px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #edf2f7;
             display: flex;
             align-items: center;
-            margin-bottom: 0.5rem;
-            gap: 5px;
-            font-size: 15px;
+            gap: 8px;
         }
-        #lesson .list-lesson label {
+        .answer-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e0;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .answer-input-group:focus-within {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+            background: #fff;
+        }
+        .answer-letter {
+            width: 46px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            background: #edf2f7;
+            color: #2d3748;
+            border-right: 1px solid #cbd5e0;
+        }
+        .answer-input-group input {
+            border: 0;
+            box-shadow: none;
+            background: transparent;
+            padding: 10px 14px;
+            width: 100%;
+            outline: none;
+        }
+        .correct-ans-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e0;
+            font-weight: 700;
+            font-size: 17px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 12px;
+            background: #fff;
+        }
+        .correct-ans-pill:hover {
+            border-color: #3182ce;
+            color: #3182ce;
+        }
+        .correct-ans-pill.active {
+            background: #3182ce;
+            color: #fff;
+            border-color: #3182ce;
+            box-shadow: 0 4px 10px rgba(49, 130, 206, 0.35);
+        }
+        .level-pill {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 14px;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 10px;
+            background: #fff;
+        }
+        .level-pill.active-de {
+            background: #def7ec;
+            color: #03543f;
+            border-color: #31c48d;
+        }
+        .level-pill.active-tb {
+            background: #e1effe;
+            color: #1e429f;
+            border-color: #3f83f8;
+        }
+        .level-pill.active-kho {
+            background: #fde8e8;
+            color: #9b1c1c;
+            border-color: #f98080;
+        }
+        .cur-accordion .card {
+            border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+            border-radius: 8px !important;
+        }
+        .cur-accordion .card-header {
+            background: #f8fafc;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #edf2f7;
+            font-weight: 600;
+        }
+        .cur-accordion .card-header:hover {
+            background: #edf2f7;
+        }
+        .cur-lesson-item {
+            padding: 8px 14px 8px 30px;
+            border-bottom: 1px dashed #edf2f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cur-lesson-item:last-child {
+            border-bottom: 0;
+        }
+        .cur-lesson-item label {
             margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+        .alert-toast {
+            display: none;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .ck-editor__editable_inline {
+            min-height: 140px;
         }
     </style>
 </head>
@@ -45,367 +220,632 @@
         <div th:insert="~{index.html :: navbarAdmin}"></div>
         <div th:insert="~{index.html :: topnavAdmin}"></div>
         <div class="right_col" role="main">
-            <div class="row">
-                <div class="container-fluid" style="margin-bottom: 150px">
-                    <div class="h4 text-center mb-4">
-                        Tạo Câu Hỏi Mới
+            <div class="container-fluid" style="max-width: 960px; margin: 0 auto; padding-bottom: 80px;">
+
+                <!-- Header Title Box -->
+                <div class="page-header-box d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <div class="text-uppercase small font-weight-bold mb-1 text-white-50">
+                            <i class="fas fa-layer-group mr-1"></i> Khảo thí & Ngân hàng câu hỏi
+                        </div>
+                        <h1 class="h3 font-weight-bold mb-1">Xây Dựng Ngân Hàng Câu Hỏi</h1>
+                        <p class="mb-0 text-white-50">Tạo câu hỏi trắc nghiệm linh hoạt theo Môn học, Khung chương trình hoặc Kế hoạch bài dạy (KHBD).</p>
                     </div>
-                    <form style="max-width: 600px; margin: 0 auto; background-color: #d8f5ff;" th:object="${question}">
-                        <div class="border border-secondary rounded p-3 pt-5">
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Môn học</label>
-                                <div class="col-sm-8 pt-2">
-                                    <select id="subject" class="btn dropdown-toggle" data-toggle="dropdown"
-                                            style="background-color: #14c4ff" onchange="getClass()">
-                                        <option value="" selected disabled>--Chọn môn học--</option>
-                                        <th:block class="dropdown-menu" th:each="subject : ${subjects}">
-                                            <option class="dropdown-item" th:value="${subject.id}"
-                                                    th:text="${subject.name}"></option>
-                                        </th:block>
-                                    </select>
-                                    <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
-                                            style="background-color: #14c4ff;display: none" onchange="getChapter()">
-                                        <option id="default" value="" selected disabled>--Chọn khối--</option>
-                                        </th:block>
-                                    </select>
-                                    <div id="lesson">
-                                    </div>
+                    <a th:href="@{/question/list}" class="btn btn-light btn-sm mt-3 mt-md-0 shadow-sm font-weight-bold">
+                        <i class="fas fa-arrow-left mr-1"></i> Quay lại Ngân hàng câu hỏi
+                    </a>
+                </div>
+
+                <!-- 3 Options Chooser -->
+                <div class="mb-4">
+                    <div class="row">
+                        <!-- Option 1 -->
+                        <div class="col-md-4 mb-3">
+                            <div class="option-card active" id="cardOpt1" onclick="selectOption(1)">
+                                <span class="badge-rec">Nhanh & Linh hoạt</span>
+                                <div class="option-icon icon-opt1">
+                                    <i class="fas fa-book"></i>
                                 </div>
+                                <h6 class="font-weight-bold mb-1 text-dark">1. Chỉ chọn môn học</h6>
+                                <p class="text-muted small mb-0">Tạo câu hỏi nhanh gắn trực tiếp vào Môn học (tùy chọn Khối), không bắt buộc phải chọn bài học.</p>
                             </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Theo giáo án</label>
-                                <div class="col-sm-8 pt-2">
-                                    <select id="planSubject" class="form-control mb-2">
-                                        <option value="">-- Chọn môn trong giáo án --</option>
+                        </div>
+
+                        <!-- Option 2 -->
+                        <div class="col-md-4 mb-3">
+                            <div class="option-card" id="cardOpt2" onclick="selectOption(2)">
+                                <div class="option-icon icon-opt2">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <h6 class="font-weight-bold mb-1 text-dark">2. Khung chương trình</h6>
+                                <p class="text-muted small mb-0">Chọn Môn và Khối để gắn câu hỏi chính xác vào Chủ đề & Bài học trong Khung chương trình chuẩn.</p>
+                            </div>
+                        </div>
+
+                        <!-- Option 3 -->
+                        <div class="col-md-4 mb-3">
+                            <div class="option-card" id="cardOpt3" onclick="selectOption(3)">
+                                <div class="option-icon icon-opt3">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <h6 class="font-weight-bold mb-1 text-dark">3. Theo KHBD (Giáo án)</h6>
+                                <p class="text-muted small mb-0">Chọn Kế hoạch bài dạy của thầy cô để gắn câu hỏi trực tiếp vào bài giảng đang phụ trách.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Form Card -->
+                <div class="question-form-card">
+                    <form id="createQuestionForm">
+                        <input type="hidden" id="creationOption" name="creationOption" value="1">
+
+                        <!-- Feedback alert -->
+                        <div id="formAlert" class="alert alert-danger alert-toast" role="alert">
+                            <i class="fas fa-exclamation-triangle mr-2"></i><span id="formAlertMsg">Thông báo lỗi</span>
+                        </div>
+
+                        <!-- Phân Loại Nguồn Câu Hỏi -->
+                        <div class="form-section-title">
+                            <i class="fas fa-sliders-h text-primary"></i> 1. Phân loại & Phạm vi câu hỏi
+                        </div>
+
+                        <!-- Panel Option 1: Chỉ chọn Môn học -->
+                        <div id="panelOpt1" class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">Môn học <span class="text-danger">*</span></label>
+                                    <select id="subjectOpt1" class="form-control" onchange="onSubjectOpt1Change()">
+                                        <option value="">-- Chọn môn học --</option>
                                         <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
                                     </select>
-                                    <select id="planGrade" class="form-control mb-2">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">Khối (Tùy chọn)</label>
+                                    <select id="classOpt1" class="form-control">
+                                        <option value="">-- Mọi khối / Không bắt buộc --</option>
+                                        <option th:each="c : ${allClasses}" th:value="${c.id}" th:text="${c.displayName}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="alert alert-light border small text-muted mb-0">
+                                <i class="fas fa-info-circle text-info mr-1"></i> Câu hỏi tạo theo môn học sẽ được lưu vào ngân hàng đề thi chung của môn này và có thể được chọn vào bất kỳ đề thi nào.
+                            </div>
+                        </div>
+
+                        <!-- Panel Option 2: Khung chương trình -->
+                        <div id="panelOpt2" class="mb-4" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">Môn học <span class="text-danger">*</span></label>
+                                    <select id="subjectOpt2" class="form-control" onchange="loadCurriculumClasses()">
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">Khối <span class="text-danger">*</span></label>
+                                    <select id="classOpt2" class="form-control" onchange="loadCurriculumLessons()" disabled>
                                         <option value="">-- Chọn khối --</option>
-                                        <option th:each="grade : ${lessonPlanGrades}" th:value="${grade.grade}" th:text="${grade.displayName}"></option>
-                                    </select>
-                                    <select id="planTopic" class="form-control mb-2" disabled>
-                                        <option value="">-- Chọn chủ đề --</option>
-                                    </select>
-                                    <select id="planLessonCustom" class="form-control" disabled>
-                                        <option value="">-- Chọn bài học --</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Câu hỏi</label>
-                                <div class="col-sm-8 pt-2">
-                                    <div id="editor"></div>
-                                    <!--                    <div th:if="${#fields.hasErrors('idName')}" th:errors="*{idName}" style="color: red"></div>-->
+                            <div class="mb-3">
+                                <label class="font-weight-bold mb-1">Chọn Bài học trong Khung chương trình <span class="text-danger">*</span></label>
+                                <div id="curriculumLessonContainer" class="p-3 border rounded bg-light" style="max-height: 280px; overflow-y: auto;">
+                                    <span class="text-muted small">Vui lòng chọn Môn học và Khối để hiển thị danh sách bài học.</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Đáp án A</label>
-                                <div class="col-sm-8 pt-2">
+                        <!-- Panel Option 3: Kế hoạch bài dạy (KHBD / Giáo án) -->
+                        <div id="panelOpt3" class="mb-4" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold">Môn học liên quan</label>
+                                    <select id="subjectOpt3" class="form-control" onchange="loadTeacherLessonPlans()">
+                                        <option value="">-- Tất cả môn học --</option>
+                                        <option th:each="subject : ${subjects}" th:value="${subject.id}" th:text="${subject.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="font-weight-bold">Kế hoạch bài dạy (KHBD) của bạn <span class="text-danger">*</span></label>
+                                    <select id="lessonPlanSelect" class="form-control" onchange="onLessonPlanSelected()">
+                                        <option value="">-- Đang tải danh sách KHBD... --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="font-weight-bold mb-1">Chọn Bài học / Hoạt động trong KHBD <span class="text-danger">*</span></label>
+                                <div id="lessonPlanLessonContainer" class="p-3 border rounded bg-light" style="max-height: 280px; overflow-y: auto;">
+                                    <span class="text-muted small">Vui lòng chọn Kế hoạch bài dạy để chọn bài học.</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <input type="text" class="form-control" th:field="*{optionA}" id="an1"
-                                           onchange="return validate()">
-                                    <!--                        <div th:if="${#fields.hasErrors('idName')}" th:errors="*{idName}" style="color: red"></div>-->
+                        <!-- Nội Dung Câu Hỏi -->
+                        <div class="form-section-title">
+                            <i class="fas fa-question-circle text-primary"></i> 2. Nội dung câu hỏi trắc nghiệm
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold">Câu hỏi <span class="text-danger">*</span></label>
+                            <div id="editor"></div>
+                        </div>
 
+                        <!-- 4 Đáp Án A, B, C, D -->
+                        <div class="form-section-title">
+                            <i class="fas fa-list-ul text-primary"></i> 3. Các phương án trả lời & Đáp án đúng
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="small font-weight-bold text-muted">Phương án A <span class="text-danger">*</span></label>
+                                <div class="answer-input-group">
+                                    <div class="answer-letter">A</div>
+                                    <input type="text" id="an1" placeholder="Nhập nội dung đáp án A...">
                                 </div>
                             </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Đáp án B</label>
-                                <div class="col-sm-8 pt-2">
-                                    <input type="text" class="form-control" th:field="*{optionB}" id="an2"
-                                           onchange="return validate()">
-                                    <!--                    <div th:if="${#fields.hasErrors('nameExam')}" th:errors="*{nameExam}" style="color: red"></div>-->
+                            <div class="col-md-6">
+                                <label class="small font-weight-bold text-muted">Phương án B <span class="text-danger">*</span></label>
+                                <div class="answer-input-group">
+                                    <div class="answer-letter">B</div>
+                                    <input type="text" id="an2" placeholder="Nhập nội dung đáp án B...">
                                 </div>
                             </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Đáp án C</label>
-                                <div class="col-sm-8 pt-2">
+                            <div class="col-md-6">
+                                <label class="small font-weight-bold text-muted">Phương án C <span class="text-danger">*</span></label>
+                                <div class="answer-input-group">
+                                    <div class="answer-letter">C</div>
+                                    <input type="text" id="an3" placeholder="Nhập nội dung đáp án C...">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small font-weight-bold text-muted">Phương án D <span class="text-danger">*</span></label>
+                                <div class="answer-input-group">
+                                    <div class="answer-letter">D</div>
+                                    <input type="text" id="an4" placeholder="Nhập nội dung đáp án D...">
+                                </div>
+                            </div>
+                        </div>
 
-                                    <input type="text" class="form-control" th:field="*{optionC}" id="an3"
-                                           onchange="return validate()">
+                        <!-- Chọn Đáp án đúng -->
+                        <div class="mb-4">
+                            <label class="font-weight-bold d-block mb-2">Đáp án đúng <span class="text-danger">*</span></label>
+                            <div class="d-flex align-items-center">
+                                <div class="correct-ans-pill" data-ans="1" onclick="selectCorrectAns(1)">A</div>
+                                <div class="correct-ans-pill" data-ans="2" onclick="selectCorrectAns(2)">B</div>
+                                <div class="correct-ans-pill" data-ans="3" onclick="selectCorrectAns(3)">C</div>
+                                <div class="correct-ans-pill" data-ans="4" onclick="selectCorrectAns(4)">D</div>
+                                <input type="hidden" id="correctAnswerVal" value="">
+                                <span class="text-muted small ml-2" id="ansHint">(Click chọn phương án chính xác)</span>
+                            </div>
+                        </div>
 
+                        <!-- Thuộc tính bổ trợ: Mức độ & Phạm vi -->
+                        <div class="form-section-title">
+                            <i class="fas fa-tag text-primary"></i> 4. Mức độ nhận thức & Quyền chia sẻ
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-7 mb-3">
+                                <label class="font-weight-bold d-block mb-2">Mức độ nhận thức <span class="text-danger">*</span></label>
+                                <div>
+                                    <span class="level-pill active-de" data-lvl="1" onclick="selectLevel(1)">
+                                        <i class="fas fa-smile mr-1 text-success"></i> Dễ (Nhận biết)
+                                    </span>
+                                    <span class="level-pill" data-lvl="2" onclick="selectLevel(2)">
+                                        <i class="fas fa-meh mr-1 text-primary"></i> Trung bình (Thông hiểu)
+                                    </span>
+                                    <span class="level-pill" data-lvl="3" onclick="selectLevel(3)">
+                                        <i class="fas fa-brain mr-1 text-danger"></i> Khó (Vận dụng cao)
+                                    </span>
+                                    <input type="hidden" id="levelVal" value="1">
                                 </div>
                             </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Đáp án D</label>
-                                <div class="col-sm-8 pt-2">
+                            <div class="col-md-5 mb-3">
+                                <label class="font-weight-bold d-block mb-2">Phạm vi câu hỏi</label>
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" id="scopePublic" name="isPublicRadio" class="custom-control-input" value="true" checked>
+                                    <label class="custom-control-label text-success font-weight-bold" for="scopePublic">
+                                        <i class="fas fa-globe mr-1"></i> Công khai
+                                    </label>
+                                </div>
+                                <div class="custom-control custom-radio custom-control-inline">
+                                    <input type="radio" id="scopePrivate" name="isPublicRadio" class="custom-control-input" value="false">
+                                    <label class="custom-control-label text-warning font-weight-bold" for="scopePrivate">
+                                        <i class="fas fa-lock mr-1"></i> Nội bộ trường
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <input type="text" class="form-control" th:field="*{optionD}" id="an4"
-                                           onchange="return validate()">
-
-                                </div>
-                            </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Đáp án</label>
-                                <div class="col-sm-8 pt-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" value="1" th:field="*{ans}"
-                                               name="answer" onblur="validate()">
-                                        <label class="form-check-label">A</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" value="2" th:field="*{ans}"
-                                               name="answer" onblur="validate()">
-                                        <label class="form-check-label">B</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" value="3" th:field="*{ans}"
-                                               name="answer" onblur="validate()">
-                                        <label class="form-check-label">C</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" value="4" th:field="*{ans}"
-                                               name="answer" onblur="validate()">
-                                        <label class="form-check-label">D</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Mức độ câu hỏi</label>
-                                <div class="col-sm-8 pt-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" th:field="*{level}" value="1" onchange="return validate()">
-                                        <label class="form-check-label">Dễ</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" th:field="*{level}" value="2" onchange="return validate()">
-                                        <label class="form-check-label">Trung bình</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" th:field="*{level}" value="3" onchange="return validate()">
-                                        <label class="form-check-label">Khó</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group row justify-content-center align-items-center">
-                                <label class="col-sm-3 col-form-label">Phạm vi câu hỏi</label>
-                                <div class="col-sm-8 pt-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" th:field="*{isPublic}" value="true">
-                                        <label class="form-check-label text-success"><i class="fa fa-globe"></i> Công khai (tất cả trường dùng được)</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" th:field="*{isPublic}" value="false">
-                                        <label class="form-check-label text-warning"><i class="fa fa-lock"></i> Nội bộ (chỉ trong trường)</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <button type="button" class="btn" style="background-color: #3bceff" id="btnSub"
-                                >Thêm mới
-                                </button>
-                                <a href="/question/list" type="button" class="btn btn-warning">Quay về</a>
-                            </div>
+                        <!-- Action Buttons -->
+                        <div class="text-center pt-3 border-top">
+                            <button type="button" class="btn btn-primary btn-lg px-5 shadow-sm font-weight-bold mr-2" id="btnSub" onclick="submitQuestion()">
+                                <i class="fas fa-plus-circle mr-1"></i> Thêm mới câu hỏi
+                            </button>
+                            <a th:href="@{/question/list}" class="btn btn-outline-secondary btn-lg px-4">
+                                Hủy bỏ
+                            </a>
                         </div>
                     </form>
                 </div>
+
             </div>
         </div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>
-</body>
-<!-- jQuery -->
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<!-- Bootstrap -->
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
-<!-- Custom Theme Scripts -->
-<script th:src="@{/build/js/custom.min.js}"></script>
 
+<!-- Scripts -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
 <script th:src="@{https://cdn.ckeditor.com/ckeditor5/37.0.1/classic/ckeditor.js}"></script>
-<script>
-    function checkEmpty(obj) {
-        if ($(obj).val() === "" || $(obj).val() === undefined) {
-            return false;
-        }
-        return true;
-    }
 
+<script>
     var editor;
+    var lessonPlansCache = [];
+
     ClassicEditor
-        .create(document.querySelector('#editor'))
+        .create(document.querySelector('#editor'), {
+            placeholder: 'Nhập nội dung câu hỏi tại đây... Bạn có thể định dạng in đậm, công thức, bảng biểu...'
+        })
         .then(newEditor => {
             editor = newEditor;
-            newEditor.model.document.on('change', () => {
-                editor = newEditor;
-                validate();
-            });
         })
         .catch(error => {
-            console.error(error);
+            console.error('CKEditor Init Error:', error);
         });
 
-    function validate() {
-        if (!editor) return false;
-        var valid = true;
-        valid = valid && editor.getData() !== "";
-        valid = valid && (checkEmpty($("#an1")) || checkEmpty($("#an2")) || checkEmpty($("#an3")) || checkEmpty($("#an4")) );
-        valid = valid && checkEmpty($('input[name="ans"]:checked'));
-        valid = valid && (!!$('#planLessonCustom').val() || checkEmpty($('input[name="lesson"]:checked')));
-        valid = valid && checkEmpty($('input[name="level"]:checked'));
+    // Option selection switcher (1, 2, 3)
+    function selectOption(opt) {
+        document.getElementById('creationOption').value = opt;
+        $('.option-card').removeClass('active');
+        $('#cardOpt' + opt).addClass('active');
 
-        $("#btnSub").attr("disabled", true);
-        if (valid) {
-            $("#btnSub").attr("disabled", false);
+        $('#panelOpt1, #panelOpt2, #panelOpt3').hide();
+        $('#panelOpt' + opt).slideDown(200);
+
+        if (opt === 3) {
+            loadTeacherLessonPlans();
         }
+        hideAlert();
     }
 
-    $("#btnSub").click(function () {
+    // Correct answer selector
+    function selectCorrectAns(ans) {
+        $('#correctAnswerVal').value = ans;
+        document.getElementById('correctAnswerVal').value = ans;
+        $('.correct-ans-pill').removeClass('active');
+        $('.correct-ans-pill[data-ans="' + ans + '"]').addClass('active');
+        var letters = { 1: 'A', 2: 'B', 3: 'C', 4: 'D' };
+        $('#ansHint').html('<span class="text-success font-weight-bold"><i class="fas fa-check-circle"></i> Đã chọn đáp án đúng: ' + letters[ans] + '</span>');
+        hideAlert();
+    }
 
-        var title = editor.getData();
-        var optionA = $('#an1').val();
-        var optionB = $('#an2').val();
-        var optionC = $("#an3").val();
-        var optionD = $("#an4").val();
-        var ans = $("input[name=ans]:checked").val();
-        var subjectId = $("#subject").val();
-        var lessonId = $("input[name=lesson]:checked").val();
-        var customLessonId = $("#planLessonCustom").val();
-        var level = $("input[name=level]:checked").val();
+    // Level selector
+    function selectLevel(lvl) {
+        document.getElementById('levelVal').value = lvl;
+        $('.level-pill').removeClass('active-de active-tb active-kho');
+        if (lvl === 1) $('.level-pill[data-lvl="1"]').addClass('active-de');
+        if (lvl === 2) $('.level-pill[data-lvl="2"]').addClass('active-tb');
+        if (lvl === 3) $('.level-pill[data-lvl="3"]').addClass('active-kho');
+    }
 
-        var question = new FormData();
-        question.append("title", title);
-        question.append("optionA", optionA);
-        question.append("optionB", optionB);
-        question.append("optionC", optionC);
-        question.append("optionD", optionD);
-        question.append("ans", ans);
-        question.append("subjects", subjectId);
-        question.append("classId", $("#class").val());
-        if (customLessonId) {
-            question.append("lessonPlanLessonId", customLessonId);
-        } else {
-            question.append("lesson", lessonId);
+    // Option 1 change
+    function onSubjectOpt1Change() {
+        hideAlert();
+    }
+
+    // Option 2: Load classes by subject
+    function loadCurriculumClasses() {
+        var subId = $('#subjectOpt2').val();
+        var $cls = $('#classOpt2');
+        var $curLesson = $('#curriculumLessonContainer');
+        $cls.html('<option value="">-- Chọn khối --</option>').prop('disabled', true);
+        $curLesson.html('<span class="text-muted small">Vui lòng chọn Khối để xem bài học.</span>');
+        if (!subId) return;
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/class/' + subId,
+            dataType: 'json',
+            success: function (response) {
+                if (response && response.length > 0) {
+                    for (var i = 0; i < response.length; i++) {
+                        var text = response[i].displayName || (response[i].grade ? 'Khối ' + response[i].grade : response[i].nameClass);
+                        $cls.append('<option value="' + response[i].id + '">' + text + '</option>');
+                    }
+                    $cls.prop('disabled', false);
+                } else {
+                    $cls.html('<option value="">Môn này chưa gán khối nào</option>');
+                }
+            },
+            error: function () {
+                $cls.html('<option value="">Lỗi tải danh sách khối</option>');
+            }
+        });
+    }
+
+    // Option 2: Load chapters & lessons
+    function loadCurriculumLessons() {
+        var subId = $('#subjectOpt2').val();
+        var classId = $('#classOpt2').val();
+        var $container = $('#curriculumLessonContainer');
+        if (!subId || !classId) return;
+
+        $container.html('<div class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> Đang tải chương trình học...</div>');
+
+        $.ajax({
+            type: 'GET',
+            url: '/api/curriculum',
+            data: {subjectId: subId, gradeId: classId},
+            dataType: 'json',
+            success: function (response) {
+                var topics = response && response.topics ? response.topics : [];
+                if (topics.length === 0) {
+                    $container.html('<div class="alert alert-warning mb-0 small"><i class="fas fa-exclamation-circle mr-1"></i> Môn và khối này chưa có chủ đề/bài học trong khung chương trình. Thầy cô có thể thêm ở trang <a href="/curriculum" target="_blank" class="font-weight-bold">Chương trình học</a> hoặc chuyển sang <b>Tùy chọn 1 (Chỉ chọn môn học)</b> để tạo nhanh.</div>');
+                    return;
+                }
+                var html = '<div class="cur-accordion" id="accordionCurriculum">';
+                for (var i = 0; i < topics.length; i++) {
+                    var chapter = topics[i];
+                    var collapseId = 'cur_chap_' + chapter.id;
+                    html += '<div class="card mb-2">';
+                    html += '  <div class="card-header" data-toggle="collapse" data-target="#' + collapseId + '">';
+                    html += '    <i class="fas fa-folder text-warning mr-1"></i> Chủ đề ' + (i + 1) + ': ' + escapeHtml(chapter.name);
+                    html += '  </div>';
+                    html += '  <div id="' + collapseId + '" class="collapse show" data-parent="#accordionCurriculum">';
+                    html += '    <div class="card-body p-0">';
+                    if (!chapter.lessons || chapter.lessons.length === 0) {
+                        html += '      <div class="p-2 text-muted small pl-4">Chủ đề chưa có bài học nào.</div>';
+                    } else {
+                        chapter.lessons.sort(function(a, b) { return (a.serial || 0) - (b.serial || 0); });
+                        for (var j = 0; j < chapter.lessons.length; j++) {
+                            var lesson = chapter.lessons[j];
+                            var radioId = 'lesson_radio_' + lesson.id;
+                            html += '      <div class="cur-lesson-item">';
+                            html += '        <input type="radio" name="lessonIdOpt2" id="' + radioId + '" value="' + lesson.id + '" onchange="hideAlert()">';
+                            html += '        <label for="' + radioId + '">Bài ' + (j + 1) + '. ' + escapeHtml(lesson.name) + '</label>';
+                            html += '      </div>';
+                        }
+                    }
+                    html += '    </div>';
+                    html += '  </div>';
+                    html += '</div>';
+                }
+                html += '</div>';
+                $container.html(html);
+            },
+            error: function () {
+                $container.html('<div class="text-danger small">Lỗi khi tải chương trình học.</div>');
+            }
+        });
+    }
+
+    // Option 3: Load teacher's lesson plans
+    function loadTeacherLessonPlans() {
+        var $select = $('#lessonPlanSelect');
+        $select.html('<option value="">Đang tải danh sách KHBD...</option>');
+        $('#lessonPlanLessonContainer').html('<span class="text-muted small">Vui lòng chọn Kế hoạch bài dạy để chọn bài học.</span>');
+
+        var subjectId = $('#subjectOpt3').val();
+
+        $.ajax({
+            type: 'GET',
+            url: '/lesson-plans/catalog',
+            data: subjectId ? {subjectId: subjectId} : {},
+            dataType: 'json',
+            success: function (data) {
+                lessonPlansCache = data || [];
+                if (lessonPlansCache.length === 0) {
+                    $select.html('<option value="">Bạn chưa có Kế hoạch bài dạy (KHBD) nào</option>');
+                    $('#lessonPlanLessonContainer').html('<div class="alert alert-warning small mb-0"><i class="fas fa-info-circle mr-1"></i> Thầy cô chưa có Kế hoạch bài dạy (KHBD) nào. Hãy tạo ở mục <a href="/lesson-plans/create" target="_blank" class="font-weight-bold">Soạn KHBD</a> hoặc chọn <b>Tùy chọn 1 (Chỉ chọn môn học)</b>.</div>');
+                    return;
+                }
+                var html = '<option value="">-- Chọn Kế hoạch bài dạy (KHBD) --</option>';
+                for (var i = 0; i < lessonPlansCache.length; i++) {
+                    var lp = lessonPlansCache[i];
+                    html += '<option value="' + lp.id + '">' + escapeHtml(lp.name) + (lp.grade ? ' (Khối ' + lp.grade + ')' : '') + '</option>';
+                }
+                $select.html(html);
+            },
+            error: function () {
+                $select.html('<option value="">Lỗi khi tải danh sách KHBD</option>');
+            }
+        });
+    }
+
+    // Option 3: When a lesson plan is selected
+    function onLessonPlanSelected() {
+        var planId = parseInt($('#lessonPlanSelect').val());
+        var $container = $('#lessonPlanLessonContainer');
+        if (!planId) {
+            $container.html('<span class="text-muted small">Vui lòng chọn Kế hoạch bài dạy để chọn bài học.</span>');
+            return;
         }
-        question.append("level",level);
 
-        console.log(...question);
+        var plan = lessonPlansCache.find(function(p) { return p.id === planId; });
+        if (!plan || !plan.topics || plan.topics.length === 0) {
+            $container.html('<div class="text-muted small">KHBD này chưa có bài học hoặc chủ đề con nào.</div>');
+            return;
+        }
+
+        var html = '<div class="cur-accordion" id="accordionLP">';
+        for (var i = 0; i < plan.topics.length; i++) {
+            var topic = plan.topics[i];
+            var collapseId = 'lp_topic_' + topic.id;
+            html += '<div class="card mb-2">';
+            html += '  <div class="card-header" data-toggle="collapse" data-target="#' + collapseId + '">';
+            html += '    <i class="fas fa-bookmark text-info mr-1"></i> ' + escapeHtml(topic.name);
+            html += '  </div>';
+            html += '  <div id="' + collapseId + '" class="collapse show" data-parent="#accordionLP">';
+            html += '    <div class="card-body p-0">';
+            if (!topic.lessons || topic.lessons.length === 0) {
+                html += '      <div class="p-2 text-muted small pl-4">Chưa có bài học nào.</div>';
+            } else {
+                for (var j = 0; j < topic.lessons.length; j++) {
+                    var l = topic.lessons[j];
+                    var radioId = 'lp_lesson_radio_' + l.id;
+                    html += '      <div class="cur-lesson-item">';
+                    html += '        <input type="radio" name="lpLessonRadio" id="' + radioId + '" value="' + l.id + '" onchange="hideAlert()">';
+                    html += '        <label for="' + radioId + '">' + escapeHtml(l.name) + '</label>';
+                    html += '      </div>';
+                }
+            }
+            html += '    </div>';
+            html += '  </div>';
+            html += '</div>';
+        }
+        html += '</div>';
+        $container.html(html);
+        hideAlert();
+    }
+
+    // Utility: Show alert message
+    function showAlert(msg) {
+        $('#formAlertMsg').text(msg);
+        $('#formAlert').slideDown(200);
+        $('html, body').animate({
+            scrollTop: $('#formAlert').offset().top - 80
+        }, 200);
+    }
+
+    function hideAlert() {
+        $('#formAlert').slideUp(150);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return $('<div>').text(str).html();
+    }
+
+    // Form submit handler
+    function submitQuestion() {
+        hideAlert();
+        var option = parseInt($('#creationOption').val());
+
+        // 1. Validate based on option
+        var subjectId = null;
+        var classId = null;
+        var lessonId = null;
+        var lessonPlanLessonId = null;
+
+        if (option === 1) {
+            subjectId = $('#subjectOpt1').val();
+            classId = $('#classOpt1').val() || null;
+            if (!subjectId) {
+                showAlert('Vui lòng chọn môn học cho câu hỏi.');
+                $('#subjectOpt1').focus();
+                return;
+            }
+        } else if (option === 2) {
+            subjectId = $('#subjectOpt2').val();
+            classId = $('#classOpt2').val();
+            lessonId = $('input[name="lessonIdOpt2"]:checked').val();
+
+            if (!subjectId) {
+                showAlert('Vui lòng chọn môn học trong Khung chương trình.');
+                $('#subjectOpt2').focus();
+                return;
+            }
+            if (!classId) {
+                showAlert('Vui lòng chọn khối học trong Khung chương trình.');
+                $('#classOpt2').focus();
+                return;
+            }
+            if (!lessonId) {
+                showAlert('Vui lòng chọn bài học cụ thể trong Khung chương trình (hoặc chuyển sang Tùy chọn 1 "Chỉ chọn môn học").');
+                return;
+            }
+        } else if (option === 3) {
+            var planId = $('#lessonPlanSelect').val();
+            lessonPlanLessonId = $('input[name="lpLessonRadio"]:checked').val();
+
+            if (!planId) {
+                showAlert('Vui lòng chọn Kế hoạch bài dạy (KHBD).');
+                $('#lessonPlanSelect').focus();
+                return;
+            }
+            if (!lessonPlanLessonId) {
+                showAlert('Vui lòng chọn bài học trong Kế hoạch bài dạy đã chọn.');
+                return;
+            }
+        }
+
+        // 2. Validate Question content
+        var title = editor ? editor.getData().trim() : '';
+        if (!title) {
+            showAlert('Vui lòng nhập nội dung câu hỏi.');
+            return;
+        }
+
+        // 3. Validate 4 options
+        var optionA = $('#an1').val().trim();
+        var optionB = $('#an2').val().trim();
+        var optionC = $('#an3').val().trim();
+        var optionD = $('#an4').val().trim();
+
+        if (!optionA || !optionB || !optionC || !optionD) {
+            showAlert('Vui lòng nhập đầy đủ cả 4 phương án trả lời A, B, C, D.');
+            if (!optionA) $('#an1').focus();
+            else if (!optionB) $('#an2').focus();
+            else if (!optionC) $('#an3').focus();
+            else if (!optionD) $('#an4').focus();
+            return;
+        }
+
+        // 4. Validate Correct answer
+        var ans = $('#correctAnswerVal').val();
+        if (!ans) {
+            showAlert('Vui lòng chọn đáp án đúng (click vào nút A, B, C hoặc D).');
+            return;
+        }
+
+        // 5. Gather remaining fields
+        var level = $('#levelVal').val() || 1;
+        var isPublic = $('input[name="isPublicRadio"]:checked').val() === 'true';
+
+        // Prepare FormData
+        var fd = new FormData();
+        fd.append('creationOption', option);
+        fd.append('title', title);
+        fd.append('optionA', optionA);
+        fd.append('optionB', optionB);
+        fd.append('optionC', optionC);
+        fd.append('optionD', optionD);
+        fd.append('ans', ans);
+        fd.append('level', level);
+        fd.append('isPublic', isPublic);
+
+        if (subjectId) fd.append('subjects', subjectId);
+        if (classId) fd.append('classId', classId);
+        if (lessonId) fd.append('lesson', lessonId);
+        if (lessonPlanLessonId) fd.append('lessonPlanLessonId', lessonPlanLessonId);
+
+        // Button loading state
+        var $btn = $('#btnSub');
+        var originalText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Đang thêm câu hỏi...');
+
         $.ajax({
             type: 'POST',
             url: '/api/question',
-            data: question,
+            data: fd,
             enctype: 'multipart/form-data',
             processData: false,
             cache: false,
             contentType: false,
-            error: function (error) {
-                console.log(error);
-            },
             success: function () {
-                window.location.replace('/question/list?create=' + true);
-            }
-        });
-    });
-
-    var lessonPlanCatalog = [];
-    function loadLessonPlanTopics() {
-        var subjectId = $('#planSubject').val();
-        var grade = $('#planGrade').val();
-        $('#planTopic').prop('disabled', true).html('<option value="">-- Chọn chủ đề --</option>');
-        $('#planLessonCustom').prop('disabled', true).html('<option value="">-- Chọn bài học --</option>');
-        if (!subjectId || !grade) return;
-        $.getJSON('/lesson-plans/catalog', {subjectId: subjectId, grade: grade}).done(function (catalog) {
-            lessonPlanCatalog = catalog;
-            catalog.forEach(function (plan) { plan.topics.forEach(function (topic) {
-                $('#planTopic').append($('<option>', {value: topic.id, text: topic.name + ' · ' + plan.planName}));
-            }); });
-            $('#planTopic').prop('disabled', false);
-        });
-    }
-    $('#planSubject, #planGrade').on('change', loadLessonPlanTopics);
-    $('#planTopic').on('change', function () {
-        var topicId = parseInt(this.value);
-        var topic = null;
-        lessonPlanCatalog.forEach(function (plan) { plan.topics.forEach(function (item) {
-            if (item.id === topicId) topic = item;
-        }); });
-        $('#planLessonCustom').prop('disabled', !topic).html('<option value="">-- Chọn bài học --</option>');
-        if (topic) topic.lessons.forEach(function (lesson) {
-            $('#planLessonCustom').append($('<option>', {value: lesson.id, text: lesson.name}));
-        });
-        validate();
-    });
-    $('#planLessonCustom').on('change', validate);
-
-    function getClass() {
-        var subId = $("#subject").val();
-        $("#lesson").html('');
-        $('#class').find('option:not(:first)').remove();
-        document.getElementById("default").selected = true;
-        $.ajax({
-            type: 'GET',
-            url: '/api/class/' + subId,
-            enctype: 'application/json',
-            dataType: 'json',
-            processData: false,
-            cache: false,
-            contentType: false,
-            error: function (error) {
+                window.location.replace('/question/list?create=true');
             },
-            success: function (response) {
-                for (let i = 0; i < response.length; i++) {
-                    var x = document.getElementById("class");
-                    var option = document.createElement("option");
-                    option.text = response[i].grade != null ? 'Khối ' + response[i].grade : response[i].nameClass;
-                    option.value = response[i].id;
-                    x.add(option);
-                }
-                $("#class").css("display", "inline-block");
-            }
-        });
-    }
-
-    function getChapter() {
-        var subId = $("#subject").val();
-        var classId = $("#class").val();
-        $("#lesson").html('');
-        $.ajax({
-            type: 'GET',
-            url: '/api/chapter/' + subId + '/' + classId,
-            enctype: 'application/json',
-            dataType: 'json',
-            processData: false,
-            cache: false,
-            contentType: false,
-            error: function (error) {
-            },
-            success: function (response) {
-                var x = document.getElementById("lesson");
-                for (let i = 0; i < response.length; i++) {
-                    var button = document.createElement("button");
-                    button.type = "button";
-                    button.setAttribute("class","btn btn-info");
-                    button.setAttribute("data-toggle","collapse");
-                    button.setAttribute("data-target",'#collapse'+response[i].id);
-                    button.textContent = 'CHỦ ĐỀ '+(i + 1)+'.'+response[i].chapterName;
-                    x.appendChild(button);
-                    var demo = document.createElement("div");
-                    demo.setAttribute("id",'collapse'+response[i].id);
-                    demo.setAttribute("class","collapse");
-                    response[i].lessons.sort(function(it1, it2) {
-                        let a = it1.serial;
-                        let b = it2.serial;
-                        return a === b ? 0 : a > b ? 1 : -1;
-                    });
-                    for(let j = 0; j<response[i].lessons.length;j++){
-                        var div = document.createElement("div");
-                        div.setAttribute("class","list-lesson");
-                        var radio = document.createElement("input");
-                        radio.type = "radio";
-                        radio.value = response[i].lessons[j].id;
-                        radio.name = "lesson";
-                        radio.addEventListener("change",validate);
-                        div.appendChild(radio);
-                        var label = document.createElement("label");
-                        label.textContent = 'Bài '+(j + 1)+'.'+response[i].lessons[j].nameLesson;
-                        div.appendChild(label);
-                        demo.appendChild(div);
-                    }
-                    x.appendChild(demo);
-                }
+            error: function (xhr) {
+                $btn.prop('disabled', false).html(originalText);
+                var err = xhr.responseText || 'Không thể lưu câu hỏi. Vui lòng kiểm tra lại.';
+                showAlert(err);
             }
         });
     }
 </script>
+</body>
 </html>

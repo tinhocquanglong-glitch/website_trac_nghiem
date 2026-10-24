@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Hộp xác nhận xóa trường: mở bằng nút có class js-delete-school (data-action, data-name). -->
+<div th:fragment="modal(returnTo)">
+    <div class="modal fade" id="deleteSchoolModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteSchoolModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" method="post" id="deleteSchoolForm" action="">
+                <input type="hidden" name="returnTo" th:value="${returnTo}">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteSchoolModalLabel">Xóa trường học</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Đóng">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn sắp xóa trường <strong id="deleteSchoolName"></strong>. Thao tác này không thể hoàn tác.</p>
+                    <p class="small text-muted">
+                        Chỉ xóa được trường không còn tài khoản và lớp học. Nếu trường vẫn còn dữ liệu,
+                        hãy dùng chức năng Khóa trường.
+                    </p>
+                    <label for="deleteSchoolPassword">Nhập mật khẩu admin để xác nhận</label>
+                    <input type="password" class="form-control" id="deleteSchoolPassword" name="adminPassword"
+                           required autocomplete="current-password">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Xóa trường</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('.js-delete-school');
+            if (!button) {
+                return;
+            }
+            var password = document.getElementById('deleteSchoolPassword');
+            document.getElementById('deleteSchoolForm').action = button.dataset.action;
+            document.getElementById('deleteSchoolName').textContent = button.dataset.name;
+            password.value = '';
+            window.jQuery('#deleteSchoolModal')
+                .one('shown.bs.modal', function () { password.focus(); })
+                .modal('show');
+        });
+    </script>
+</div>
+</body>
+</html>

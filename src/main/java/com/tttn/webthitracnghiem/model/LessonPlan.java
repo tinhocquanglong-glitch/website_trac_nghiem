@@ -100,7 +100,14 @@ public class LessonPlan {
     public Set<Lesson> getLessons() { return lessons; }
     public void setLessons(Set<Lesson> lessons) { this.lessons = lessons; }
     public List<LessonPlanChapter> getPlanChapters() { return planChapters; }
-    public void setPlanChapters(List<LessonPlanChapter> planChapters) { this.planChapters = planChapters; }
+    /** Updates the list in place: Hibernate rejects replacing an orphan-removal collection on a loaded plan. */
+    public void setPlanChapters(List<LessonPlanChapter> planChapters) {
+        if (planChapters == this.planChapters) return;
+        List<LessonPlanChapter> copy = planChapters == null ? new ArrayList<>() : new ArrayList<>(planChapters);
+        if (this.planChapters == null) this.planChapters = new ArrayList<>();
+        this.planChapters.clear();
+        this.planChapters.addAll(copy);
+    }
     public Boolean getIsPublic() { return isPublic; }
     public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
     public LocalDateTime getCreatedAt() { return createdAt; }

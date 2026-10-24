@@ -5,7 +5,9 @@ import com.tttn.webthitracnghiem.model.ExamRequest;
 import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.model.Lesson;
 import com.tttn.webthitracnghiem.model.LessonPlanLesson;
+import com.tttn.webthitracnghiem.model.Question;
 import com.tttn.webthitracnghiem.repository.SchoolRepository;
 import com.tttn.webthitracnghiem.repository.StudentTrackingClassRepository;
 import com.tttn.webthitracnghiem.repository.LessonPlanLessonRepository;
@@ -57,12 +59,17 @@ public class ExamApiController {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private com.tttn.webthitracnghiem.service.ExamScopeService examScopeService;
+
     /**
      * Older edit forms submit empty optional fields. Convert those values to
      * null before Spring tries to bind them to typed properties such as dates.
      */
     @InitBinder("exam")
     public void trimEmptyExamFields(WebDataBinder binder) {
+        // Scope is set only from lessonIds through ExamScopeService; the old form also posts an unrelated "subject" value.
+        binder.setDisallowedFields("subject", "gradeLevel", "scopeLessons");
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
         binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
             @Override
@@ -92,17 +99,34 @@ public class ExamApiController {
                                   @RequestParam(required = false) String scoreType,
                                   @RequestParam(required = false) Integer gradeMonth,
                                   @RequestParam(required = false) Integer lessonPlanLessonId,
-                                  @RequestParam(required = false, defaultValue = "false") boolean practice) {
+                                  @RequestParam(required = false, defaultValue = "false") boolean practice,
+                                  @RequestParam(value = "lessonIds", required = false) List<Integer> lessonIds) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
         User currentUser = (auth != null && userService != null) ? userService.findById(auth.getName()) : null;
+
+        List<Lesson> scope = null;
+        if (lessonIds != null && !lessonIds.isEmpty()) {
+            try {
+                scope = examScopeService.resolveScope(lessonIds, currentUser);
+            } catch (IllegalArgumentException ex) {
+                return ResponseEntity.badRequest().body(ex.getMessage());
+            } catch (SecurityException ex) {
+                return ResponseEntity.status(403).body(ex.getMessage());
+            }
+        }
 
         // Khi sua de, form co the khong gui lai cac quan he khong hien thi.
         // Giu lai cac lien ket hien co de khong lam mat chu de, truong hoac nguoi tao.
         if (exam.getId() > 0) {
             Exam existingExam = examService.findById(exam.getId());
             if (existingExam != null) {
+                if (scope == null) {
+                    exam.setSubject(existingExam.getSubject());
+                    exam.setGradeLevel(existingExam.getGradeLevel());
+                    exam.setScopeLessons(new java.util.LinkedHashSet<>(existingExam.getScopeLessons()));
+                }
                 if (exam.getUsers() == null) exam.setUsers(existingExam.getUsers());
                 if (exam.getSchool() == null) exam.setSchool(existingExam.getSchool());
                 if (exam.getTargetClass() == null) exam.setTargetClass(existingExam.getTargetClass());
@@ -205,7 +229,9 @@ public class ExamApiController {
             exam.setTargetClass(null);
             exam.setSchool(null);
         }
-        if (lessonPlanLessonId != null) {
+        if (scope != null) {
+            examScopeService.applyScope(exam, scope);
+        } else if (lessonPlanLessonId != null) {
             LessonPlanLesson customLesson = lessonPlanLessonRepository.findById(lessonPlanLessonId).orElse(null);
             if (customLesson == null) return ResponseEntity.notFound().build();
             if (auth == null || !lessonPlanService.canView(customLesson.getChapter().getLessonPlan(), auth.getName(), isAdmin || isSchoolAdmin)) {
@@ -234,7 +260,7 @@ public class ExamApiController {
                                   String endTimeStr, String scoreType, Integer lessonPlanLessonId,
                                   boolean practice) {
         return save(exam, school, isPublic, targetType, targetGrade, targetClassId, startTimeStr,
-                endTimeStr, scoreType, null, lessonPlanLessonId, practice);
+                endTimeStr, scoreType, null, lessonPlanLessonId, practice, null);
     }
 
     @PostMapping(value = "/excel", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -286,8 +312,26 @@ public class ExamApiController {
             }
         }
 
+        List<Lesson> scope = null;
+        if (examRequest.getLessonIds() != null && !examRequest.getLessonIds().isEmpty()) {
+            try {
+                scope = examScopeService.resolveScope(examRequest.getLessonIds(), currentUser);
+            } catch (IllegalArgumentException ex) {
+                return ResponseEntity.badRequest().body(ex.getMessage());
+            } catch (SecurityException ex) {
+                return ResponseEntity.status(403).body(ex.getMessage());
+            }
+            // Questions typed into the exam are filed under its first scope lesson.
+            int primaryLessonId = scope.get(0).getId();
+            examRequest.setLessonId(primaryLessonId);
+            examRequest.setLessonPlanLessonId(null);
+            if (examRequest.getQuestions() != null) {
+                examRequest.getQuestions().forEach(question -> question.setLessonId(primaryLessonId));
+            }
+        }
+
         LessonPlanLesson customLesson = null;
-        if (examRequest.getLessonPlanLessonId() != null) {
+        if (scope == null && examRequest.getLessonPlanLessonId() != null) {
             customLesson = lessonPlanLessonRepository.findById(examRequest.getLessonPlanLessonId()).orElse(null);
             if (customLesson == null) return ResponseEntity.notFound().build();
             if (auth == null || !lessonPlanService.canView(customLesson.getChapter().getLessonPlan(), auth.getName(), isAdmin || isSchoolAdmin)) {
@@ -295,9 +339,23 @@ public class ExamApiController {
             }
         }
         Exam saved = examService.save(examRequest);
-        if (customLesson != null) {
+        if (scope != null) {
+            examScopeService.applyScope(saved, scope);
+        } else if (customLesson != null) {
             saved.setLessonPlanLesson(customLesson);
             saved.setLesson(null);
+        }
+        if (saved.getQuestions() != null) {
+            for (Question question : saved.getQuestions()) {
+                if (question.getSource() == null) {
+                    question.setSource(Question.SOURCE_EXCEL);
+                    question.setReviewStatus(Question.REVIEW_APPROVED);
+                    question.setAuthor(currentUser);
+                    if (question.getSchool() == null && currentUser != null) {
+                        question.setSchool(currentUser.getSchool());
+                    }
+                }
+            }
         }
         // Gán isPublic và school từ ExamRequest
         if ("PUBLIC".equalsIgnoreCase(targetType)) {

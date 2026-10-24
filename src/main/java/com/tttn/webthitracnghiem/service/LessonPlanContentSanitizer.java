@@ -1,5 +1,6 @@
 package com.tttn.webthitracnghiem.service;
 
+import java.text.Normalizer;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +18,7 @@ public final class LessonPlanContentSanitizer {
 
     public static String sanitize(String value) {
         if (value == null || value.trim().isEmpty()) return null;
-        String input = BLOCKED.matcher(value).replaceAll("")
+        String input = BLOCKED.matcher(normalizeUnicode(value)).replaceAll("")
                 .replaceAll("(?i)javascript\\s*:", "");
         Matcher matcher = TAG.matcher(input);
         StringBuffer output = new StringBuffer();
@@ -41,6 +42,55 @@ public final class LessonPlanContentSanitizer {
         }
         matcher.appendTail(output);
         return output.toString().trim();
+    }
+
+    /** Removes malformed UTF-16 and database-hostile control characters from imported HTML. */
+    private static String normalizeUnicode(String value) {
+        StringBuilder clean = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char current = value.charAt(i);
+            if (Character.isHighSurrogate(current)) {
+                if (i + 1 < value.length() && Character.isLowSurrogate(value.charAt(i + 1))) {
+                    clean.append(current).append(value.charAt(++i));
+                }
+                continue;
+            }
+            if (Character.isLowSurrogate(current)) continue;
+            if (current == '\t' || current == '\n' || current == '\r'
+                    || (!Character.isISOControl(current) && !isNoncharacter(current))) {
+                clean.append(current);
+            }
+        }
+        return Normalizer.normalize(clean, Normalizer.Form.NFC);
+    }
+
+    private static boolean isNoncharacter(int codePoint) {
+        int low = codePoint & 0xFFFF;
+        return (low >= 0xFDD0 && low <= 0xFDEF) || low == 0xFFFE || low == 0xFFFF;
+    }
+
+    /**
+     * Readable plain text of sanitized lesson HTML: one line per paragraph or list item.
+     * Stored next to the HTML for search and as input for question generation.
+     */
+    public static String toPlainText(String html) {
+        if (html == null || html.trim().isEmpty()) return null;
+        String text = html.replaceAll("(?i)<br\\s*/?>", "\n")
+                .replaceAll("(?i)</(p|li|ul|ol)>", "\n")
+                .replaceAll("(?i)<li>", "- ")
+                .replaceAll("(?s)<[^>]*>", "")
+                .replace("&nbsp;", " ")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&amp;", "&");
+        StringBuilder result = new StringBuilder();
+        for (String line : text.split("\n")) {
+            String cleaned = line.replaceAll("[ \\t\\x0B\\f\\r]+", " ").trim();
+            if (!cleaned.isEmpty()) result.append(cleaned).append('\n');
+        }
+        return result.length() == 0 ? null : result.toString().trim();
     }
 
     private static boolean isAllowed(String tag) {

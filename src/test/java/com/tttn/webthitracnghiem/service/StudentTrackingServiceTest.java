@@ -104,7 +104,7 @@ class StudentTrackingServiceTest {
                 mock(StudentTrackingExcelParser.class));
         when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
-        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 9))
+        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null))
                 .thenReturn(List.of());
 
         TrackingSheetForm form = new TrackingSheetForm();
@@ -113,7 +113,7 @@ class StudentTrackingServiceTest {
 
         batchService.saveSheet(1, form);
 
-        verify(monthlyRecordRepository).findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 9);
+        verify(monthlyRecordRepository).findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null);
         verify(recordRepository, never()).findByStudentIdAndSemester(10, 1);
     }
 
@@ -138,8 +138,8 @@ class StudentTrackingServiceTest {
                 .thenReturn(List.of(student));
         when(recordRepository.findByStudentIdInAndSemester(List.of(10), 1)).thenReturn(List.of());
         when(recordRepository.findByStudentIdInAndSemester(List.of(10), 2)).thenReturn(List.of());
-        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 9)).thenReturn(List.of());
-        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 2, 2)).thenReturn(List.of());
+        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null)).thenReturn(List.of());
+        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 2, 2, null, null)).thenReturn(List.of());
 
         TrackingSheetForm semesterOne = semesterService.getSheet(1, 1);
         TrackingSheetForm semesterTwo = semesterService.getSheet(1, 2);
@@ -231,9 +231,9 @@ class StudentTrackingServiceTest {
                 mock(StudentTrackingExcelParser.class));
         when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 10))
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 10, null, null))
                 .thenReturn(List.of(october));
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 2, 3))
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 2, 3, null, null))
                 .thenReturn(List.of());
 
         TrackingSheetForm octoberSheet = monthlyService.getSheet(1, 1, 10);
@@ -264,7 +264,7 @@ class StudentTrackingServiceTest {
                 mock(StudentTrackingExcelParser.class));
         when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 9)).thenReturn(List.of());
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null)).thenReturn(List.of());
         when(legacyRepository.findByStudentIdInAndSemester(List.of(10), 1)).thenReturn(List.of(legacy));
 
         TrackingSheetForm sheet = monthlyService.getSheet(1, 1, 9);
@@ -291,7 +291,7 @@ class StudentTrackingServiceTest {
         StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
         TrackedStudentRepository studentRepository = mock(TrackedStudentRepository.class);
         StudentMonthlyRecordRepository monthlyRepository = mock(StudentMonthlyRecordRepository.class);
-        when(classRepository.findByClassNameIgnoreCaseAndSchoolYear("6A", "2026-2027"))
+        when(classRepository.findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(null, "6A", "2026-2027"))
                 .thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of());
         when(studentRepository.saveAll(any())).thenAnswer(invocation -> {
@@ -299,7 +299,7 @@ class StudentTrackingServiceTest {
             students.forEach(student -> student.setId(10));
             return students;
         });
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 10))
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 10, null, null))
                 .thenReturn(List.of());
         StudentTrackingService importService = new StudentTrackingService(
                 classRepository, studentRepository, mock(StudentSemesterRecordRepository.class),
@@ -329,9 +329,9 @@ class StudentTrackingServiceTest {
         when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1))
                 .thenReturn(List.of(savedStudent));
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 11))
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 11, null, null))
                 .thenReturn(List.of());
-        when(monthlyRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 2, 3))
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 2, 3, null, null))
                 .thenReturn(List.of());
 
         assertThat(importService.getSheet(1, 1, 11).getRows())
@@ -340,6 +340,101 @@ class StudentTrackingServiceTest {
         assertThat(importService.getSheet(1, 2, 3).getRows())
                 .extracting(TrackingRowForm::getFullName)
                 .containsExactly("Nguyen Van A");
+    }
+
+    @Test
+    void subjectTeacherSaveWritesOnlyTheirOwnBook() {
+        StudentTrackingClass trackingClass = trackingClass(1, "6A", "2026-2027");
+        TrackedStudent student = student(10, "Nguyen Van A", trackingClass);
+        StudentMonthlyRecord homeroomRecord = new StudentMonthlyRecord();
+        homeroomRecord.setStudent(student);
+        homeroomRecord.setRegularScore1(new BigDecimal("6"));
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        TrackedStudentRepository studentRepository = mock(TrackedStudentRepository.class);
+        StudentMonthlyRecordRepository monthlyRepository = mock(StudentMonthlyRecordRepository.class);
+        StudentTrackingService bookService = new StudentTrackingService(
+                classRepository, studentRepository, mock(StudentSemesterRecordRepository.class),
+                monthlyRepository, mock(StudentTrackingExcelParser.class));
+        when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
+        when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null))
+                .thenReturn(List.of(homeroomRecord));
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, "gvbm", 5))
+                .thenReturn(List.of());
+
+        TrackingRowForm row = row(10, "Ten Bi Doi");
+        row.setRegularScore1(new BigDecimal("9"));
+        row.setAttendanceStatus(AttendanceStatus.ABSENT);
+        TrackingSheetForm form = new TrackingSheetForm();
+        form.setSemester(1);
+        form.setRows(List.of(row));
+
+        bookService.saveSheet(1, form, "gvbm", 5);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Iterable<StudentMonthlyRecord>> captor = ArgumentCaptor.forClass(Iterable.class);
+        verify(monthlyRepository).saveAll(captor.capture());
+        StudentMonthlyRecord saved = captor.getValue().iterator().next();
+        assertThat(saved).isNotSameAs(homeroomRecord);
+        assertThat(saved.getTeacherId()).isEqualTo("gvbm");
+        assertThat(saved.getSubjectId()).isEqualTo(5);
+        assertThat(saved.getRegularScore1()).isEqualByComparingTo("9");
+        assertThat(saved.getAttendanceStatus()).isNull();
+        assertThat(homeroomRecord.getRegularScore1()).isEqualByComparingTo("6");
+        assertThat(student.getFullName()).isEqualTo("Nguyen Van A");
+        verify(studentRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void subjectBookShowsOwnScoresWithHomeroomAttendance() {
+        StudentTrackingClass trackingClass = trackingClass(1, "6A", "2026-2027");
+        TrackedStudent student = student(10, "Nguyen Van A", trackingClass);
+        StudentMonthlyRecord homeroomRecord = new StudentMonthlyRecord();
+        homeroomRecord.setStudent(student);
+        homeroomRecord.setRegularScore1(new BigDecimal("6"));
+        homeroomRecord.setAttendanceStatus(AttendanceStatus.ABSENT);
+        StudentMonthlyRecord subjectRecord = new StudentMonthlyRecord();
+        subjectRecord.setStudent(student);
+        subjectRecord.setRegularScore1(new BigDecimal("9"));
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        TrackedStudentRepository studentRepository = mock(TrackedStudentRepository.class);
+        StudentMonthlyRecordRepository monthlyRepository = mock(StudentMonthlyRecordRepository.class);
+        StudentTrackingService bookService = new StudentTrackingService(
+                classRepository, studentRepository, mock(StudentSemesterRecordRepository.class),
+                monthlyRepository, mock(StudentTrackingExcelParser.class));
+        when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
+        when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null))
+                .thenReturn(List.of(homeroomRecord));
+        when(monthlyRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, "gvbm", 5))
+                .thenReturn(List.of(subjectRecord));
+
+        TrackingRowForm subjectRow = bookService.getSheet(1, 1, 9, "gvbm", 5).getRows().get(0);
+        TrackingRowForm homeroomRow = bookService.getSheet(1, 1, 9).getRows().get(0);
+
+        assertThat(subjectRow.getRegularScore1()).isEqualByComparingTo("9");
+        assertThat(subjectRow.getAttendanceStatus()).isEqualTo(AttendanceStatus.ABSENT);
+        assertThat(homeroomRow.getRegularScore1()).isEqualByComparingTo("6");
+    }
+
+    @Test
+    void sameClassNameIsAllowedInAnotherSchoolButNotTwiceInOneSchool() {
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        StudentTrackingService classService = new StudentTrackingService(
+                classRepository, mock(TrackedStudentRepository.class), mock(StudentSemesterRecordRepository.class),
+                mock(StudentMonthlyRecordRepository.class), mock(StudentTrackingExcelParser.class));
+        when(classRepository.findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(1, "1A", "2026-2027"))
+                .thenReturn(Optional.of(trackingClass(5, "1A", "2026-2027")));
+        when(classRepository.findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(2, "1A", "2026-2027"))
+                .thenReturn(Optional.empty());
+        when(classRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        StudentTrackingClass created = classService.createClass("1A", "2026-2027", 1, 2, null);
+
+        assertThat(created.getClassName()).isEqualTo("1A");
+        assertThatThrownBy(() -> classService.createClass("1A", "2026-2027", 1, 1, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("da ton tai");
     }
 
     private StudentMonthlyRecord saveAttendance(AttendanceStatus status, String dates) {
@@ -354,7 +449,7 @@ class StudentTrackingServiceTest {
                 mock(StudentTrackingExcelParser.class));
         when(classRepository.findById(1)).thenReturn(Optional.of(trackingClass));
         when(studentRepository.findByTrackingClassIdOrderByDisplayOrderAscIdAsc(1)).thenReturn(List.of(student));
-        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonth(List.of(10), 1, 9)).thenReturn(List.of());
+        when(monthlyRecordRepository.findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(List.of(10), 1, 9, null, null)).thenReturn(List.of());
 
         TrackingRowForm row = row(10, "Nguyen Van A");
         row.setAttendanceStatus(status);

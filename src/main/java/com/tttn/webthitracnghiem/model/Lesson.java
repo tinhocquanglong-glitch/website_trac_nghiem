@@ -1,6 +1,7 @@
 package com.tttn.webthitracnghiem.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import javax.persistence.*;
@@ -24,6 +25,12 @@ public class Lesson implements Comparable<Lesson> {
     @JoinColumn(name = "chapter_id",referencedColumnName = "id")
     @JsonBackReference
     private Chapter chapter;
+
+    // The shared lesson this school copy was made from; public questions are shared through it.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_lesson_id")
+    @JsonIgnore
+    private Lesson templateLesson;
 
     public Lesson() {
     }
@@ -79,6 +86,14 @@ public class Lesson implements Comparable<Lesson> {
 
     public int getSerial() {
         return serial;
+    }
+
+    public Lesson getTemplateLesson() {
+        return templateLesson;
+    }
+
+    public void setTemplateLesson(Lesson templateLesson) {
+        this.templateLesson = templateLesson;
     }
 
     public void setSerial(int serial) {

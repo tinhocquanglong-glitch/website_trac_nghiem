@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -17,8 +18,28 @@ public class ClassApiController {
     private IClassesService classesService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<List<Classes>> getClass(@PathVariable Integer id) {
-        return ResponseEntity.ok(classesService.findAllBySubject(id));
+    public ResponseEntity<List<ClassOption>> getClass(@PathVariable Integer id) {
+        List<ClassOption> options = new ArrayList<>();
+        for (Classes classes : classesService.findAllBySubject(id)) {
+            options.add(new ClassOption(classes.getId(), classes.getNameClass(), classes.getGrade(),
+                    classes.getDisplayName()));
+        }
+        return ResponseEntity.ok(options);
+    }
+
+    /** Lightweight response for dependent selects; do not serialize the curriculum graph here. */
+    public static class ClassOption {
+        public final Integer id;
+        public final String nameClass;
+        public final Integer grade;
+        public final String displayName;
+
+        public ClassOption(Integer id, String nameClass, Integer grade, String displayName) {
+            this.id = id;
+            this.nameClass = nameClass;
+            this.grade = grade;
+            this.displayName = displayName;
+        }
     }
 
     @PostMapping

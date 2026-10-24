@@ -164,6 +164,45 @@ class AdministrativeDataSeederTest {
     }
 
     @Test
+    void lessonPlanMigrationConvertsExistingTextColumnsToUtf8mb4() throws Exception {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), anyString(), anyString()))
+                .thenReturn(1);
+
+        AdministrativeDataSeeder seeder = new AdministrativeDataSeeder();
+        setField(seeder, "jdbcTemplate", jdbcTemplate);
+
+        invokePrivate(seeder, "migrateLessonPlanSchema");
+
+        verify(jdbcTemplate).execute(
+                "ALTER TABLE lesson_plan_custom_lesson CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        verify(jdbcTemplate).execute(
+                "ALTER TABLE lesson_plan_custom_lesson MODIFY content TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL");
+    }
+
+    @Test
+    void lessonPlanEncodingMigrationStillRunsWhenAnOlderSchemaChangeFails() throws Exception {
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), anyString(), anyString()))
+                .thenReturn(1);
+        doAnswer(invocation -> {
+            String sql = invocation.getArgument(0, String.class);
+            if (sql.startsWith("ALTER TABLE lesson_plan MODIFY")) {
+                throw new RuntimeException("legacy column is missing");
+            }
+            return null;
+        }).when(jdbcTemplate).execute(anyString());
+
+        AdministrativeDataSeeder seeder = new AdministrativeDataSeeder();
+        setField(seeder, "jdbcTemplate", jdbcTemplate);
+
+        invokePrivate(seeder, "migrateLessonPlanSchema");
+
+        verify(jdbcTemplate).execute(
+                "ALTER TABLE lesson_plan_custom_lesson CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    }
+
+    @Test
     void demoStudentRosterCreatesStudentAccountLinkedToClass() throws Exception {
         UserRepository userRepository = mock(UserRepository.class);
         TrackedStudentRepository trackedStudentRepository = mock(TrackedStudentRepository.class);
@@ -206,6 +245,12 @@ class AdministrativeDataSeederTest {
         Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private void invokePrivate(Object target, String name) throws Exception {
+        java.lang.reflect.Method method = target.getClass().getDeclaredMethod(name);
+        method.setAccessible(true);
+        method.invoke(target);
     }
 
     private void verifyNoJdbcCalls(JdbcTemplate jdbcTemplate) {

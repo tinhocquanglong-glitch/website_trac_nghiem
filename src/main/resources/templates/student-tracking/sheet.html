@@ -161,7 +161,32 @@
                     </div>
                 </div>
 
-                <div class="tracking-toolbar">
+                <!-- Chọn sổ: sổ chủ nhiệm (GVCN / BGH) hoặc sổ riêng của từng môn mình dạy -->
+                <div class="card mb-3" style="border-left: 5px solid #28a745; border-radius: 4px;">
+                    <div class="card-body p-3">
+                        <div style="font-size: 14px; margin-bottom: 8px;">
+                            <i class="fa fa-book text-success"></i>
+                            <strong>Đang ghi:</strong>
+                            <span th:if="${homeroomBook}" class="text-success font-weight-bold">Sổ chủ nhiệm của lớp</span>
+                            <span th:unless="${homeroomBook}" class="text-success font-weight-bold"
+                                  th:text="|Sổ bộ môn ${bookSubjectName} (của riêng bạn)|">Sổ bộ môn</span>
+                            <span th:unless="${homeroomBook}" class="small text-muted d-block">
+                                Điểm và nhận xét môn này được lưu riêng, không ghi đè sổ chủ nhiệm. Điểm danh do GVCN ghi.
+                            </span>
+                        </div>
+                        <nav class="semester-tabs" aria-label="Chọn sổ"
+                             th:if="${(canManage == true ? 1 : 0) + (myAssignments != null ? myAssignments.size() : 0) > 1}">
+                            <a th:if="${canManage == true}" th:classappend="${homeroomBook} ? 'active'"
+                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month})}">Sổ chủ nhiệm</a>
+                            <a th:each="asg : ${myAssignments}"
+                               th:classappend="${asg.subject.id == bookSubjectId} ? 'active'"
+                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month},subjectId=${asg.subject.id})}"
+                               th:text="|Môn ${asg.subject.name}|">Môn</a>
+                        </nav>
+                    </div>
+                </div>
+
+                <div class="tracking-toolbar" th:with="bookQuery=${bookSubjectId != null ? '&subjectId=' + bookSubjectId : ''}">
                     <div class="tracking-view-controls">
                         <div class="tracking-class-switcher">
                             <label for="trackingClassSelector">Lớp đang xem</label>
@@ -174,12 +199,12 @@
                             </select>
                         </div>
                         <nav class="semester-tabs" aria-label="Chọn học kỳ">
-                            <a th:classappend="${semester == 1} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=1,month=9)}">Học kỳ 1</a>
-                            <a th:classappend="${semester == 2} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=2,month=2)}">Học kỳ 2</a>
+                            <a th:classappend="${semester == 1} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=1,month=9)} + ${bookQuery}">Học kỳ 1</a>
+                            <a th:classappend="${semester == 2} ? 'active'" th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=2,month=2)} + ${bookQuery}">Học kỳ 2</a>
                         </nav>
                         <nav class="semester-tabs month-tabs" aria-label="Chọn tháng">
                             <a th:each="monthOption : ${months}" th:classappend="${monthOption == month} ? 'active'"
-                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${monthOption})}"
+                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${monthOption})} + ${bookQuery}"
                                th:text="|Tháng ${monthOption}|">Tháng</a>
                         </nav>
                     </div>
@@ -222,9 +247,11 @@
                     <span id="classStudentSearchStatus" class="sr-only" role="status" aria-live="polite"></span>
                 </div>
 
-                <form method="post" th:action="@{/student-tracking/classes/{id}/records(id=${trackingClass.id})}">
+                <form method="post" th:action="@{/student-tracking/classes/{id}/records(id=${trackingClass.id})}"
+                      th:with="editRoster=${canManage == true and homeroomBook == true}">
                     <input type="hidden" name="semester" th:value="${semester}">
                     <input type="hidden" name="month" th:value="${month}">
+                    <input th:if="${bookSubjectId != null}" type="hidden" name="subjectId" th:value="${bookSubjectId}">
                     <div class="tracking-table-wrap">
                         <table class="table table-bordered tracking-table" aria-label="Bảng theo dõi học sinh">
                             <thead>
@@ -234,18 +261,18 @@
                                 <th class="cell-score" rowspan="2">ĐGK</th><th class="cell-score" rowspan="2">ĐCK</th><th class="cell-score" rowspan="2">ĐTBM</th>
                                 <th class="cell-comment" rowspan="2">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
                                 <th class="cell-status" rowspan="2">Điểm danh</th><th class="cell-days" rowspan="2">Số ngày</th>
-                                <th th:if="${canManage != false}" class="cell-order" rowspan="2">Xóa</th>
+                                <th th:if="${editRoster}" class="cell-order" rowspan="2">Xóa</th>
                             </tr>
                             <tr><th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th></tr>
                             </thead>
                             <tbody>
-                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td th:colspan="${canManage == false ? 10 : 11}" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
+                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td th:colspan="${editRoster ? 11 : 10}" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
                             <tr th:each="row, stat : ${sheetForm.rows}">
                                 <td class="cell-order" th:text="${stat.count}"></td>
                                 <td class="cell-name">
                                     <input type="hidden" th:name="|rows[${stat.index}].studentId|" th:value="${row.studentId}">
-                                    <input th:if="${canManage != false}" th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}" maxlength="150" required aria-label="Họ và tên">
-                                    <th:block th:if="${canManage == false}">
+                                    <input th:if="${editRoster}" th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}" maxlength="150" required aria-label="Họ và tên">
+                                    <th:block th:unless="${editRoster}">
                                         <input type="hidden" th:name="|rows[${stat.index}].fullName|" th:value="${row.fullName}">
                                         <strong th:text="${row.fullName}"></strong>
                                     </th:block>
@@ -257,24 +284,24 @@
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].averageScore|" th:value="${row.averageScore}" aria-label="Điểm trung bình môn"></td>
                                 <td class="cell-comment"><textarea th:name="|rows[${stat.index}].progressComment|" th:text="${row.progressComment}" maxlength="2000" aria-label="Nhận xét sự tiến bộ"></textarea></td>
                                 <td class="cell-status">
-                                    <select th:if="${canManage != false}" th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
+                                    <select th:if="${editRoster}" th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
                                         <option th:each="status : ${attendanceStatuses}" th:value="${status}" th:text="${status.displayName}"
                                                 th:selected="${status == row.attendanceStatus or (row.attendanceStatus == null and status.name() == 'NONE')}"></option>
                                     </select>
-                                    <th:block th:if="${canManage == false}">
+                                    <th:block th:unless="${editRoster}">
                                         <input type="hidden" th:name="|rows[${stat.index}].attendanceStatus|" th:value="${row.attendanceStatus != null ? row.attendanceStatus : 'NONE'}">
                                         <span class="badge badge-light" th:text="${row.attendanceStatus != null ? row.attendanceStatus.displayName : 'Chưa điểm danh'}"></span>
                                     </th:block>
                                 </td>
                                 <td class="cell-days">
-                                    <input th:if="${canManage != false}" th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}"
+                                    <input th:if="${editRoster}" th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}"
                                            maxlength="500" placeholder="Ghi chú tùy ý" aria-label="Ghi chú số ngày">
-                                    <th:block th:if="${canManage == false}">
+                                    <th:block th:unless="${editRoster}">
                                         <input type="hidden" th:name="|rows[${stat.index}].attendanceDates|" th:value="${row.attendanceDates}">
                                         <span class="text-muted" th:text="${row.attendanceDates}"></span>
                                     </th:block>
                                 </td>
-                                <td th:if="${canManage != false}" class="cell-order">
+                                <td th:if="${editRoster}" class="cell-order">
                                     <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa học sinh" name="semester" th:value="${semester}"
                                             th:formaction="@{/student-tracking/classes/{classId}/students/{studentId}/delete(classId=${trackingClass.id},studentId=${row.studentId})}"
                                             onclick="return confirm('Xóa học sinh này khỏi lớp?');">
@@ -285,7 +312,8 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="tracking-save-bar"><button class="btn btn-success" type="submit"><i class="fa fa-save" aria-hidden="true"></i> Lưu sổ theo dõi</button></div>
+                    <div class="tracking-save-bar"><button class="btn btn-success" type="submit"><i class="fa fa-save" aria-hidden="true"></i>
+                        <span th:text="${homeroomBook} ? 'Lưu sổ chủ nhiệm' : |Lưu sổ môn ${bookSubjectName}|">Lưu sổ theo dõi</span></button></div>
                 </form>
 
                 <!-- Modal Cấp tài khoản Học sinh cho GVCN / Admin -->

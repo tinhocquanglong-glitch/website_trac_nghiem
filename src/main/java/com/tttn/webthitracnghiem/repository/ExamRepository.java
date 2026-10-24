@@ -10,6 +10,15 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ExamRepository extends JpaRepository<Exam, Integer> {
+    /** Exams whose primary lesson or curriculum scope includes the lesson. */
+    @Query("SELECT COUNT(DISTINCT e) FROM Exam e LEFT JOIN e.scopeLessons s WHERE e.lesson.id = :lessonId OR s.id = :lessonId")
+    long countCoveringLesson(@Param("lessonId") int lessonId);
+
+    @Query("SELECT DISTINCT e FROM Exam e LEFT JOIN e.scopeLessons s WHERE e.lesson.id IN :lessonIds OR s.id IN :lessonIds")
+    List<Exam> findCoveringLessons(@Param("lessonIds") java.util.Collection<Integer> lessonIds);
+
+    List<Exam> findByLessonPlanLesson_Id(Integer lessonPlanLessonId);
+
     @Query(value = "SELECT exam.* FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id",
             countQuery = "SELECT COUNT(*) FROM exam JOIN lesson ON lesson.id = exam.lesson_id JOIN chapter ON chapter.id = lesson.chapter_id JOIN subject_classes ON subject_classes.id = chapter.subject_class_id WHERE subject_classes.subject_id = :id",nativeQuery = true)
     Page<Exam> findAllBySubject(@Param("id") int id, Pageable pageable);

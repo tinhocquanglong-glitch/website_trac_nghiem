@@ -60,6 +60,12 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
     private LessonRepository lessonRepository;
     @Autowired
     private ISubjectClassService subjectClassService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.CurriculumService curriculumService;
+    @Autowired
+    private com.tttn.webthitracnghiem.repository.QuestionRepository questionRepository;
+    @Autowired
+    private com.tttn.webthitracnghiem.repository.ExamRepository examRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -240,7 +246,7 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
                 ? legacyCurriculum
                 : subjectClassRepository.findByClassesAndSubject(grade.getId(), subject.getId()).orElse(null));
         plan.setIsPublic(Boolean.TRUE.equals(request.getIsPublic()));
-        plan.setPlanChapters(buildCustomChapters(plan, request.getChapters()));
+        plan.setPlanChapters(buildCustomChapters(plan, request.getChapters(), owner));
 
         // Keep old links readable for records created by the previous form.
         if (request.getChapters() == null || request.getChapters().isEmpty()) {
@@ -254,7 +260,8 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
     }
 
     private List<LessonPlanChapter> buildCustomChapters(LessonPlan plan,
-                                                         List<LessonPlanChapterRequest> requests) {
+                                                         List<LessonPlanChapterRequest> requests,
+                                                         User owner) {
         List<LessonPlanChapter> chapters = new java.util.ArrayList<>();
         if (requests == null) return chapters;
         Map<Integer, LessonPlanChapter> existingChapters = new HashMap<>();
@@ -270,6 +277,8 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
             chapter.setLessonPlan(plan);
             chapter.setName(request.getName().trim());
             chapter.setDisplayOrder(chapterOrder++);
+            chapter.setCurriculumChapter(request.getCurriculumChapterId() == null ? null
+                    : curriculumChapter(request.getCurriculumChapterId(), plan, owner));
             Map<Integer, LessonPlanLesson> existingLessons = new HashMap<>();
             for (LessonPlanLesson existing : chapter.getLessons()) {
                 if (existing.getId() != null) existingLessons.put(existing.getId(), existing);
@@ -286,6 +295,24 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
                 lesson.setName(lessonRequest.getName().trim());
                 lesson.setDisplayOrder(lessonOrder++);
                 lesson.setContent(LessonPlanContentSanitizer.sanitize(lessonRequest.getContent()));
+                lesson.setContentText(LessonPlanContentSanitizer.toPlainText(lesson.getContent()));
+                lesson.setObjectives(normalize(lessonRequest.getObjectives()));
+                lesson.setPeriods(lessonRequest.getPeriods() == null || lessonRequest.getPeriods() < 1
+                        ? null : Math.min(lessonRequest.getPeriods(), 50));
+                Lesson curriculumLesson = null;
+                if (lessonRequest.getCurriculumLessonId() != null) {
+                    curriculumLesson = curriculumLesson(lessonRequest.getCurriculumLessonId(), plan, owner);
+                } else if (lessonRequest.isAddToCurriculum()) {
+                    curriculumLesson = curriculumService.ensureLesson(owner, curriculumService.schoolIdOf(owner),
+                            requireCurriculum(plan), request.getCurriculumChapterId(), chapter.getName(), lesson.getName());
+                    if (chapter.getCurriculumChapter() == null) {
+                        chapter.setCurriculumChapter(curriculumLesson.getChapter());
+                    }
+                }
+                if (curriculumLesson != null && lesson.getCurriculumLesson() == null && lesson.getId() != null) {
+                    moveLegacyContent(lesson, curriculumLesson);
+                }
+                lesson.setCurriculumLesson(curriculumLesson);
                 MultipartFile attachment = lessonRequest.getAttachment();
                 if (attachment != null && !attachment.isEmpty()) {
                     validateWordAttachment(attachment);
@@ -308,6 +335,64 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
 
     private String normalize(String value) {
         return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private SubjectClasses requireCurriculum(LessonPlan plan) {
+        if (plan.getSubjectClasses() == null) {
+            throw new IllegalArgumentException("Môn và khối của giáo án chưa có chương trình học để liên kết.");
+        }
+        return plan.getSubjectClasses();
+    }
+
+    /** A curriculum lesson the plan may link: same subject-grade and the owner's school curriculum. */
+    private Lesson curriculumLesson(int lessonId, LessonPlan plan, User owner) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Bài trong chương trình học không tồn tại."));
+        SubjectClasses subjectClass = requireCurriculum(plan);
+        if (!curriculumService.belongsTo(lesson, curriculumService.schoolIdOf(owner), subjectClass)) {
+            throw new IllegalArgumentException("Bài \"" + lesson.getNameLesson()
+                    + "\" không thuộc chương trình học môn và khối của giáo án này.");
+        }
+        return lesson;
+    }
+
+    private Chapter curriculumChapter(int chapterId, LessonPlan plan, User owner) {
+        Chapter chapter = chapterRepository.findById(chapterId)
+                .orElseThrow(() -> new IllegalArgumentException("Chủ đề trong chương trình học không tồn tại."));
+        SubjectClasses subjectClass = requireCurriculum(plan);
+        Integer schoolId = curriculumService.schoolIdOf(owner);
+        Integer chapterSchoolId = chapter.getSchool() == null ? null : chapter.getSchool().getId();
+        if (chapter.getSubjectClasses() == null || chapter.getSubjectClasses().getId() != subjectClass.getId()
+                || !java.util.Objects.equals(chapterSchoolId, schoolId)) {
+            throw new IllegalArgumentException("Chủ đề \"" + chapter.getChapterName()
+                    + "\" không thuộc chương trình học môn và khối của giáo án này.");
+        }
+        return chapter;
+    }
+
+    /**
+     * When an older plan lesson is first linked to the curriculum, its questions and exams move to
+     * the curriculum lesson so the question bank and exam scope see them. The exams stop pointing at
+     * the plan lesson, which would otherwise delete them along with it.
+     */
+    private void moveLegacyContent(LessonPlanLesson planLesson, Lesson curriculumLesson) {
+        for (com.tttn.webthitracnghiem.model.Question question : questionRepository.findByLessonPlanLesson_Id(planLesson.getId())) {
+            if (question.getLesson() == null) {
+                question.setLesson(curriculumLesson);
+                question.setLessonPlanLesson(null);
+                question.setSourcePlanLessonId(planLesson.getId());
+                questionRepository.save(question);
+            }
+        }
+        for (com.tttn.webthitracnghiem.model.Exam exam : examRepository.findByLessonPlanLesson_Id(planLesson.getId())) {
+            exam.setLesson(curriculumLesson);
+            exam.setLessonPlanLesson(null);
+            exam.getScopeLessons().add(curriculumLesson);
+            exam.setSubject(curriculumLesson.getChapter().getSubjectClasses().getSubject());
+            exam.setGradeLevel(curriculumLesson.getChapter().getSubjectClasses().getClasses().getGrade());
+            examRepository.save(exam);
+        }
+        planLesson.getExams().clear();
     }
 
     private void validateWordAttachment(MultipartFile attachment) {
@@ -355,8 +440,22 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
         if (owner.getSchoolLevel() != null) {
             return grade >= minGrade(owner.getSchoolLevel()) && grade <= maxGrade(owner.getSchoolLevel());
         }
-        return trackingClassRepository.findClassesByTeacherInvolved(owner.getId()).stream()
+        if (owner.getSchool() != null && owner.getSchool().getName() != null) {
+            String sname = owner.getSchool().getName().toUpperCase();
+            if (sname.contains("TIỂU HỌC") || sname.contains("TIEU HOC") || sname.contains(" TH ")) {
+                return grade >= 1 && grade <= 5;
+            }
+            if (sname.contains("THCS") || sname.contains("TRUNG HỌC CƠ SỞ")) {
+                return grade >= 6 && grade <= 9;
+            }
+            if (sname.contains("THPT") || sname.contains("TRUNG HỌC PHỔ THÔNG")) {
+                return grade >= 10 && grade <= 12;
+            }
+        }
+        boolean hasInvolved = trackingClassRepository.findClassesByTeacherInvolved(owner.getId()).stream()
                 .anyMatch(item -> item.getGrade() != null && item.getGrade() == grade);
+        if (hasInvolved) return true;
+        return true;
     }
 
     private void validateTargetClass(StudentTrackingClass targetClass, Classes grade, User owner) {

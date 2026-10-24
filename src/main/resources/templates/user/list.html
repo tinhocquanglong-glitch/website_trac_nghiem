@@ -32,6 +32,19 @@
         .school-code { font-size: 0.8rem; color: #757575; }
         .nav-pills .nav-link.active { background-color: #1a73e8; font-weight: 600; }
         .nav-pills .nav-link { color: #555; font-weight: 600; }
+        @media (max-width: 767px) {
+            .user-management-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+            .user-management-header > div:last-child {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body class="nav-md">
@@ -45,15 +58,15 @@
 
                 <div class="user-management-header d-flex align-items-center justify-content-between mb-3">
                     <div>
-                        <h4 class="mb-1"><i class="fas fa-users-cog text-primary mr-2"></i>Quản lý người dùng hệ thống</h4>
-                        <div class="text-muted" style="font-size: 0.88rem;">Phân quyền theo từng trường học và người quản lý cơ sở</div>
+                        <h4 class="mb-1"><i class="fas fa-server text-primary mr-2"></i>Trung tâm Quản trị Tài khoản &amp; Dữ liệu Nhân sự</h4>
+                        <div class="text-muted" style="font-size: 0.88rem;">Điều phối tài khoản, phân quyền quản trị theo từng Đơn vị Cơ sở Giáo dục toàn hệ thống</div>
                     </div>
                     <div>
-                        <a th:href="@{/user/create-teacher}" class="btn btn-success btn-sm">
-                            <i class="fa fa-user-plus mr-1"></i> Cấp tài khoản GV / Admin
+                        <a th:href="@{/user/create-teacher}" class="btn btn-success btn-sm font-weight-bold shadow-sm">
+                            <i class="fa fa-user-plus mr-1"></i> Cấp quyền &amp; Khởi tạo Tài khoản
                         </a>
-                        <a th:href="@{/user/create}" class="btn btn-primary btn-sm">
-                            <i class="fa fa-plus mr-1"></i> Thêm người dùng
+                        <a th:href="@{/user/create}" class="btn btn-outline-primary btn-sm">
+                            <i class="fa fa-plus mr-1"></i> Thêm tài khoản thủ công
                         </a>
                     </div>
                 </div>
@@ -62,19 +75,23 @@
                     <strong th:text="${message}"></strong>
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
                 </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${error != null}">
+                    <strong th:text="${error}"></strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+                </div>
 
-                <!-- Tabs: Theo trường học vs Tất cả tài khoản -->
+                <!-- Tabs: Theo đơn vị cơ sở vs Toàn bộ cơ sở dữ liệu tài khoản -->
                 <ul class="nav nav-pills mb-3 border-bottom pb-2">
                     <li class="nav-item">
                         <a th:href="@{/user/list(viewMode='schools', keyword=${keyword})}"
                            th:class="'nav-link ' + (${viewMode == 'schools'} ? 'active' : '')">
-                            <i class="fas fa-school mr-1"></i> Quản lý theo từng trường
+                            <i class="fas fa-university mr-1"></i> Quản lý theo từng trường
                         </a>
                     </li>
                     <li class="nav-item">
                         <a th:href="@{/user/list(viewMode='all', keyword=${keyword})}"
                            th:class="'nav-link ' + (${viewMode == 'all'} ? 'active' : '')">
-                            <i class="fas fa-list mr-1"></i> Toàn bộ tài khoản
+                            <i class="fas fa-database mr-1"></i> Toàn bộ Cơ sở Dữ liệu Tài khoản
                         </a>
                     </li>
                 </ul>
@@ -134,6 +151,9 @@
                                     <td>
                                         <div class="school-title" th:text="${school.name}"></div>
                                         <div class="school-code" th:text="'Mã: ' + (${school.schoolCode != null ? school.schoolCode : '—'})"></div>
+                                        <span th:unless="${school.active}" class="badge badge-secondary mt-1">
+                                            <i class="fas fa-lock mr-1"></i>Đang khóa
+                                        </span>
                                     </td>
                                     <td>
                                         <div style="font-size: 0.85rem;" th:text="${school.fullLocationString}"></div>
@@ -174,6 +194,32 @@
                                            title="Cấp tài khoản GV cho trường này">
                                             <i class="fas fa-user-plus"></i>
                                         </a>
+                                        <div class="mt-1">
+                                            <a th:href="@{/school/edit/{id}(id=${school.id})}"
+                                               class="btn btn-outline-info btn-sm" title="Sửa thông tin trường">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a th:if="${school.active}"
+                                               th:href="@{/school/toggle/{id}(id=${school.id}, returnTo=${returnUrl})}"
+                                               class="btn btn-outline-warning btn-sm ml-1" title="Khóa trường"
+                                               th:data-name="${school.name}"
+                                               onclick="return confirm('Khóa trường ' + this.dataset.name + '? Tài khoản của trường sẽ không đăng nhập được cho đến khi mở khóa.')">
+                                                <i class="fas fa-lock"></i>
+                                            </a>
+                                            <a th:unless="${school.active}"
+                                               th:href="@{/school/toggle/{id}(id=${school.id}, returnTo=${returnUrl})}"
+                                               class="btn btn-outline-success btn-sm ml-1" title="Mở khóa trường"
+                                               th:data-name="${school.name}"
+                                               onclick="return confirm('Mở khóa trường ' + this.dataset.name + '?')">
+                                                <i class="fas fa-lock-open"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger btn-sm ml-1 js-delete-school"
+                                                    title="Xóa trường"
+                                                    th:data-action="@{/school/delete/{id}(id=${school.id})}"
+                                                    th:data-name="${school.name}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -268,6 +314,7 @@
 
             </div>
         </div>
+        <div th:replace="~{school/delete-modal :: modal(${returnUrl})}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

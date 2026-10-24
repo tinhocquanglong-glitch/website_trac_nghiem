@@ -32,6 +32,10 @@ public class LessonPlanChapter {
     @OrderBy("displayOrder ASC, id ASC")
     private List<LessonPlanLesson> lessons = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curriculum_chapter_id")
+    private Chapter curriculumChapter;
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
     public LessonPlan getLessonPlan() { return lessonPlan; }
@@ -41,5 +45,14 @@ public class LessonPlanChapter {
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
     public List<LessonPlanLesson> getLessons() { return lessons; }
-    public void setLessons(List<LessonPlanLesson> lessons) { this.lessons = lessons; }
+    /** Updates the list in place: Hibernate rejects replacing an orphan-removal collection on a loaded chapter. */
+    public void setLessons(List<LessonPlanLesson> lessons) {
+        if (lessons == this.lessons) return;
+        List<LessonPlanLesson> copy = lessons == null ? new ArrayList<>() : new ArrayList<>(lessons);
+        if (this.lessons == null) this.lessons = new ArrayList<>();
+        this.lessons.clear();
+        this.lessons.addAll(copy);
+    }
+    public Chapter getCurriculumChapter() { return curriculumChapter; }
+    public void setCurriculumChapter(Chapter curriculumChapter) { this.curriculumChapter = curriculumChapter; }
 }

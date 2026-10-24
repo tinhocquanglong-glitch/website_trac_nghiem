@@ -77,6 +77,7 @@ public class ClassController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())
-                        || "ROLE_SCHOOL_ADMIN".equals(authority.getAuthority()));
+                        || "ROLE_SCHOOL_ADMIN".equals(authority.getAuthority())
+                        || "ROLE_TEACHER".equals(authority.getAuthority()));
     }
 }

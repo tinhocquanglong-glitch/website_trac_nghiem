@@ -14,6 +14,7 @@ public class ExamRequest {
     private String usersId;
     private int lessonId;
     private Integer lessonPlanLessonId;
+    private List<Integer> lessonIds;
     private List<QuestionRequest> questions;
     private Boolean isPublic = true;
     private Integer schoolId;
@@ -118,6 +119,15 @@ public class ExamRequest {
 
     public Integer getLessonPlanLessonId() {
         return lessonPlanLessonId;
+    }
+
+    /** Curriculum lessons the exam covers (one or more); replaces lessonId for new exams. */
+    public List<Integer> getLessonIds() {
+        return lessonIds;
+    }
+
+    public void setLessonIds(List<Integer> lessonIds) {
+        this.lessonIds = lessonIds;
     }
 
     public void setLessonPlanLessonId(Integer lessonPlanLessonId) {

@@ -28,8 +28,7 @@ public class LessonPlanLesson {
     private String name;
     private int displayOrder;
 
-    @Lob
-    @javax.persistence.Column(columnDefinition = "text")
+    @javax.persistence.Column(columnDefinition = "text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
     private String content;
 
     private String attachmentOriginalName;
@@ -42,6 +41,20 @@ public class LessonPlanLesson {
 
     @OneToMany(mappedBy = "lessonPlanLesson", cascade = CascadeType.REMOVE)
     private List<Exam> exams = new ArrayList<>();
+
+    // The curriculum lesson this part of the plan teaches; questions and exams attach there.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curriculum_lesson_id")
+    private Lesson curriculumLesson;
+
+    private Integer periods;
+
+    @javax.persistence.Column(columnDefinition = "text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String objectives;
+
+    // Plain text of content, kept for search and as input for question generation.
+    @javax.persistence.Column(columnDefinition = "text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String contentText;
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
@@ -63,4 +76,12 @@ public class LessonPlanLesson {
     public void setAttachmentData(byte[] attachmentData) { this.attachmentData = attachmentData; }
     public List<Exam> getExams() { return exams; }
     public void setExams(List<Exam> exams) { this.exams = exams; }
+    public Lesson getCurriculumLesson() { return curriculumLesson; }
+    public void setCurriculumLesson(Lesson curriculumLesson) { this.curriculumLesson = curriculumLesson; }
+    public Integer getPeriods() { return periods; }
+    public void setPeriods(Integer periods) { this.periods = periods; }
+    public String getObjectives() { return objectives; }
+    public void setObjectives(String objectives) { this.objectives = objectives; }
+    public String getContentText() { return contentText; }
+    public void setContentText(String contentText) { this.contentText = contentText; }
 }

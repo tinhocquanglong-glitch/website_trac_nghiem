@@ -31,7 +31,8 @@ public class SubjectController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority())
-                        || "ROLE_SCHOOL_ADMIN".equals(a.getAuthority()));
+                        || "ROLE_SCHOOL_ADMIN".equals(a.getAuthority())
+                        || "ROLE_TEACHER".equals(a.getAuthority()));
     }
 
     @Autowired
@@ -46,6 +47,8 @@ public class SubjectController {
     IChapterService chapterService;
     @Autowired
     ILessonService lessonService;
+    @Autowired
+    CurriculumService curriculumService;
 
     @GetMapping("/list")
     public String index(@RequestParam("keyword") Optional<String> name,
@@ -151,16 +154,12 @@ public class SubjectController {
             return "redirect:/subject/list/" + classId;
         }
         SubjectClasses subjectClasses = subjectClassService.findByClassAndSubject(classId,subjectId);
-        List<Chapter> chapters = new ArrayList<>(subjectClasses.getChapters());
-        for(int i = 0; i<chapters.size();i++){
-            List<Lesson> lessons = new ArrayList<>(chapters.get(i).getLessons());
-            for(int j = 0; j<lessons.size();j++){
-                lessonService.remove(lessons.get(j));
-            }
-            chapterService.remove(chapters.get(i));
+        try {
+            curriculumService.deleteSubjectClass(subjectClasses);
+            ra.addFlashAttribute("message","Xóa thành công môn học!");
+        } catch (IllegalStateException ex) {
+            ra.addFlashAttribute("message", ex.getMessage());
         }
-        subjectClassService.remove(subjectClasses);
-        ra.addFlashAttribute("message","Xóa thành công môn học!");
         return "redirect:/subject/list/"+classId;
     }
 }

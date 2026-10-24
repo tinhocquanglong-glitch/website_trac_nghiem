@@ -45,6 +45,10 @@ public class QuestionController {
     private IChapterService chapterService;
     @Autowired
     private ILessonPlanService lessonPlanService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.CurriculumService curriculumService;
+    @Autowired
+    private com.tttn.webthitracnghiem.repository.QuestionRepository questionRepository;
 
     @ModelAttribute("exams")
     public Iterable<Exam> exams() {
@@ -86,8 +90,13 @@ public class QuestionController {
         model.addAttribute("selectedChapterId", chapterId.orElse(null));
         model.addAttribute("classes", subjectId.isPresent()
                 ? classesService.findAllBySubject(subjectId.get()) : Collections.emptyList());
+        Integer viewerSchoolId = curriculumService.schoolIdOf(
+                userService.findById(SecurityContextHolder.getContext().getAuthentication().getName()));
         model.addAttribute("chapters", subjectId.isPresent() && classId.isPresent()
-                ? chapterService.findBySubjectAndClass(subjectId.get(), classId.get()) : Collections.emptyList());
+                ? curriculumService.findSubjectClass(subjectId.get(), classId.get())
+                        .map(subjectClass -> curriculumService.readChapters(viewerSchoolId, subjectClass))
+                        .orElse(Collections.emptyList())
+                : Collections.emptyList());
         if (create.isPresent()) {
             model.addAttribute("message", "Thêm câu hỏi thành công!");
         }
@@ -117,6 +126,7 @@ public class QuestionController {
         subjectId.ifPresent(value -> model.addAttribute("subjectId", value));
         name.ifPresent(value -> model.addAttribute("keyword", value));
         model.addAttribute("questions", questions);
+        model.addAttribute("pendingCount", pendingQuestions(auth).size());
         return "question/listQuestion";
     }
 
@@ -137,34 +147,61 @@ public class QuestionController {
             }
         }
 
-        List<Chapter> chapters = new ArrayList<>(question.getLesson().getChapter().getSubjectClasses().getChapters());
-        Collections.sort(chapters);
-        for (int i = 0; i < chapters.size(); i++) {
-            Set<Lesson> lessons = chapters.get(i).getLessons();
-            List<Lesson> lessons1 = new ArrayList<>(lessons);
-            Collections.sort(lessons1);
-            Set<Lesson> lessons2 = new LinkedHashSet<>(lessons1);
-            chapters.get(i).setLessons(lessons2);
-        }
-        Set<Chapter> chapterSet = new LinkedHashSet<>(chapters);
-        question.getLesson().getChapter().getSubjectClasses().setChapters(chapterSet);
         model.addAttribute("subjects", subjectService.findAll());
-        model.addAttribute("classes",classesService.findAllBySubject(question.getLesson().getChapter().getSubjectClasses().getSubject().getId()));
+        if (question.getLesson() != null) {
+            Chapter questionChapter = question.getLesson().getChapter();
+            Integer curriculumSchoolId = questionChapter.getSchool() == null ? null : questionChapter.getSchool().getId();
+            List<Chapter> chapters = curriculumService.readChapters(curriculumSchoolId, questionChapter.getSubjectClasses());
+            for (Chapter chapter : chapters) {
+                chapter.setLessons(new LinkedHashSet<>(curriculumService.lessonsOf(chapter)));
+            }
+            Set<Chapter> chapterSet = new LinkedHashSet<>(chapters);
+            question.getLesson().getChapter().getSubjectClasses().setChapters(chapterSet);
+            model.addAttribute("classes", classesService.findAllBySubject(question.getLesson().getChapter().getSubjectClasses().getSubject().getId()));
+        } else if (question.getSubject() != null) {
+            model.addAttribute("classes", classesService.findAllBySubject(question.getSubject().getId()));
+        } else {
+            model.addAttribute("classes", classesService.findAll());
+        }
         model.addAttribute("question", question);
         return "question/editQuestion";
     }
 
     @PostMapping("/question/update")
     public String update(Question question, RedirectAttributes ra) {
-        // Giữ nguyên school của câu hỏi nếu giáo viên update
+        // The form only carries the editable fields; keep author, source, school and review state.
+        Question existing = questionService.findById(question.getQuesId());
+        if (existing == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy câu hỏi.");
+            return "redirect:/question/list";
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (isTeacherOnly(auth)) {
             School school = getCurrentUserSchool(auth);
-            if (question.getSchool() == null && school != null) {
-                question.setSchool(school);
+            boolean sameSchool = existing.getSchool() == null
+                    || (school != null && existing.getSchool().getId().equals(school.getId()));
+            if (!sameSchool) {
+                ra.addFlashAttribute("error", "Bạn không có quyền sửa câu hỏi này!");
+                return "redirect:/question/list";
+            }
+            if (existing.getSchool() == null && school != null) {
+                existing.setSchool(school);
             }
         }
-        questionService.save(question);
+        existing.setTitle(question.getTitle());
+        existing.setOptionA(question.getOptionA());
+        existing.setOptionB(question.getOptionB());
+        existing.setOptionC(question.getOptionC());
+        existing.setOptionD(question.getOptionD());
+        existing.setAns(question.getAns());
+        existing.setLevel(question.getLevel());
+        if (question.getIsPublic() != null) {
+            existing.setIsPublic(question.getIsPublic());
+        }
+        if (question.getLesson() != null) {
+            existing.setLesson(question.getLesson());
+        }
+        questionService.save(existing);
         ra.addFlashAttribute("message", "Chỉnh sửa câu hỏi thành công!");
         return "redirect:/question/list";
     }
@@ -190,10 +227,50 @@ public class QuestionController {
         return "redirect:/question/list";
     }
 
+    /** Questions waiting for a teacher's review (e.g. generated by AI) in the viewer's school; all for the admin. */
+    @GetMapping("/question/review")
+    public String review(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("pendingQuestions", pendingQuestions(auth));
+        return "question/review";
+    }
+
+    @PostMapping("/question/{id}/approve")
+    public String approve(@PathVariable("id") Integer id, RedirectAttributes ra) {
+        Question question = questionService.findById(id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (question == null || !canReview(auth, question)) {
+            ra.addFlashAttribute("error", "Bạn không có quyền duyệt câu hỏi này.");
+            return "redirect:/question/review";
+        }
+        question.setReviewStatus(Question.REVIEW_APPROVED);
+        questionService.save(question);
+        ra.addFlashAttribute("message", "Đã duyệt câu hỏi; câu hỏi đã dùng được trong đề thi.");
+        return "redirect:/question/review";
+    }
+
+    private List<Question> pendingQuestions(Authentication auth) {
+        if (auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            return questionRepository.findByReviewStatusOrderByQuesIdDesc(Question.REVIEW_PENDING);
+        }
+        School school = getCurrentUserSchool(auth);
+        return school == null ? Collections.emptyList()
+                : questionRepository.findByReviewStatusAndSchool_IdOrderByQuesIdDesc(Question.REVIEW_PENDING, school.getId());
+    }
+
+    private boolean canReview(Authentication auth, Question question) {
+        if (auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            return true;
+        }
+        School school = getCurrentUserSchool(auth);
+        return school != null && question.getSchool() != null && school.getId().equals(question.getSchool().getId());
+    }
+
     @GetMapping("/question/create")
     public String create(Model model) {
         model.addAttribute("question", new Question());
         model.addAttribute("subjects", subjectService.findAll());
+        model.addAttribute("allClasses", classesService.findAll());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = auth == null ? null : userService.findById(auth.getName());
         model.addAttribute("lessonPlanGrades", user == null

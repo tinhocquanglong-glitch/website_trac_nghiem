@@ -2,7 +2,8 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Giáo án</title>
+    <title>Kế hoạch bài dạy (KHBD)</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
     <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
     <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
@@ -34,11 +35,13 @@
         <div class="container-fluid py-4 plan-shell">
             <section class="plan-hero mb-4 d-flex justify-content-between align-items-center flex-wrap">
                 <div>
-                    <div class="text-uppercase small font-weight-bold mb-2 text-white-50">Kho tri thức giảng dạy</div>
-                    <h1 class="h2 mb-2">Giáo án</h1>
-                    <p class="mb-0">Soạn nội dung riêng theo môn, khối, lớp và chia sẻ cho đồng nghiệp.</p>
+                    <div class="text-uppercase small font-weight-bold mb-2 text-white-50">Kho tri thức &amp; Khung bài giảng</div>
+                    <h1 class="h2 mb-2">Kế hoạch bài dạy (KHBD)</h1>
+                    <p class="mb-0">Soạn thảo, chuẩn hóa kế hoạch bài dạy theo môn, khối, lớp và chia sẻ chuyên môn.</p>
                 </div>
-                <a th:href="@{/lesson-plans/create}" class="btn btn-light mt-3 mt-md-0"><i class="fas fa-plus mr-1"></i> Tạo giáo án</a>
+                <a th:href="@{/lesson-plans/create}" class="btn btn-warning font-weight-bold text-dark mt-3 mt-md-0 shadow-sm">
+                    <i class="fas fa-plus mr-1"></i> + KHBD
+                </a>
             </section>
 
             <div th:if="${message != null}" class="alert alert-success" role="status" th:text="${message}"></div>
@@ -49,14 +52,14 @@
                     <div class="form-group col-lg-4 col-md-6 mb-3">
                         <label class="form-label" for="q">Tên hoặc từ khóa</label>
                         <input id="q" class="form-control" type="search" name="q" th:value="${q}"
-                               placeholder="Tên giáo án hoặc nội dung mô tả">
+                               placeholder="Tên kế hoạch bài dạy hoặc nội dung mô tả">
                     </div>
                     <div class="form-group col-lg-2 col-md-6 mb-3">
                         <label class="form-label" for="subjectId">Môn học</label>
                         <select id="subjectId" name="subjectId" class="form-control">
                             <option value="">Tất cả môn</option>
                             <option th:each="subject : ${subjects}" th:value="${subject.id}"
-                                    th:selected="${subjectId == subject.id}" th:text="${subject.name}"></option>
+                                     th:selected="${subjectId == subject.id}" th:text="${subject.name}"></option>
                         </select>
                     </div>
                     <div class="form-group col-lg-2 col-md-6 mb-3">
@@ -93,12 +96,12 @@
                         <div class="custom-control custom-checkbox mb-2">
                             <input id="mine" class="custom-control-input" type="checkbox" name="mine" value="true"
                                    th:checked="${mine}">
-                            <label class="custom-control-label" for="mine">Chỉ xem giáo án của tôi</label>
+                            <label class="custom-control-label" for="mine">Chỉ xem KHBD của tôi</label>
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-12 mb-3 d-flex align-items-end justify-content-md-end filter-actions pt-3 pt-md-0">
                         <a class="btn btn-light mr-2" th:href="@{/lesson-plans}"><i class="fas fa-undo mr-1"></i> Xóa lọc</a>
-                        <button class="btn btn-primary" type="submit" title="Tìm kiếm giáo án">
+                        <button class="btn btn-primary" type="submit" title="Tìm kiếm KHBD">
                             <i class="fas fa-search mr-1"></i> Áp dụng bộ lọc
                         </button>
                     </div>
@@ -107,9 +110,9 @@
 
             <section th:if="${plans.isEmpty()}" class="text-center py-5 bg-white rounded shadow-sm" role="status">
                 <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
-                <h2 class="h4">Chưa có giáo án nào</h2>
-                <p class="text-muted">Tạo giáo án đầu tiên từ phạm vi môn và khối được cấp.</p>
-                <a th:href="@{/lesson-plans/create}" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> Bắt đầu soạn</a>
+                <h2 class="h4">Chưa có kế hoạch bài dạy nào</h2>
+                <p class="text-muted">Tạo KHBD đầu tiên từ phạm vi môn và khối được cấp.</p>
+                <a th:href="@{/lesson-plans/create}" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> + KHBD Mới</a>
             </section>
 
             <div class="row" th:unless="${plans.isEmpty()}">
@@ -117,7 +120,7 @@
                     <article class="card plan-card">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h2 class="h5 card-title mb-0 mr-2" th:text="${plan.name}">Tên giáo án</h2>
+                                <h2 class="h5 card-title mb-0 mr-2" th:text="${plan.name}">Tên kế hoạch bài dạy</h2>
                                 <span th:if="${plan.isPublic}" class="visibility-public small"><i class="fas fa-globe mr-1"></i>Public</span>
                                 <span th:unless="${plan.isPublic}" class="visibility-private small"><i class="fas fa-lock mr-1"></i>Private</span>
                             </div>
@@ -131,8 +134,8 @@
                                 <span class="scope-chip" th:text="${plan.planChapters.?[lessons != null].size() + ' phần'}">0 phần</span>
                             </div>
                             <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <a class="btn btn-outline-primary btn-sm" th:href="@{/lesson-plans/{id}(id=${plan.id})}"><i class="fas fa-eye mr-1"></i> Xem giáo án</a>
-                                <a class="btn btn-link btn-sm" th:if="${plan.owner.id == #authentication.name}" th:href="@{/lesson-plans/{id}/edit(id=${plan.id})}" aria-label="Chỉnh sửa giáo án"><i class="fas fa-edit"></i></a>
+                                <a class="btn btn-outline-primary btn-sm" th:href="@{/lesson-plans/{id}(id=${plan.id})}"><i class="fas fa-eye mr-1"></i> Xem KHBD</a>
+                                <a class="btn btn-link btn-sm" th:if="${plan.owner.id == #authentication.name}" th:href="@{/lesson-plans/{id}/edit(id=${plan.id})}" aria-label="Chỉnh sửa KHBD"><i class="fas fa-edit"></i></a>
                             </div>
                         </div>
                     </article>

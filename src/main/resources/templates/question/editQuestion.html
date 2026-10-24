@@ -63,7 +63,7 @@
                                         <option value="" disabled>--Chọn môn học--</option>
                                         <th:block class="dropdown-menu" th:each="subject : ${subjects}">
                                             <option class="dropdown-item" th:value="${subject.id}"
-                                                    th:text="${subject.name}" th:selected="${question.lesson.chapter.subjectClasses.subject.id == subject.id ? 'selected' : null}"></option>
+                                                    th:text="${subject.name}" th:selected="${(question.lesson != null and question.lesson.chapter != null and question.lesson.chapter.subjectClasses != null and question.lesson.chapter.subjectClasses.subject.id == subject.id) or (question.subject != null and question.subject.id == subject.id) ? 'selected' : null}"></option>
                                         </th:block>
                                     </select>
                                     <select id="class" class="btn dropdown-toggle" data-toggle="dropdown"
@@ -71,12 +71,12 @@
                                         <option id="default" value="" disabled>--Chọn lớp học--</option>
                                         <th:block class="dropdown-menu" th:each="class : ${classes}">
                                             <option class="dropdown-item" th:value="${class.id}"
-                                                    th:text="${class.displayName}" th:selected="${question.lesson.chapter.subjectClasses.classes.id == class.id ? 'selected' : null}"></option>
+                                                    th:text="${class.displayName}" th:selected="${(question.lesson != null and question.lesson.chapter != null and question.lesson.chapter.subjectClasses != null and question.lesson.chapter.subjectClasses.classes.id == class.id) or (question.classes != null and question.classes.id == class.id) ? 'selected' : null}"></option>
                                         </th:block>
                                         </th:block>
                                     </select>
                                     <div id="lesson">
-                                        <th:block th:each="chapter,i : ${question.lesson.chapter.subjectClasses.chapters}">
+                                        <th:block th:if="${question.lesson != null and question.lesson.chapter != null and question.lesson.chapter.subjectClasses != null}" th:each="chapter,i : ${question.lesson.chapter.subjectClasses.chapters}">
                                             <button type="button" class="btn btn-info" data-toggle="collapse" th:data-target="'#collapse'+${chapter.id}" th:text="'CHỦ ĐỀ '+${chapter.serial}+'. '+${chapter.chapterName}"></button>
                                             <div th:id="'collapse'+${chapter.id}" th:class="${chapter.id == question.lesson.chapter.id ? 'collapse show' : 'collapse'}">
                                                 <div class="list-lesson" th:each=" lesson : ${chapter.lessons}">

@@ -23,6 +23,18 @@ class ExamTemplateTest {
     }
 
     @Test
+    void examScopeComesFromCurriculumAndQuestionPool() throws Exception {
+        String template = Files.readString(
+                Path.of("src/main/resources/templates/exam/createExam.html"),
+                StandardCharsets.UTF_8);
+
+        assertThat(template)
+                .contains("/api/curriculum", "/api/question/pool", "id=\"scopeTree\"")
+                .contains("lessonIds: scopeLessonIds()", "exam.append(\"lessonIds\", id)")
+                .doesNotContain("/lesson-plans/catalog", "legacyLessonId", "selectedLessonId");
+    }
+
+    @Test
     void examListExposesTeacherStatisticsAction() throws Exception {
         String template = Files.readString(
                 Path.of("src/main/resources/templates/exam/listExam.html"),

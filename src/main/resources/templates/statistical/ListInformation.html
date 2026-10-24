@@ -3,76 +3,120 @@
       xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
-          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <style>
-        .number {
-            display: inline;
-            border-radius: 15px;
-            padding: 3px 6px;
-            background-color: rgb(114, 187, 230);
-            color: white;
-            float: right;
-            margin-right: 20px;
-            font-size: 14px
-        }
-    </style>
+    <title>Bảng Vàng Danh Dự</title>
 </head>
 <body>
-<div class="container">
+<div class="container p-0">
     <div th:fragment="thong-ke">
-        <div class="card-header  " style="background: #0070e9;;text-align: center;">
-            <label class="col-form-label" style="color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;font-weight: bold"><i class="fa-solid fa-ranking-star"></i>BXH TOP 10</label>
-        </div>
-        <div style="padding: 5px;">
-            <table class="table table-hover mr-3 h-50 rounded " id="tableHistory" style="font-size: 15px">
-                <tbody th:each="result,i :${sList}">
-                <tr style="background: white">
-                    <td style="display: flex;gap: 10px;margin: 5px 0">
-                        <div class="score-left" style="position: relative">
-                            <img th:src="@{${result.users.img}}"
-                                 style="width: 70px;height: 70px;object-fit: cover;border-radius: 5px;">
-                        </div>
-                        <div class="score-right" style="color: black;display: flex;flex-direction: column;gap: 5px;">
-                            <div class="score-name">
-                                <span style="padding: 5px;color: white;background: #2bb52b;text-align: center;border-radius: 5px;"
-                                      th:text="${new java.text.DecimalFormat('0.#').format(result.mark)} + ' điểm'"></span>
-                                <span th:text="${result.users.fullName}"></span>
-                            </div>
-                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam != null}">
-                                <span th:if="${result.exam.lesson != null}"
-                                      th:text="${result.exam.lesson.chapter.subjectClasses.classes.nameClass} + ', '"></span>
-                                <span th:if="${result.exam.lesson != null}"
-                                      th:text="${result.exam.lesson.chapter.subjectClasses.subject.name} + ', '"></span>
-                                <span th:if="${result.exam.lessonPlanLesson != null}"
-                                      th:text="${result.exam.lessonPlanLesson.chapter.lessonPlan.grade.displayName} + ', '"></span>
-                                <span th:if="${result.exam.lessonPlanLesson != null}"
-                                      th:text="${result.exam.lessonPlanLesson.chapter.lessonPlan.subject.name} + ', '"></span>
-                                <span th:text="${result.exam.idName}"></span>
-                            </div>
-                            <div class="score-class-subject" style="color: #949494;font-style: italic;" th:if="${result.exam == null}">
-                                <span>Bài kiểm tra IQ</span>
-                            </div>
-                            <div class="score-total">
-                                <span th:text="'vào '+${#dates.format(result.endTime,'hh:mm:ss, dd/MM/yyyy')}"></span>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        <style>
+            .rank-card-header {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: #ffffff;
+                text-align: center;
+                padding: 12px 16px;
+                border-radius: 12px 12px 0 0;
+                font-weight: 800;
+                font-size: 0.95rem;
+                letter-spacing: 0.5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+            }
+            .rank-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-bottom: 1px solid #f1f5f9;
+                transition: all 0.2s;
+                background: #ffffff;
+            }
+            .rank-item:hover {
+                background: #f8fafc;
+                transform: translateX(3px);
+            }
+            .rank-badge-pos {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.8rem;
+                font-weight: 800;
+                flex-shrink: 0;
+            }
+            .rank-1 { background: #fef3c7; color: #b45309; border: 2px solid #f59e0b; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3); }
+            .rank-2 { background: #f1f5f9; color: #475569; border: 2px solid #94a3b8; }
+            .rank-3 { background: #ffedd5; color: #c2410c; border: 2px solid #f97316; }
+            .rank-other { background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; }
+            .rank-avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #e2e8f0;
+                flex-shrink: 0;
+            }
+            .rank-score-pill {
+                font-size: 0.76rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: #fff;
+                padding: 2px 8px;
+                border-radius: 12px;
+                display: inline-block;
+            }
+        </style>
 
+        <div class="rank-card-header">
+            <i class="fas fa-trophy" style="color: #fef08a;"></i>
+            <span>BẢNG VÀNG TOP 10</span>
+        </div>
+        <div class="p-1 bg-white" style="border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
+            <div th:if="${sList == null or sList.isEmpty()}" class="text-center py-4 text-muted small">
+                <i class="fas fa-award fa-2x mb-2 text-warning d-block"></i>
+                Chưa có kết quả xếp hạng.
+            </div>
+            <div th:each="result, stat : ${sList}" class="rank-item">
+                <!-- Vị trí xếp hạng -->
+                <div th:class="'rank-badge-pos ' + (${stat.count == 1} ? 'rank-1' : (${stat.count == 2} ? 'rank-2' : (${stat.count == 3} ? 'rank-3' : 'rank-other')))">
+                    <span th:if="${stat.count == 1}">🥇</span>
+                    <span th:if="${stat.count == 2}">🥈</span>
+                    <span th:if="${stat.count == 3}">🥉</span>
+                    <span th:if="${stat.count > 3}" th:text="${stat.count}">4</span>
+                </div>
+
+                <!-- Avatar -->
+                <img th:src="@{${result.users != null and result.users.img != null ? result.users.img : '/img/avatar/default.jpg'}}"
+                     alt="Avatar" class="rank-avatar">
+
+                <!-- Chi tiết -->
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <strong class="text-truncate text-dark" style="font-size: 0.88rem; max-width: 110px;"
+                                th:text="${result.users != null ? result.users.fullName : 'Học sinh'}">Họ tên</strong>
+                        <span class="rank-score-pill" th:text="${new java.text.DecimalFormat('0.#').format(result.mark)} + ' đ'">10 đ</span>
+                    </div>
+
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem;" th:if="${result.exam != null}">
+                        <i class="fas fa-file-alt mr-1 text-primary"></i>
+                        <span th:text="${result.exam.idName != null ? result.exam.idName : 'Bài kiểm tra'}">Đề thi</span>
+                    </div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem;" th:if="${result.exam == null}">
+                        <i class="fas fa-brain mr-1 text-warning"></i>
+                        <span>Bài kiểm tra IQ</span>
+                    </div>
+
+                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 2px;">
+                        <i class="far fa-clock mr-1"></i>
+                        <span th:text="${#dates.format(result.endTime, 'dd/MM/yyyy HH:mm')}">Thời gian</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

@@ -304,18 +304,45 @@ public class AdministrativeDataSeeder implements CommandLineRunner {
     }
 
     private void migrateLessonPlanSchema() {
+        // Run each migration independently so an optional legacy column cannot prevent
+        // the encoding fix needed by current lesson-plan content.
+        runSchemaMigration("lesson plan encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"));
+        runSchemaMigration("lesson plan chapter encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan_custom_chapter CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"));
+        runSchemaMigration("lesson plan lesson encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan_custom_lesson CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"));
+        // Old lesson plans used a mandatory subject_class_id; new plans store subject and grade separately.
+        runSchemaMigration("legacy lesson plan subject class column", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan MODIFY subject_class_id INT NULL"));
+        runSchemaMigration("lesson plan content column", () -> ensureLessonPlanLessonColumn("content", "TEXT NULL"));
+        runSchemaMigration("lesson plan content encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan_custom_lesson MODIFY content TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL"));
+        runSchemaMigration("lesson plan objectives column", () -> ensureLessonPlanLessonColumn("objectives", "TEXT NULL"));
+        runSchemaMigration("lesson plan objectives encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan_custom_lesson MODIFY objectives TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL"));
+        runSchemaMigration("lesson plan plain text column", () -> ensureLessonPlanLessonColumn("content_text", "TEXT NULL"));
+        runSchemaMigration("lesson plan plain text encoding", () -> jdbcTemplate.execute(
+                "ALTER TABLE lesson_plan_custom_lesson MODIFY content_text TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL"));
+        runSchemaMigration("lesson plan attachment name column",
+                () -> ensureLessonPlanLessonColumn("attachment_original_name", "VARCHAR(255) NULL"));
+        runSchemaMigration("lesson plan attachment type column",
+                () -> ensureLessonPlanLessonColumn("attachment_content_type", "VARCHAR(255) NULL"));
+        runSchemaMigration("lesson plan attachment size column",
+                () -> ensureLessonPlanLessonColumn("attachment_size", "BIGINT NULL"));
+        runSchemaMigration("lesson plan attachment data column",
+                () -> ensureLessonPlanLessonColumn("attachment_data", "LONGBLOB NULL"));
+        runSchemaMigration("question lesson plan link",
+                () -> ensureColumn("question", "lesson_plan_lesson_id", "INT NULL"));
+        runSchemaMigration("exam lesson plan link",
+                () -> ensureColumn("exam", "lesson_plan_lesson_id", "INT NULL"));
+    }
+
+    private void runSchemaMigration(String description, Runnable migration) {
         try {
-            // Old lesson plans used a mandatory subject_class_id; new plans store subject and grade separately.
-            jdbcTemplate.execute("ALTER TABLE lesson_plan MODIFY subject_class_id INT NULL");
-            ensureLessonPlanLessonColumn("content", "TEXT NULL");
-            ensureLessonPlanLessonColumn("attachment_original_name", "VARCHAR(255) NULL");
-            ensureLessonPlanLessonColumn("attachment_content_type", "VARCHAR(255) NULL");
-            ensureLessonPlanLessonColumn("attachment_size", "BIGINT NULL");
-            ensureLessonPlanLessonColumn("attachment_data", "LONGBLOB NULL");
-            ensureColumn("question", "lesson_plan_lesson_id", "INT NULL");
-            ensureColumn("exam", "lesson_plan_lesson_id", "INT NULL");
+            migration.run();
         } catch (Exception e) {
-            logger.debug("Lesson plan schema migration skipped: {}", e.getMessage());
+            logger.debug("{} migration skipped: {}", description, e.getMessage());
         }
     }
 

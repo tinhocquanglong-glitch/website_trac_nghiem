@@ -19,4 +19,15 @@ public interface ChapterRepository extends JpaRepository<Chapter, Integer> {
     List<Chapter> findBySubjectAndClass(int subId, int classId);
     @Query(nativeQuery = true,value = "SELECT serial FROM chapter WHERE subject_class_id = :id order by serial desc limit 1")
     Optional<Integer> getSerial(int id);
+
+    /** One school's curriculum for a subject-grade; a null schoolId selects the shared curriculum. */
+    List<Chapter> findBySubjectClasses_IdAndSchool_IdOrderBySerialAscIdAsc(int subjectClassId, Integer schoolId);
+
+    boolean existsBySubjectClasses_IdAndSchool_Id(int subjectClassId, Integer schoolId);
+
+    List<Chapter> findBySubjectClasses_Id(int subjectClassId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Chapter c SET c.templateChapter = NULL WHERE c.templateChapter.id = :templateId")
+    int detachCopiesOf(@org.springframework.data.repository.query.Param("templateId") int templateId);
 }

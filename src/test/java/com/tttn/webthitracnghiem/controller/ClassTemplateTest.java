@@ -63,6 +63,6 @@ class ClassTemplateTest {
 
         String html = templateEngine.process("index", context);
 
-        assertThat(html).contains("/class/list");
+        assertThat(html).contains("href=\"/curriculum\"");
     }
 }

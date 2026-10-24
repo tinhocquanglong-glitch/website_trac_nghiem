@@ -103,6 +103,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    long countBySchoolId(Integer schoolId);
+
     @Query(value = "SELECT u.* FROM user u WHERE " +
             "CONVERT(u.id USING utf8mb4) COLLATE utf8mb4_unicode_ci LIKE " +
             "CONCAT('%', CONVERT(:name USING utf8mb4), '%') COLLATE utf8mb4_unicode_ci OR " +

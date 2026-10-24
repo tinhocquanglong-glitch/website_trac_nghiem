@@ -29,24 +29,10 @@ public class LessonApiController {
         return ResponseEntity.ok(lessonService.findById(id));
     }
 
+    /** The old bulk editor replaced (and deleted) every lesson; editing now happens per school in /curriculum. */
     @PostMapping(value = ("/{chapId}"),consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> save(@PathVariable Integer chapId,@RequestBody List<LessonForm> lessonForms) {
-        Set<Lesson> lessons = new LinkedHashSet<>();
-        for (int i = 0; i < lessonForms.size(); i++) {
-            Lesson lesson = new Lesson();
-            lesson.setId(lessonForms.get(i).getId());
-            lesson.setNameLesson(lessonForms.get(i).getLessonName());
-            lesson.setChapter(chapterService.findById(lessonForms.get(i).getChapter()));
-            lesson.setSerial(i + 1);
-            Lesson lessonSave = lessonService.save(lesson);
-            lessons.add(lessonSave);
-        }
-        List<Lesson> lessonAll = lessonService.findByChapId(chapId);
-        for(Lesson lesson : lessonAll){
-            if(!lessons.contains(lesson)){
-                lessonService.remove(lesson);
-            }
-        }
-        return ResponseEntity.ok(lessonForms);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.GONE)
+                .body("Hãy sửa bài học ở trang Chương trình học (/curriculum).");
     }
 }

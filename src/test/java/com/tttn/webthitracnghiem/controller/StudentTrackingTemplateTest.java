@@ -174,10 +174,14 @@ class StudentTrackingTemplateTest {
         context.setVariable("month", 10);
         context.setVariable("months", List.of(9, 10, 11, 12, 1));
         context.setVariable("attendanceStatuses", AttendanceStatus.values());
+        context.setVariable("canManage", true);
+        context.setVariable("homeroomBook", true);
 
         String html = templateEngine.process("student-tracking/sheet", context);
 
         assertThat(html)
+                .contains("Sổ chủ nhiệm của lớp", "Lưu sổ chủ nhiệm")
+                .doesNotContain("name=\"subjectId\"")
                 .contains("Sổ theo dõi lớp 6A", "rows[0].studentId", "Nguyen Van A", "Vắng", "Đi học", "Không có")
                 .contains("ĐGTX", "colspan=\"2\"", "Số ngày", "rows[0].attendanceDates",
                         "Nghỉ có phép, phụ huynh đã báo", "placeholder=\"Ghi chú tùy ý\"")
@@ -190,6 +194,51 @@ class StudentTrackingTemplateTest {
                 .contains("name=\"month\" value=\"10\"")
                 .contains("Tháng 9", "Tháng 10", "Tháng 1")
                 .contains("/student-tracking/export?classId=1");
+    }
+
+    @Test
+    void rendersSubjectBookWithSubjectIdAndReadOnlyRoster() {
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(1);
+        trackingClass.setClassName("6A");
+        trackingClass.setSchoolYear("2026-2027");
+        TrackingSheetForm sheetForm = new TrackingSheetForm();
+        sheetForm.setSemester(1);
+        TrackingRowForm row = new TrackingRowForm();
+        row.setStudentId(10);
+        row.setFullName("Nguyen Van A");
+        row.setAttendanceStatus(AttendanceStatus.ABSENT);
+        sheetForm.setRows(List.of(row));
+        com.tttn.webthitracnghiem.model.Subject math = new com.tttn.webthitracnghiem.model.Subject();
+        math.setId(5);
+        math.setName("Toán");
+        com.tttn.webthitracnghiem.model.ClassSubjectAssignment assignment = new com.tttn.webthitracnghiem.model.ClassSubjectAssignment();
+        assignment.setSubject(math);
+
+        WebContext context = webContext();
+        context.setVariable("trackingClass", trackingClass);
+        context.setVariable("trackingClasses", List.of(trackingClass));
+        context.setVariable("sheetForm", sheetForm);
+        context.setVariable("semester", 1);
+        context.setVariable("month", 10);
+        context.setVariable("months", List.of(9, 10, 11, 12, 1));
+        context.setVariable("attendanceStatuses", AttendanceStatus.values());
+        // A homeroom teacher who also teaches maths, looking at the maths book.
+        context.setVariable("canManage", true);
+        context.setVariable("homeroomBook", false);
+        context.setVariable("myAssignments", List.of(assignment));
+        context.setVariable("bookSubjectId", 5);
+        context.setVariable("bookSubjectName", "Toán");
+
+        String html = templateEngine.process("student-tracking/sheet", context);
+
+        assertThat(html)
+                .contains("Sổ bộ môn Toán (của riêng bạn)", "Lưu sổ môn Toán")
+                .contains("name=\"subjectId\" value=\"5\"")
+                .contains("Sổ chủ nhiệm", "Môn Toán")
+                .contains("/student-tracking/classes/1?semester=1&amp;month=11&amp;subjectId=5")
+                .doesNotContain("name=\"rows[0].attendanceStatus\" aria-label")
+                .doesNotContain("aria-label=\"Họ và tên\"");
     }
 
     @Test
@@ -298,6 +347,40 @@ class StudentTrackingTemplateTest {
 
         String html = templateEngine.process("user/list", context);
         assertThat(html).contains("Quản lý theo từng trường");
+    }
+
+    @Test
+    void rendersSchoolEditLockAndPasswordProtectedDelete() {
+        School active = new School();
+        active.setId(3);
+        active.setName("THCS A");
+        School locked = new School();
+        locked.setId(4);
+        locked.setName("THCS B");
+        locked.setActive(false);
+
+        WebContext context = webContext();
+        context.setVariable("viewMode", "schools");
+        context.setVariable("keyword", "");
+        context.setVariable("schools", List.of(active, locked));
+        context.setVariable("addressKeyword", "");
+        context.setVariable("hasSchoolSearch", true);
+        context.setVariable("schoolManagersMap", Map.of());
+        context.setVariable("teacherCountMap", Map.of(3, 0, 4, 0));
+        context.setVariable("studentCountMap", Map.of(3, 0, 4, 0));
+        context.setVariable("isAdmin", true);
+        context.setVariable("returnUrl", "/user/list?viewMode=schools&keyword=&address=");
+        context.setVariable("error", "Mật khẩu admin không đúng. Trường chưa bị xóa.");
+        context.setVariable("users", new org.springframework.data.domain.PageImpl<>(List.of()));
+
+        String html = templateEngine.process("user/list", context);
+
+        assertThat(html)
+                .contains("/school/edit/3", "/school/edit/4")
+                .contains("title=\"Khóa trường\"", "title=\"Mở khóa trường\"", "Đang khóa")
+                .contains("data-action=\"/school/delete/3\"", "id=\"deleteSchoolModal\"", "name=\"adminPassword\"")
+                .contains("name=\"returnTo\" value=\"/user/list?viewMode=schools&amp;keyword=&amp;address=\"")
+                .contains("Mật khẩu admin không đúng");
     }
 
     @Test

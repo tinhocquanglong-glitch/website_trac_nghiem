@@ -34,6 +34,12 @@
                     Danh Sách Trường Học
                 </div>
 
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${error != null}">
+                    <strong th:text="${error}"></strong>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
                 <div class="alert alert-primary alert-dismissible fade show" role="alert" th:if="${message != null}">
                     <strong th:text="${message}"></strong>
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -100,9 +106,14 @@
                                     <a th:href="@{'/school/edit/' + ${s.id}}" class="btn btn-sm btn-info" title="Sửa"><i class="fa fa-edit"></i></a>
                                     <a th:href="@{'/school/toggle/' + ${s.id}}" class="btn btn-sm btn-warning"
                                        th:title="${s.active ? 'Khóa' : 'Kích hoạt'}"
-                                       onclick="return confirm('Bạn có chắc muốn đổi trạng thái trường này?')">
+                                       onclick="return confirm('Bạn có chắc muốn đổi trạng thái trường này? Khi khóa, tài khoản của trường sẽ không đăng nhập được.')">
                                         <i th:class="${s.active ? 'fa fa-ban' : 'fa fa-check'}"></i>
                                     </a>
+                                    <button type="button" class="btn btn-sm btn-danger js-delete-school" title="Xóa"
+                                            th:data-action="@{/school/delete/{id}(id=${s.id})}"
+                                            th:data-name="${s.name}">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -128,6 +139,7 @@
 
             </div>
         </div>
+        <div th:replace="~{school/delete-modal :: modal('/school/list')}"></div>
     </div>
 </div>
 

@@ -37,101 +37,627 @@
 <div class="container body">
     <div class="main_container">
         <div class="col-md-3 left_col" th:fragment="navbarAdmin">
-            <div class="left_col scroll-view">
+            <!-- Ensure FontAwesome 5 is always loaded for rich icons -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+                  integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+                  crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <style>
+                /* ─── Modern Responsive Admin Sidebar Theme ─── */
+                @media (min-width: 992px) {
+                    body.nav-md .container.body .col-md-3.left_col {
+                        width: 270px !important;
+                        z-index: 1000;
+                    }
+                    body.nav-md .container.body .right_col {
+                        margin-left: 270px !important;
+                        min-height: calc(100vh - 60px);
+                        transition: margin-left 0.25s ease;
+                    }
+                    body.nav-md .container.body .top_nav {
+                        margin-left: 270px !important;
+                        transition: margin-left 0.25s ease;
+                    }
+                    body.nav-sm .container.body .col-md-3.left_col {
+                        width: 70px !important;
+                    }
+                    body.nav-sm .container.body .right_col,
+                    body.nav-sm .container.body .top_nav {
+                        margin-left: 70px !important;
+                    }
+                }
 
-                <div class="clearfix"></div>
+                /* Mobile & Tablet Off-Canvas Drawer (< 992px) */
+                @media (max-width: 991px) {
+                    .container.body .right_col,
+                    .container.body .top_nav {
+                        width: 100% !important;
+                        margin-left: 0 !important;
+                    }
+                    body.nav-md .container.body .col-md-3.left_col {
+                        display: none !important;
+                    }
+                    body.nav-sm .container.body .col-md-3.left_col {
+                        display: block !important;
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        bottom: 0 !important;
+                        width: 280px !important;
+                        max-width: 85vw !important;
+                        height: 100vh !important;
+                        z-index: 99999 !important;
+                        box-shadow: 6px 0 30px rgba(0,0,0,0.45) !important;
+                        overflow-y: auto !important;
+                    }
+                    .sidebar-backdrop {
+                        display: none;
+                        position: fixed;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(15, 23, 42, 0.65);
+                        backdrop-filter: blur(3px);
+                        z-index: 99990;
+                    }
+                    body.nav-sm .sidebar-backdrop {
+                        display: block !important;
+                    }
+                }
+
+                .left_col.scroll-view {
+                    background: linear-gradient(180deg, #0b1120 0%, #0f172a 40%, #1e293b 100%) !important;
+                    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+                    width: 100% !important;
+                }
+
+                /* Brand Header */
+                .sidebar-brand-wrapper {
+                    padding: 18px 16px 14px;
+                    border-bottom: 1px solid rgba(255,255,255,0.06);
+                    background: rgba(15, 23, 42, 0.4);
+                }
+                .sidebar-brand-link {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    text-decoration: none !important;
+                }
+                .sidebar-brand-icon {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 10px;
+                    background: linear-gradient(135deg, #38bdf8, #2563eb);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    font-size: 1.25rem;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+                    flex-shrink: 0;
+                }
+                .sidebar-brand-info {
+                    min-width: 0;
+                    flex: 1;
+                }
+                .sidebar-brand-title {
+                    font-size: 0.92rem;
+                    font-weight: 800;
+                    letter-spacing: 0.8px;
+                    color: #f8fafc;
+                    display: block;
+                    line-height: 1.2;
+                }
+                .sidebar-brand-sub {
+                    font-size: 0.68rem;
+                    color: #94a3b8;
+                    display: block;
+                    margin-top: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                body.nav-sm .sidebar-brand-info {
+                    display: none !important;
+                }
+                body.nav-sm .sidebar-brand-wrapper {
+                    padding: 14px 12px;
+                    text-align: center;
+                }
+
+                /* Modern Profile Card */
+                .sidebar-profile-card {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px 14px;
+                    background: rgba(255, 255, 255, 0.035);
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 12px;
+                    margin: 12px 12px 6px;
+                }
+                .sidebar-avatar-wrap {
+                    position: relative;
+                    flex-shrink: 0;
+                }
+                .sidebar-avatar-img {
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    border: 2px solid #38bdf8;
+                    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+                    object-fit: cover;
+                }
+                .sidebar-status-dot {
+                    position: absolute;
+                    bottom: 1px;
+                    right: 1px;
+                    width: 10px;
+                    height: 10px;
+                    background: #10b981;
+                    border: 2px solid #0f172a;
+                    border-radius: 50%;
+                }
+                .sidebar-user-details {
+                    min-width: 0;
+                    flex: 1;
+                }
+                .sidebar-greet {
+                    font-size: 0.68rem;
+                    color: #94a3b8;
+                    display: block;
+                    text-transform: uppercase;
+                    letter-spacing: 0.4px;
+                }
+                .sidebar-username {
+                    font-size: 0.88rem;
+                    font-weight: 700;
+                    color: #f8fafc;
+                    margin: 1px 0 3px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .role-pill-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.4px;
+                    line-height: 1.3;
+                }
+                .role-admin { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+                .role-school { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+                .role-teacher { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+
+                body.nav-sm .sidebar-user-details {
+                    display: none !important;
+                }
+                body.nav-sm .sidebar-profile-card {
+                    padding: 8px 4px;
+                    justify-content: center;
+                    background: transparent;
+                    border: none;
+                    margin: 8px 0;
+                }
+
+                /* Menu Section Headers */
+                .main_menu_side h3 {
+                    color: #64748b !important;
+                    font-size: 0.66rem !important;
+                    font-weight: 800 !important;
+                    letter-spacing: 1.1px;
+                    text-transform: uppercase;
+                    padding: 12px 16px 4px !important;
+                    margin: 4px 0 2px !important;
+                    border-top: 1px solid rgba(255,255,255,0.04);
+                }
+                .main_menu_side .menu_section:first-child h3 {
+                    border-top: none;
+                }
+                body.nav-sm .main_menu_side h3 {
+                    display: none !important;
+                }
+
+                /* Sidebar Menu Links */
+                .nav.side-menu > li {
+                    margin-bottom: 2px;
+                }
+                .nav.side-menu > li > a {
+                    color: #cbd5e1 !important;
+                    font-weight: 500 !important;
+                    font-size: 0.835rem !important;
+                    line-height: 1.35 !important;
+                    padding: 9px 14px !important;
+                    border-radius: 8px;
+                    margin: 2px 8px;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    transition: all 0.2s ease;
+                }
+                .nav.side-menu > li > a:hover {
+                    color: #ffffff !important;
+                    background: rgba(255, 255, 255, 0.08) !important;
+                    transform: translateX(2px);
+                }
+                .nav.side-menu > li.active > a {
+                    background: linear-gradient(90deg, #2563eb, #0284c7) !important;
+                    color: #ffffff !important;
+                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+                }
+                .nav.side-menu > li > a i {
+                    width: 22px;
+                    min-width: 22px;
+                    font-size: 0.95rem;
+                    margin-right: 10px;
+                    color: #94a3b8;
+                    text-align: center;
+                    transition: color 0.2s;
+                    flex-shrink: 0;
+                }
+                .nav.side-menu > li > a .menu-title {
+                    flex: 1;
+                    min-width: 0;
+                    word-break: break-word;
+                }
+                .nav.side-menu > li > a .fa-chevron-down {
+                    font-size: 0.68rem;
+                    opacity: 0.65;
+                    margin-left: auto;
+                    flex-shrink: 0;
+                }
+                .nav.side-menu > li > a:hover i,
+                .nav.side-menu > li.active > a i {
+                    color: #38bdf8 !important;
+                }
+
+                /* Submenu / Child Menu */
+                .nav.child_menu {
+                    background: rgba(15, 23, 42, 0.5) !important;
+                    border-left: 2px solid rgba(56, 189, 248, 0.3) !important;
+                    border-radius: 0 8px 8px 0;
+                    margin: 3px 8px 6px 20px !important;
+                    padding: 4px 0 !important;
+                }
+                .nav.child_menu li a {
+                    color: #94a3b8 !important;
+                    font-size: 0.81rem !important;
+                    line-height: 1.3 !important;
+                    padding: 7px 12px 7px 14px !important;
+                    display: block !important;
+                    transition: all 0.2s;
+                }
+                .nav.child_menu li a:hover {
+                    color: #38bdf8 !important;
+                    background: rgba(255, 255, 255, 0.04) !important;
+                    padding-left: 18px !important;
+                }
+
+                /* Topbar Modern Styling */
+                .top_nav .nav_menu {
+                    background: #ffffff !important;
+                    border-bottom: 1px solid #e2e8f0;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+                    min-height: 58px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                }
+                .topbar-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .topbar-toggle-btn {
+                    color: #334155 !important;
+                    font-size: 1.2rem;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    background: #f1f5f9;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                    border: none;
+                    text-decoration: none !important;
+                }
+                .topbar-toggle-btn:hover {
+                    background: #e2e8f0;
+                    color: #0f172a !important;
+                }
+                .topbar-badge-ctx {
+                    font-size: 0.78rem;
+                    font-weight: 600;
+                    color: #475569;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    padding: 4px 10px;
+                    border-radius: 6px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .topbar-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin: 0;
+                    padding: 0;
+                    list-style: none;
+                }
+                .quick-nav-pill {
+                    font-size: 0.81rem;
+                    font-weight: 600;
+                    padding: 6px 12px;
+                    border-radius: 20px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    text-decoration: none !important;
+                    transition: all 0.2s;
+                    white-space: nowrap;
+                }
+                .quick-nav-pill:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+                }
+                .topbar-user-btn {
+                    text-decoration: none !important;
+                    padding: 3px 8px 3px 4px;
+                    border-radius: 24px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                }
+                .topbar-user-btn:hover {
+                    background: #f1f5f9;
+                    border-color: #cbd5e1;
+                }
+                .topbar-username {
+                    color: #1e293b;
+                    font-size: 0.84rem;
+                    font-weight: 600;
+                    max-width: 140px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                @media (max-width: 767px) {
+                    .topbar-badge-ctx { display: none !important; }
+                    .quick-nav-pill .pill-text { display: none !important; }
+                    .quick-nav-pill { padding: 7px 10px; border-radius: 50%; }
+                    .topbar-username { max-width: 80px; }
+                }
+            </style>
+
+            <!-- Backdrop for mobile drawer -->
+            <div class="sidebar-backdrop" onclick="$('#menu_toggle').trigger('click');"></div>
+
+            <div class="left_col scroll-view">
+                <!-- Brand Header -->
+                <div class="sidebar-brand-wrapper">
+                    <a th:href="@{/}" class="sidebar-brand-link">
+                        <div class="sidebar-brand-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="sidebar-brand-info">
+                            <span class="sidebar-brand-title">PORTAL QUẢN TRỊ</span>
+                            <span class="sidebar-brand-sub">Hệ Thống Khảo Thí &amp; Nhân Sự</span>
+                        </div>
+                    </a>
+                </div>
 
                 <!-- menu profile quick info -->
-                <div class="profile clearfix">
-                    <div class="profile_pic">
-                        <img th:src="@{${#session.getAttribute('admin').img}}" alt="..." class="img-circle profile_img">
+                <div class="sidebar-profile-card">
+                    <div class="sidebar-avatar-wrap">
+                        <img th:src="@{${#session.getAttribute('admin').img}}" alt="Avatar" class="sidebar-avatar-img">
+                        <span class="sidebar-status-dot"></span>
                     </div>
-                    <div class="profile_info">
-                        <span>Welcome,</span>
-                        <h2 th:text="${#session.getAttribute('admin').id}"></h2>
+                    <div class="sidebar-user-details">
+                        <span class="sidebar-greet">Tài khoản quản trị</span>
+                        <h4 class="sidebar-username" th:text="${#session.getAttribute('admin').id}" th:title="${#session.getAttribute('admin').id}">Admin</h4>
+                        <div sec:authorize="hasRole('ROLE_ADMIN')">
+                            <span class="role-pill-badge role-admin"><i class="fa fa-shield-alt mr-1"></i>Super Admin</span>
+                        </div>
+                        <div sec:authorize="hasRole('ROLE_SCHOOL_ADMIN') and !hasRole('ROLE_ADMIN')">
+                            <span class="role-pill-badge role-school"><i class="fa fa-university mr-1"></i>Hiệu trưởng</span>
+                        </div>
+                        <div sec:authorize="hasRole('ROLE_TEACHER') and !hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
+                            <span class="role-pill-badge role-teacher"><i class="fa fa-chalkboard-teacher mr-1"></i>Giáo viên</span>
+                        </div>
                     </div>
                 </div>
                 <!-- /menu profile quick info -->
 
-                <br/>
-
                 <!-- sidebar menu -->
                 <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+                    <!-- PHÂN HỆ 1: HỆ THỐNG & QUẢN TRỊ -->
                     <div class="menu_section">
-                        <h3>Management</h3>
+                        <h3>QUẢN TRỊ &amp; HỆ THỐNG</h3>
                         <ul class="nav side-menu">
-                            <li><a th:href="@{/}"><i class="fa fa-home"></i> Trang chủ</a>
+                            <li>
+                                <a th:href="@{/}">
+                                    <i class="fa fa-home fas fa-home"></i>
+                                    <span class="menu-title">Cổng thông tin trang chủ</span>
+                                </a>
                             </li>
-                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')"><a><i class="fa fa-users"></i> Người dùng <span class="fa fa-chevron-down"></span></a>
+
+                            <!-- QUẢN TRỊ TÀI KHOẢN & NHÂN SỰ -->
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
+                                <a>
+                                    <i class="fa fa-users-cog fas fa-users-cog"></i>
+                                    <span class="menu-title">Quản trị Tài khoản &amp; Nhân sự</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
                                 <ul class="nav child_menu">
-                                    <li sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/user/list}"><i class="fa fa-building-o mr-1"></i>Quản lý người dùng trường</a></li>
-                                    <li sec:authorize="hasRole('ROLE_SCHOOL_ADMIN')"><a th:href="@{/school-admin/users}"><i class="fa fa-building-o mr-1"></i>Người dùng trong trường</a></li>
-                                    <li><a th:href="@{/user/create-teacher}">Cấp tài khoản GV / Admin</a></li>
+                                    <li sec:authorize="hasRole('ROLE_ADMIN')">
+                                        <a th:href="@{/user/list}"><i class="fa fa-database fas fa-database mr-1"></i>Cơ sở dữ liệu Người dùng Đơn vị</a>
+                                    </li>
+                                    <li sec:authorize="hasRole('ROLE_SCHOOL_ADMIN')">
+                                        <a th:href="@{/school-admin/users}"><i class="fa fa-id-card fas fa-id-card mr-1"></i>Hồ sơ Cán bộ &amp; Học sinh Nhà trường</a>
+                                    </li>
+                                    <li>
+                                        <a th:href="@{/user/create-teacher}"><i class="fa fa-user-plus fas fa-user-plus mr-1"></i>Cấp quyền &amp; Khởi tạo Tài khoản</a>
+                                    </li>
                                 </ul>
                             </li>
 
-                            <li sec:authorize="hasRole('ROLE_ADMIN')"><a><i class="fa fa-university"></i> Trường học <span class="fa fa-chevron-down"></span></a>
+                            <!-- HỆ THỐNG CƠ SỞ GIÁO DỤC (ADMIN BỘ/SỞ) -->
+                            <li sec:authorize="hasRole('ROLE_ADMIN')">
+                                <a>
+                                    <i class="fa fa-university fas fa-university"></i>
+                                    <span class="menu-title">Hệ thống Cơ sở Giáo dục</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
                                 <ul class="nav child_menu">
-                                    <li><a th:href="@{/school/list}">Danh sách trường học</a></li>
-                                    <li><a th:href="@{/school/add}">Thêm trường mới</a></li>
+                                    <li><a th:href="@{/school/list}"><i class="fa fa-list fas fa-list mr-1"></i>Danh mục Đơn vị Trực thuộc</a></li>
+                                    <li><a th:href="@{/school/add}"><i class="fa fa-plus-circle fas fa-plus-circle mr-1"></i>Thiết lập Cơ sở Mới</a></li>
                                 </ul>
                             </li>
-                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-clone"></i>Môn học <span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/subject/list}">Danh sách môn học</a></li>
-                                </ul>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
-                                <a th:href="@{/class/list}"><i class="fa fa-book"></i> Chương trình học</a>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
-                                <a th:href="@{/lesson-plans}"><i class="fa fa-file-text-o"></i> Giáo án</a>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-desktop"></i> Đề thi <span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/exam/list}">Danh sách đề thi</a></li>
-                                </ul>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-bar-chart-o"></i> Câu hỏi <span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/question/list}">Danh sách câu hỏi</a></li>
-                                </ul>
-                            </li>
-                            <li><a><i class="fa fa-clone"></i>Tin tức<span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/news/list}">Danh sách tin tức</a></li>
-                                </ul>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')"><a><i class="fa fa-clone"></i>Tài liệu<span class="fa fa-chevron-down"></span></a>
-                                <ul class="nav child_menu">
-                                    <li><a th:href="@{/document/list}">Danh sách tài liệu</a></li>
-                                </ul>
-                            </li>
-                            <li><a th:href="@{/student-tracking}"><i class="fa fa-table"></i>Sổ theo dõi học sinh</a></li>
+
+                            <!-- ĐIỀU PHỐI & PHÂN CÔNG CHUYÊN MÔN -->
                             <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN')">
-                                <a><i class="fa fa-sitemap"></i> Phân công giảng dạy <span class="fa fa-chevron-down"></span></a>
+                                <a>
+                                    <i class="fa fa-sitemap fas fa-sitemap"></i>
+                                    <span class="menu-title">Phân công giảng dạy &amp; Chuyên môn</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
                                 <ul class="nav child_menu">
-                                    <li><a th:href="@{/school-admin/teaching-assignments}">Theo nhóm lớp / Ma trận</a></li>
-                                    <li><a th:href="@{/school-admin/statistics}">Thống kê nhà trường</a></li>
+                                    <li><a th:href="@{/school-admin/teaching-assignments}"><i class="fa fa-th fas fa-th mr-1"></i>Ma trận Phân công Giảng dạy</a></li>
+                                    <li><a th:href="@{/school-admin/statistics}"><i class="fa fa-chart-pie fas fa-chart-pie mr-1"></i>Báo cáo &amp; Thống kê Toàn trường</a></li>
                                 </ul>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
-                                <a th:href="@{/chat}"><i class="fa fa-comments"></i> Chat nội bộ</a>
-                            </li>
-                            <li sec:authorize="hasAnyRole('ROLE_TEACHER', 'ROLE_SCHOOL_ADMIN', 'ROLE_ADMIN')">
-                                <a th:href="@{/teacher/homeroom}"><i class="fa fa-graduation-cap"></i> Học sinh lớp chủ nhiệm</a>
                             </li>
                         </ul>
+                    </div>
 
+                    <!-- PHÂN HỆ 2: CHƯƠNG TRÌNH & ĐÀO TẠO -->
+                    <div class="menu_section">
+                        <h3>CHƯƠNG TRÌNH &amp; GIẢNG DẠY</h3>
+                        <ul class="nav side-menu">
+                            <!-- KHUNG MÔN HỌC & CHƯƠNG TRÌNH -->
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a>
+                                    <i class="fa fa-book fas fa-book-open"></i>
+                                    <span class="menu-title">Khung Danh mục Môn học</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/subject/list}"><i class="fa fa-list fas fa-list mr-1"></i>Danh mục Môn học Phân bổ</a></li>
+                                </ul>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/curriculum}">
+                                    <i class="fa fa-cubes fas fa-layer-group"></i>
+                                    <span class="menu-title">Khung Chương trình Đào tạo</span>
+                                </a>
+                            </li>
 
+                            <!-- KẾ HOẠCH BÀI DẠY (KHBD) -->
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/lesson-plans}">
+                                    <i class="fa fa-file-text fas fa-file-signature"></i>
+                                    <span class="menu-title">Kế hoạch bài dạy (KHBD)</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- PHÂN HỆ 3: KHẢO THÍ & HỌC SINH -->
+                    <div class="menu_section">
+                        <h3>KHẢO THÍ &amp; HỌC SINH</h3>
+                        <ul class="nav side-menu">
+                            <!-- ĐỀ THI & KHẢO THÍ -->
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a>
+                                    <i class="fa fa-laptop fas fa-laptop-code"></i>
+                                    <span class="menu-title">Quản lý Đề thi &amp; Khảo thí</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/exam/list}"><i class="fa fa-file-alt fas fa-file-alt mr-1"></i>Danh sách Đề thi Chính thức</a></li>
+                                </ul>
+                            </li>
+
+                            <!-- NGÂN HÀNG CÂU HỎI -->
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a>
+                                    <i class="fa fa-question-circle fas fa-question-circle"></i>
+                                    <span class="menu-title">Ngân hàng Câu hỏi Chuẩn hóa</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/question/list}"><i class="fa fa-database fas fa-database mr-1"></i>Ngân hàng Câu hỏi theo Chủ đề</a></li>
+                                </ul>
+                            </li>
+
+                            <!-- SỔ THEO DÕI NỀ NẾP & HỌC SINH -->
+                            <li>
+                                <a th:href="@{/student-tracking}">
+                                    <i class="fa fa-clipboard fas fa-clipboard-list"></i>
+                                    <span class="menu-title">Sổ Theo dõi Nề nếp &amp; Học sinh</span>
+                                </a>
+                            </li>
+
+                            <!-- HỌC SINH LỚP CHỦ NHIỆM -->
+                            <li sec:authorize="hasAnyRole('ROLE_TEACHER', 'ROLE_SCHOOL_ADMIN', 'ROLE_ADMIN')">
+                                <a th:href="@{/teacher/homeroom}">
+                                    <i class="fa fa-graduation-cap fas fa-graduation-cap"></i>
+                                    <span class="menu-title">Quản lý Học sinh &amp; Lớp chủ nhiệm</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- PHÂN HỆ 4: TIỆN ÍCH & TRUYỀN THÔNG -->
+                    <div class="menu_section">
+                        <h3>TIỆN ÍCH &amp; NỘI BỘ</h3>
+                        <ul class="nav side-menu">
+                            <!-- TIN TỨC & TÀI LIỆU -->
+                            <li>
+                                <a>
+                                    <i class="fa fa-newspaper fas fa-newspaper"></i>
+                                    <span class="menu-title">Bản tin &amp; Thông báo</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/news/list}"><i class="fa fa-list fas fa-list mr-1"></i>Danh sách Tin tức &amp; Sự kiện</a></li>
+                                </ul>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a>
+                                    <i class="fa fa-folder-open fas fa-folder-open"></i>
+                                    <span class="menu-title">Thư viện Tài liệu Tham khảo</span>
+                                    <span class="fa fa-chevron-down"></span>
+                                </a>
+                                <ul class="nav child_menu">
+                                    <li><a th:href="@{/document/list}"><i class="fa fa-file-pdf fas fa-file-pdf mr-1"></i>Quản lý Tài liệu Số</a></li>
+                                </ul>
+                            </li>
+
+                            <!-- KÊNH LIÊN LẠC NỘI BỘ -->
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                                <a th:href="@{/chat}">
+                                    <i class="fa fa-comments fas fa-comments"></i>
+                                    <span class="menu-title">Kênh Trao đổi Nội bộ</span>
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
                 <!-- /sidebar menu -->
 
                 <!-- /menu footer buttons -->
-                <div class="sidebar-footer hidden-small" style="background: #172D44;display: flex;justify-content: center;align-items: center;">
-                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="/logout">
-                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+                <div class="sidebar-footer hidden-small" style="background: #0b1120; border-top: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; padding: 12px 18px;">
+                    <span style="font-size: 0.72rem; color: #64748b;">Bản quyền v2.5 Enterprise</span>
+                    <a data-toggle="tooltip" data-placement="top" title="Đăng xuất khỏi hệ thống" href="/logout" style="color: #ef4444; background: transparent; padding: 0;">
+                        <i class="fa fa-power-off" style="font-size: 1.05rem;"></i>
                     </a>
                 </div>
                 <!-- /menu footer buttons -->
@@ -141,28 +667,45 @@
         <!-- top navigation -->
         <div class="top_nav" th:fragment="topnavAdmin">
             <div class="nav_menu">
-                <div class="nav toggle">
-                    <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+                <div class="topbar-left">
+                    <a id="menu_toggle" class="topbar-toggle-btn" title="Thu gọn / Mở rộng Menu">
+                        <i class="fa fa-bars"></i>
+                    </a>
+                    <div class="topbar-badge-ctx">
+                        <i class="fa fa-graduation-cap text-primary"></i>
+                        <span>Cổng Điều Hành Giáo Dục</span>
+                    </div>
                 </div>
-                <nav class="nav navbar-nav">
-                    <ul class=" navbar-right d-flex align-items-center">
-                        <li class="nav-item" style="margin-right: 15px;">
-                            <a href="/student-tracking" class="btn btn-sm btn-success text-white" style="margin-top: 12px; font-weight: 600; border-radius: 20px; padding: 4px 14px;">
-                                <i class="fa fa-table"></i> Sổ theo dõi học sinh
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown open" style="padding-left: 15px;">
-                            <a href="javascript:;" class="user-profile dropdown-toggle" aria-haspopup="true"
-                               id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
-                                <img th:src="@{${#session.getAttribute('admin').img}}" alt="" th:text="${#session.getAttribute('admin').id}">
-                            </a>
-                            <div class="dropdown-menu dropdown-usermenu pull-right" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="/logout"><i class="fa fa-sign-out pull-right"></i> Log
-                                    Out</a>
+                <div class="topbar-right">
+                    <a href="/" target="_blank" class="quick-nav-pill btn-outline-secondary btn-sm" style="color: #475569; border: 1px solid #cbd5e1;">
+                        <i class="fa fa-external-link-alt text-primary"></i>
+                        <span class="pill-text">Xem Trang chủ</span>
+                    </a>
+                    <a href="/student-tracking" class="quick-nav-pill btn-success text-white" style="box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);">
+                        <i class="fa fa-clipboard-list"></i>
+                        <span class="pill-text">Sổ theo dõi nề nếp</span>
+                    </a>
+                    <div class="dropdown" style="margin-left: 4px;">
+                        <a href="javascript:;" class="topbar-user-btn dropdown-toggle" aria-haspopup="true"
+                           id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
+                            <img th:src="@{${#session.getAttribute('admin').img}}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <span class="topbar-username" th:text="${#session.getAttribute('admin').id}">Admin</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow-sm border-0" aria-labelledby="navbarDropdown" style="border-radius: 10px; margin-top: 10px; min-width: 210px; border: 1px solid #e2e8f0 !important;">
+                            <div class="px-3 py-2 border-bottom" style="background: #f8fafc; border-radius: 10px 10px 0 0;">
+                                <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem; font-weight: 700;">Tài khoản đăng nhập</small>
+                                <strong class="text-dark d-block" style="font-size: 0.85rem;" th:text="${#session.getAttribute('admin').id}">Admin</strong>
                             </div>
-                        </li>
-                    </ul>
-                </nav>
+                            <a class="dropdown-item py-2" href="/view">
+                                <i class="fa fa-user-circle text-primary mr-2"></i> Hồ sơ cá nhân
+                            </a>
+                            <div class="dropdown-divider my-1"></div>
+                            <a class="dropdown-item py-2" href="/logout" style="color: #dc2626;">
+                                <i class="fa fa-sign-out-alt text-danger mr-2"></i> Đăng xuất hệ thống
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- /top navigation -->

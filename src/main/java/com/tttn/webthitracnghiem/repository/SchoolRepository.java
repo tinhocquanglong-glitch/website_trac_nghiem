@@ -18,6 +18,8 @@ public interface SchoolRepository extends JpaRepository<School, Integer> {
 
     List<School> findAllByActiveTrueOrderByNameAsc();
 
+    List<School> findAllByOrderByNameAsc();
+
     List<School> findByProvinceCodeAndActiveTrueOrderByNameAsc(Integer provinceCode);
 
     List<School> findByDistrictCodeAndActiveTrueOrderByNameAsc(Integer districtCode);

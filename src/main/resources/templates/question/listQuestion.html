@@ -152,6 +152,10 @@
                             </form>
                         </div>
                         <div style="display: flex;gap: 15px;">
+                            <a href="/question/review" class="btn btn-outline-warning"
+                               th:classappend="${pendingCount != null and pendingCount > 0} ? 'btn-warning text-dark'">
+                                Chờ duyệt (<span th:text="${pendingCount != null ? pendingCount : 0}">0</span>)
+                            </a>
                             <a href="/question/create" class="btn btn-primary">
                                 Thêm mới
                             </a>
@@ -185,7 +189,7 @@
                         <tr th:each="question: ${questions}">
                             <td th:text="${question.quesId}"></td>
                             <td style="text-transform: uppercase"
-                                th:text="${question.lessonPlanLesson != null ? (question.lessonPlanLesson.chapter.lessonPlan.subject.name + ' ' + question.lessonPlanLesson.chapter.lessonPlan.grade.displayName + ': ' + question.lessonPlanLesson.name) : (question.lesson != null ? question.lesson.chapter.subjectClasses.subject.name + ' ' + question.lesson.chapter.subjectClasses.classes.displayName + ': ' + question.lesson.nameLesson : '')}"></td>
+                                th:text="${question.lessonPlanLesson != null ? (question.lessonPlanLesson.chapter.lessonPlan.subject.name + ' ' + question.lessonPlanLesson.chapter.lessonPlan.grade.displayName + ': ' + question.lessonPlanLesson.name) : (question.lesson != null ? question.lesson.chapter.subjectClasses.subject.name + ' ' + question.lesson.chapter.subjectClasses.classes.displayName + ': ' + question.lesson.nameLesson : (question.subject != null ? (question.subject.name + (question.classes != null ? ' ' + question.classes.displayName : '')) : ''))}"></td>
                             <td th:utext="${question.title}"></td>
                             <td th:text="${question.optionA}"></td>
                             <td th:text="${question.optionB}"></td>
@@ -207,7 +211,7 @@
                                 </span>
                             </td>
                             <td class="text-center wt-nowrap">
-                                <a th:if="${question.lesson != null}" th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
+                                <a th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
                                         class="fas fa-edit text-primary"></i></a>
                                 <a type="button" th:onclick="|remove(${question.quesId})|" id="deleteButton"><i
                                         class="far fa-trash-alt text-danger"></i></a>

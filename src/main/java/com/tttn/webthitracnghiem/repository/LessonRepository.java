@@ -19,4 +19,14 @@ public interface LessonRepository extends JpaRepository<Lesson,Integer> {
     @Query(nativeQuery = true,value = "SELECT COUNT(id) FROM lesson WHERE chapter_id = :id ")
     Optional<Integer> getSerial(int id);
     Optional<Lesson> findById(int id);
+
+    List<Lesson> findByChapter_IdOrderBySerialAscIdAsc(int chapterId);
+
+    /** Lessons of other schools copied from the same shared lesson (plus the shared lesson itself). */
+    @Query("SELECT l FROM Lesson l WHERE l.templateLesson.id = :templateId OR l.id = :templateId")
+    List<Lesson> findSiblingsOfTemplate(@org.springframework.data.repository.query.Param("templateId") int templateId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Lesson l SET l.templateLesson = NULL WHERE l.templateLesson.id = :templateId")
+    int detachCopiesOf(@org.springframework.data.repository.query.Param("templateId") int templateId);
 }

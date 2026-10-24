@@ -35,7 +35,7 @@ public class MemberController {
     @Autowired
     private com.tttn.webthitracnghiem.service.ILocationService locationService;
 
-    @GetMapping("/signup")
+    @GetMapping({"/signup", "/register"})
     public String showSignUp(Model model) {
         model.addAttribute("user", new User());
         model.addAttribute("provinces", locationService.getAllProvinces());
@@ -43,7 +43,7 @@ public class MemberController {
         return "register";
     }
 
-    @PostMapping("/signup")
+    @PostMapping({"/signup", "/register"})
     public String signUp(@Valid @ModelAttribute User user, BindingResult bindingResult,
                          @RequestParam(value = "schoolId", required = false) Integer schoolId,
                          @RequestParam(value = "schoolLevel", required = false) Integer schoolLevel,

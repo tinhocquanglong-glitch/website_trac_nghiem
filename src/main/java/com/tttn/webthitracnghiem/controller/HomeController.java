@@ -52,6 +52,8 @@ public class HomeController {
     com.tttn.webthitracnghiem.repository.ExamRepository examRepository;
     @Autowired
     ILessonPlanService lessonPlanService;
+    @Autowired
+    CurriculumService curriculumService;
     @GetMapping("/role")
     public String redirectRole() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -76,9 +78,12 @@ public class HomeController {
     }
 
     @GetMapping("/login")
-    public String showLogin(@RequestParam Optional<String> error, Model model) {
+    public String showLogin(@RequestParam Optional<String> error, @RequestParam Optional<String> locked, Model model) {
         if (error.isPresent()) {
             model.addAttribute("message", "Tài khoản hoặc mật khẩu không chính xác!");
+        }
+        if (locked.isPresent()) {
+            model.addAttribute("message", "Trường của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.");
         }
         return "login";
     }
@@ -196,18 +201,34 @@ public class HomeController {
                 || !isStudentSubject(currentUser, subjectId))) {
             return "redirect:/?warning=Chuong trinh khong thuoc lop cua ban";
         }
-        List<Chapter> chapters = chapterService.findBySubjectAndClass(subjectId, classId);
-        for (int i = 0; i < chapters.size(); i++) {
-            Set<Lesson> lessons = chapters.get(i).getLessons();
-            List<Lesson> lessons1 = new ArrayList<>(lessons);
-            Collections.sort(lessons1);
-            if (isStudent(currentUser)) {
-                lessons1.forEach(lesson -> lesson.setExams(lesson.getExams() == null ? Collections.emptySet()
-                        : lesson.getExams().stream().filter(exam -> !exam.isPractice()
-                        && canStudentTakeExam(exam, currentUser)).collect(Collectors.toCollection(LinkedHashSet::new))));
+        // The viewer's school curriculum (or the shared one while the school has no copy).
+        Integer schoolId = curriculumService.schoolIdOf(currentUser);
+        List<Chapter> chapters = curriculumService.findSubjectClass(subjectId, classId)
+                .map(subjectClass -> curriculumService.readChapters(schoolId, subjectClass))
+                .orElse(new ArrayList<>());
+        Map<Integer, List<Lesson>> lessonsByChapter = new HashMap<>();
+        List<Integer> lessonIds = new ArrayList<>();
+        for (Chapter chapter : chapters) {
+            List<Lesson> lessons = curriculumService.lessonsOf(chapter);
+            lessonsByChapter.put(chapter.getId(), lessons);
+            lessons.forEach(lesson -> lessonIds.add(lesson.getId()));
+        }
+        // An exam is listed under every lesson of its scope, not only its primary lesson.
+        Map<Integer, Set<Exam>> examsByLesson = new HashMap<>();
+        for (Exam exam : lessonIds.isEmpty() ? List.<Exam>of() : examRepository.findCoveringLessons(lessonIds)) {
+            if (isStudent(currentUser) && (exam.isPractice() || !canStudentTakeExam(exam, currentUser))) {
+                continue;
             }
-            Set<Lesson> lessons2 = new LinkedHashSet<>(lessons1);
-            chapters.get(i).setLessons(lessons2);
+            Set<Integer> covered = new LinkedHashSet<>();
+            if (exam.getLesson() != null) covered.add(exam.getLesson().getId());
+            exam.getScopeLessons().forEach(lesson -> covered.add(lesson.getId()));
+            covered.forEach(id -> examsByLesson.computeIfAbsent(id, key -> new LinkedHashSet<>()).add(exam));
+        }
+        // These collections are inverse (mappedBy) sides, so filling them for the page writes nothing back.
+        for (Chapter chapter : chapters) {
+            List<Lesson> lessons = lessonsByChapter.get(chapter.getId());
+            lessons.forEach(lesson -> lesson.setExams(examsByLesson.getOrDefault(lesson.getId(), new LinkedHashSet<>())));
+            chapter.setLessons(new LinkedHashSet<>(lessons));
         }
         model.addAttribute("chapters", chapters);
 

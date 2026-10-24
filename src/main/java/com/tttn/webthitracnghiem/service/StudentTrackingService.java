@@ -157,8 +157,8 @@ public class StudentTrackingService {
         if (!SCHOOL_YEAR_PATTERN.matcher(cleanYear).matches()) {
             throw new IllegalArgumentException("Nam hoc phai co dang 2026-2027");
         }
-        if (classRepository.findByClassNameIgnoreCaseAndSchoolYear(cleanName, cleanYear).isPresent()) {
-            throw new IllegalArgumentException("Lop nay da ton tai trong nam hoc " + cleanYear);
+        if (classRepository.findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(schoolId, cleanName, cleanYear).isPresent()) {
+            throw new IllegalArgumentException("Lop " + cleanName + " da ton tai trong truong o nam hoc " + cleanYear);
         }
         StudentTrackingClass trackingClass = new StudentTrackingClass();
         trackingClass.setClassName(cleanName);
@@ -303,18 +303,30 @@ public class StudentTrackingService {
 
     @Transactional(readOnly = true)
     public TrackingSheetForm getSheet(Integer classId, int semester, int month) {
+        return getSheet(classId, semester, month, null, null);
+    }
+
+    /**
+     * Loads one grade book of the class. The homeroom book has no teacher and no
+     * subject; a subject teacher's book is keyed by that teacher and subject, so the
+     * two never share records. A subject book shows the homeroom attendance read-only.
+     */
+    @Transactional(readOnly = true)
+    public TrackingSheetForm getSheet(Integer classId, int semester, int month, String teacherId, Integer subjectId) {
         validateMonth(semester, month);
+        boolean homeroomBook = isHomeroomBook(teacherId, subjectId);
         findClass(classId);
         List<TrackedStudent> students = studentRepository
                 .findByTrackingClassIdOrderByDisplayOrderAscIdAsc(classId);
         List<Integer> studentIds = students.stream().map(TrackedStudent::getId).collect(Collectors.toList());
         Map<Integer, StudentMonthlyRecord> monthlyRecords = new HashMap<>();
+        Map<Integer, StudentMonthlyRecord> homeroomRecords = new HashMap<>();
         Map<Integer, StudentSemesterRecord> legacyRecords = new HashMap<>();
         if (!studentIds.isEmpty()) {
-            monthlyRecords = monthlyRecordRepository
-                    .findByStudentIdInAndSemesterAndMonth(studentIds, semester, month).stream()
-                    .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
-            if (month == defaultMonth(semester)) {
+            monthlyRecords = bookRecordsByStudent(studentIds, semester, month, teacherId, subjectId);
+            if (!homeroomBook) {
+                homeroomRecords = bookRecordsByStudent(studentIds, semester, month, null, null);
+            } else if (month == defaultMonth(semester)) {
                 legacyRecords = recordRepository.findByStudentIdInAndSemester(studentIds, semester).stream()
                         .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record));
             }
@@ -337,6 +349,11 @@ public class StudentTrackingService {
                     copyRecordToRow(legacyRecord, row);
                 }
             }
+            if (!homeroomBook) {
+                StudentMonthlyRecord homeroomRecord = homeroomRecords.get(student.getId());
+                row.setAttendanceStatus(homeroomRecord == null ? null : homeroomRecord.getAttendanceStatus());
+                row.setAttendanceDates(homeroomRecord == null ? null : homeroomRecord.getAttendanceDates());
+            }
             rows.add(row);
         }
         form.setRows(rows);
@@ -345,6 +362,16 @@ public class StudentTrackingService {
 
     @Transactional
     public void saveSheet(Integer classId, TrackingSheetForm form) {
+        saveSheet(classId, form, null, null);
+    }
+
+    /**
+     * Saves one grade book (see {@link #getSheet(Integer, int, int, String, Integer)}).
+     * Only the homeroom book may rename students or change attendance.
+     */
+    @Transactional
+    public void saveSheet(Integer classId, TrackingSheetForm form, String teacherId, Integer subjectId) {
+        boolean homeroomBook = isHomeroomBook(teacherId, subjectId);
         if (form == null || form.getSemester() == null) {
             throw new IllegalArgumentException("Hoc ky khong hop le");
         }
@@ -370,10 +397,7 @@ public class StudentTrackingService {
                 .collect(Collectors.toMap(TrackedStudent::getId, student -> student));
         Map<Integer, StudentMonthlyRecord> records = new HashMap<>();
         if (!students.isEmpty()) {
-            records = monthlyRecordRepository
-                    .findByStudentIdInAndSemesterAndMonth(new ArrayList<>(students.keySet()), semester, month).stream()
-                    .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record,
-                            (first, duplicate) -> first));
+            records = bookRecordsByStudent(new ArrayList<>(students.keySet()), semester, month, teacherId, subjectId);
         }
         List<TrackedStudent> changedStudents = new ArrayList<>();
         List<StudentMonthlyRecord> changedRecords = new ArrayList<>();
@@ -382,18 +406,41 @@ public class StudentTrackingService {
             if (student == null) {
                 throw new IllegalArgumentException("Danh sach co hoc sinh khong thuoc lop nay");
             }
-            student.setFullName(cleanRequired(row.getFullName(), 150, "Ho va ten"));
-            changedStudents.add(student);
+            if (homeroomBook) {
+                student.setFullName(cleanRequired(row.getFullName(), 150, "Ho va ten"));
+                changedStudents.add(student);
+            }
 
             StudentMonthlyRecord record = records.getOrDefault(student.getId(), new StudentMonthlyRecord());
             record.setStudent(student);
             record.setSemester(semester);
             record.setMonth(month);
-            copyRowToRecord(row, record);
+            record.setTeacherId(teacherId);
+            record.setSubjectId(subjectId);
+            copyRowToRecord(row, record, homeroomBook);
             changedRecords.add(record);
         }
-        studentRepository.saveAll(changedStudents);
+        if (!changedStudents.isEmpty()) {
+            studentRepository.saveAll(changedStudents);
+        }
         monthlyRecordRepository.saveAll(changedRecords);
+    }
+
+    private boolean isHomeroomBook(String teacherId, Integer subjectId) {
+        if ((teacherId == null) != (subjectId == null)) {
+            throw new IllegalArgumentException("So bo mon phai co ca giao vien va mon hoc");
+        }
+        return teacherId == null;
+    }
+
+    /** Records of exactly one book; null teacher and subject select the homeroom book. */
+    private Map<Integer, StudentMonthlyRecord> bookRecordsByStudent(List<Integer> studentIds, int semester, int month,
+                                                                    String teacherId, Integer subjectId) {
+        return monthlyRecordRepository
+                .findByStudentIdInAndSemesterAndMonthAndTeacherIdAndSubjectId(studentIds, semester, month, teacherId, subjectId)
+                .stream()
+                .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record,
+                        (first, duplicate) -> first));
     }
 
     @Transactional
@@ -403,21 +450,31 @@ public class StudentTrackingService {
 
     @Transactional
     public ImportSummary importWorkbook(MultipartFile file, int semester, int month) throws IOException {
+        return importWorkbook(file, semester, month, null);
+    }
+
+    /** Imports into the given school's classes; a class with the same name in another school is never touched. */
+    @Transactional
+    public ImportSummary importWorkbook(MultipartFile file, int semester, int month, Integer schoolId) throws IOException {
         validateMonth(semester, month);
         validateUpload(file);
         List<StudentTrackingExcelParser.ImportedClass> importedClasses;
         try (var inputStream = file.getInputStream()) {
             importedClasses = excelParser.parse(inputStream);
         }
+        com.tttn.webthitracnghiem.model.School school = schoolId == null || schoolRepository == null
+                ? null : schoolRepository.findById(schoolId).orElse(null);
 
         int importedStudentCount = 0;
         for (StudentTrackingExcelParser.ImportedClass importedClass : importedClasses) {
             StudentTrackingClass trackingClass = classRepository
-                    .findByClassNameIgnoreCaseAndSchoolYear(importedClass.getClassName(), importedClass.getSchoolYear())
+                    .findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(
+                            schoolId, importedClass.getClassName(), importedClass.getSchoolYear())
                     .orElseGet(() -> {
                         StudentTrackingClass created = new StudentTrackingClass();
                         created.setClassName(importedClass.getClassName());
                         created.setSchoolYear(importedClass.getSchoolYear());
+                        created.setSchool(school);
                         return classRepository.save(created);
                     });
             List<TrackedStudent> currentStudents = studentRepository
@@ -445,12 +502,10 @@ public class StudentTrackingService {
                     .map(importedStudent -> studentsByName.get(nameKey(importedStudent.getFullName())).getId())
                     .distinct()
                     .collect(Collectors.toList());
+            // The workbook is the class's homeroom book; subject teachers' books are left untouched.
             Map<Integer, StudentMonthlyRecord> records = new LinkedHashMap<>();
             if (!importedStudentIds.isEmpty()) {
-                records = monthlyRecordRepository
-                        .findByStudentIdInAndSemesterAndMonth(importedStudentIds, semester, month).stream()
-                        .collect(Collectors.toMap(record -> record.getStudent().getId(), record -> record,
-                                (first, duplicate) -> first, LinkedHashMap::new));
+                records.putAll(bookRecordsByStudent(importedStudentIds, semester, month, null, null));
             }
             for (StudentTrackingExcelParser.ImportedStudent importedStudent : importedClass.getStudents()) {
                 TrackedStudent student = studentsByName.get(nameKey(importedStudent.getFullName()));
@@ -587,15 +642,17 @@ public class StudentTrackingService {
         row.setAttendanceDates(record.getAttendanceDates());
     }
 
-    private void copyRowToRecord(TrackingRowForm row, StudentMonthlyRecord record) {
+    private void copyRowToRecord(TrackingRowForm row, StudentMonthlyRecord record, boolean includeAttendance) {
         record.setRegularScore1(row.getRegularScore1());
         record.setRegularScore2(row.getRegularScore2());
         record.setMidtermScore(row.getMidtermScore());
         record.setFinalScore(row.getFinalScore());
         record.setAverageScore(row.getAverageScore());
         record.setProgressComment(row.getProgressComment() == null ? null : row.getProgressComment().trim());
-        record.setAttendanceStatus(row.getAttendanceStatus());
-        record.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
+        if (includeAttendance) {
+            record.setAttendanceStatus(row.getAttendanceStatus());
+            record.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
+        }
     }
 
     private void copyImportedToRecord(StudentTrackingExcelParser.ImportedStudent imported,

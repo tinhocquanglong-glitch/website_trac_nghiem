@@ -29,6 +29,8 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class LessonPlanDocumentService {
@@ -75,6 +77,17 @@ public class LessonPlanDocumentService {
                     lessonRun.setBold(true);
                     lessonRun.setFontSize(12);
                     lessonRun.setText(lesson.getName());
+                    if (lesson.getPeriods() != null) {
+                        document.createParagraph().createRun().setText("Thời gian thực hiện: " + lesson.getPeriods() + " tiết");
+                    }
+                    if (lesson.getObjectives() != null) {
+                        XWPFRun objectivesTitle = document.createParagraph().createRun();
+                        objectivesTitle.setBold(true);
+                        objectivesTitle.setText("Mục tiêu");
+                        for (String line : lesson.getObjectives().split("\n")) {
+                            document.createParagraph().createRun().setText(line);
+                        }
+                    }
                     writeHtml(document, lesson.getContent());
                 }
             }
@@ -96,21 +109,31 @@ public class LessonPlanDocumentService {
         try (XWPFDocument document = new XWPFDocument(input)) {
             for (var bodyElement : document.getBodyElements()) {
                 if (bodyElement instanceof XWPFParagraph paragraph) {
-                    addParagraphBlock(blocks, paragraph);
+                    addParagraphBlock(blocks, document, paragraph);
                 } else if (bodyElement instanceof XWPFTable table) {
+                    // Table cells are content (lesson plan activity tables), never headings.
                     table.getRows().forEach(row -> row.getTableCells().forEach(cell ->
-                            cell.getParagraphs().forEach(paragraph -> addParagraphBlock(blocks, paragraph))));
+                            cell.getParagraphs().forEach(paragraph -> addParagraphBlock(blocks, null, paragraph))));
                 }
             }
         }
         return blocks;
     }
 
-    private void addParagraphBlock(List<DocumentBlock> blocks, XWPFParagraph paragraph) {
+    private void addParagraphBlock(List<DocumentBlock> blocks, XWPFDocument document, XWPFParagraph paragraph) {
         String text = paragraph.getText() == null ? "" : paragraph.getText().trim();
         if (!text.isEmpty()) {
+            String styleName = null;
+            if (document != null && paragraph.getStyleID() != null && document.getStyles() != null
+                    && document.getStyles().getStyle(paragraph.getStyleID()) != null) {
+                styleName = document.getStyles().getStyle(paragraph.getStyleID()).getName();
+            }
+            boolean allBold = paragraph.getRuns().stream()
+                    .filter(run -> run.text() != null && !run.text().isBlank())
+                    .allMatch(XWPFRun::isBold);
             blocks.add(new DocumentBlock(text, renderRuns(paragraph.getRuns()),
-                    maxFontSize(paragraph.getRuns())));
+                    maxFontSize(paragraph.getRuns()), headingLevel(styleName != null ? styleName : paragraph.getStyleID()),
+                    emphasized(text, allBold)));
         }
     }
 
@@ -122,12 +145,31 @@ public class LessonPlanDocumentService {
                 Paragraph paragraph = range.getParagraph(i);
                 String text = paragraph.text() == null ? "" : paragraph.text().trim();
                 if (!text.isEmpty()) {
+                    String styleName = null;
+                    var style = document.getStyleSheet().getStyleDescription(paragraph.getStyleIndex());
+                    if (style != null && !paragraph.isInTable()) {
+                        styleName = style.getName();
+                    }
+                    boolean allBold = true;
+                    for (int r = 0; r < paragraph.numCharacterRuns(); r++) {
+                        CharacterRun run = paragraph.getCharacterRun(r);
+                        if (run.text() != null && !run.text().isBlank() && !run.isBold()) allBold = false;
+                    }
                     blocks.add(new DocumentBlock(text, renderRuns(paragraph, range),
-                            maxFontSize(paragraph, range)));
+                            maxFontSize(paragraph, range), headingLevel(styleName), emphasized(text, allBold)));
                 }
             }
         }
         return blocks;
+    }
+
+    /** 1 for title/heading 1 styles, 2 for heading 2, otherwise 0. */
+    private static int headingLevel(String styleName) {
+        if (styleName == null) return 0;
+        String name = styleName.toLowerCase(java.util.Locale.ROOT).replace(" ", "");
+        if (name.equals("title") || name.equals("heading1")) return 1;
+        if (name.equals("heading2")) return 2;
+        return 0;
     }
 
     private String renderRuns(List<XWPFRun> runs) {
@@ -191,7 +233,124 @@ public class LessonPlanDocumentService {
         return max;
     }
 
+    private static final Pattern TOPIC_LINE = Pattern.compile("^(phan|chu de|chuyen de|chuong)\\s*([0-9]+|[ivxlc]+)\\b.*");
+    private static final Pattern LESSON_LINE = Pattern.compile("^bai\\s*[0-9]+\\b.*");
+    private static final Pattern PERIOD_LINE = Pattern.compile("^tiet\\s*[0-9]+\\b.*");
+    private static final Pattern OBJECTIVES_LINE = Pattern.compile("^(i\\s*[.:)\\-]\\s*)?muc tieu\\b.*");
+    private static final Pattern NEXT_SECTION_LINE = Pattern.compile("^(ii|iii|iv|v|vi)\\s*[.:)\\-].*");
+    private static final Pattern PERIODS_COUNT = Pattern.compile("thoi gian( thuc hien)?\\s*:?\\s*([0-9]+)\\s*tiet");
+    private static final int MAX_HEADING_LENGTH = 150;
+
+    /**
+     * Splits a lesson-plan document into topics and lessons. Signals, strongest first:
+     * Word heading styles, then numbered lines ("Chủ đề 1", "Chương II", "Bài 3"; "Tiết 5"
+     * only when the file has no "Bài" lines), then the old font-size heuristic as a fallback.
+     * Each lesson also gets its objectives ("I. Mục tiêu" section) and period count when present.
+     */
     private List<LessonPlanChapterRequest> toStructure(List<DocumentBlock> blocks) {
+        if (blocks.isEmpty()) return new ArrayList<>();
+        // A file that uses heading styles is trusted as is; exercise lines such as "Bài 1: Tính..." stay content.
+        boolean styled = blocks.stream().anyMatch(block -> block.headingLevel() > 0);
+        boolean hasBaiLines = blocks.stream().anyMatch(block -> isShort(block) && block.emphasized()
+                && LESSON_LINE.matcher(CurriculumMatcher.normalize(block.text())).matches());
+        int[] levels = new int[blocks.size()];
+        boolean anyHeading = false;
+        for (int i = 0; i < blocks.size(); i++) {
+            levels[i] = styled ? blocks.get(i).headingLevel() : classify(blocks.get(i), hasBaiLines);
+            anyHeading |= levels[i] > 0;
+        }
+        if (!anyHeading) {
+            return toStructureByFontSize(blocks);
+        }
+
+        List<LessonPlanChapterRequest> result = new ArrayList<>();
+        LessonPlanChapterRequest currentChapter = null;
+        LessonPlanLessonRequest currentLesson = null;
+        List<DocumentBlock> lessonBlocks = new ArrayList<>();
+        for (int i = 0; i < blocks.size(); i++) {
+            DocumentBlock block = blocks.get(i);
+            if (levels[i] == 1) {
+                finishLesson(currentLesson, lessonBlocks);
+                currentChapter = new LessonPlanChapterRequest();
+                currentChapter.setName(block.text());
+                result.add(currentChapter);
+                currentLesson = null;
+            } else if (levels[i] == 2) {
+                finishLesson(currentLesson, lessonBlocks);
+                if (currentChapter == null) {
+                    currentChapter = new LessonPlanChapterRequest();
+                    currentChapter.setName("Nội dung chung");
+                    result.add(currentChapter);
+                }
+                currentLesson = new LessonPlanLessonRequest();
+                currentLesson.setName(block.text());
+                currentChapter.getLessons().add(currentLesson);
+            } else {
+                if (currentChapter == null) {
+                    currentChapter = new LessonPlanChapterRequest();
+                    currentChapter.setName("Nội dung chung");
+                    result.add(currentChapter);
+                }
+                if (currentLesson == null) {
+                    currentLesson = new LessonPlanLessonRequest();
+                    currentLesson.setName("Giới thiệu " + currentChapter.getName());
+                    currentChapter.getLessons().add(currentLesson);
+                }
+                lessonBlocks.add(block);
+            }
+        }
+        finishLesson(currentLesson, lessonBlocks);
+        return result;
+    }
+
+    /** Numbered-line rule for unstyled files; lesson titles must be emphasized so numbered exercises are not split. */
+    private int classify(DocumentBlock block, boolean hasBaiLines) {
+        if (!isShort(block)) return 0;
+        String normalized = CurriculumMatcher.normalize(block.text());
+        if (TOPIC_LINE.matcher(normalized).matches()) return 1;
+        if (!block.emphasized()) return 0;
+        if (LESSON_LINE.matcher(normalized).matches()) return 2;
+        if (!hasBaiLines && PERIOD_LINE.matcher(normalized).matches()) return 2;
+        return 0;
+    }
+
+    private static boolean isShort(DocumentBlock block) {
+        return block.text().length() <= MAX_HEADING_LENGTH;
+    }
+
+    /** Content HTML, plus objectives and period count read from the lesson's own blocks. */
+    private void finishLesson(LessonPlanLessonRequest lesson, List<DocumentBlock> lessonBlocks) {
+        if (lesson == null) {
+            lessonBlocks.clear();
+            return;
+        }
+        StringBuilder html = new StringBuilder();
+        StringBuilder objectives = new StringBuilder();
+        boolean inObjectives = false;
+        for (DocumentBlock block : lessonBlocks) {
+            html.append(block.html());
+            String normalized = CurriculumMatcher.normalize(block.text());
+            if (lesson.getPeriods() == null) {
+                Matcher periods = PERIODS_COUNT.matcher(normalized);
+                if (periods.find()) lesson.setPeriods(Integer.valueOf(periods.group(2)));
+            }
+            if (OBJECTIVES_LINE.matcher(normalized).matches()) {
+                inObjectives = true;
+                continue;
+            }
+            if (inObjectives && NEXT_SECTION_LINE.matcher(normalized).matches()) {
+                inObjectives = false;
+            }
+            if (inObjectives) {
+                objectives.append(block.text()).append('\n');
+            }
+        }
+        if (html.length() > 0) lesson.setContent(html.toString());
+        if (objectives.length() > 0) lesson.setObjectives(objectives.toString().trim());
+        lessonBlocks.clear();
+    }
+
+    private List<LessonPlanChapterRequest> toStructureByFontSize(List<DocumentBlock> blocks) {
         List<LessonPlanChapterRequest> result = new ArrayList<>();
         if (blocks.isEmpty()) return result;
         List<Integer> sizes = blocks.stream().map(DocumentBlock::fontSize).filter(size -> size > 0)
@@ -299,7 +458,13 @@ public class LessonPlanDocumentService {
         if (file.getSize() > MAX_FILE_SIZE) throw new IllegalArgumentException("File Word khong duoc lon hon 5 MB");
     }
 
-    private record DocumentBlock(String text, String html, int fontSize) {
+    /** One paragraph; emphasized = all bold or all upper case, as lesson titles usually are. */
+    private record DocumentBlock(String text, String html, int fontSize, int headingLevel, boolean emphasized) {
+    }
+
+    private static boolean emphasized(String text, boolean allBold) {
+        return allBold || (text.chars().anyMatch(Character::isLetter)
+                && text.equals(text.toUpperCase(java.util.Locale.forLanguageTag("vi"))));
     }
 
     private static final class WordHtmlCallback extends HTMLEditorKit.ParserCallback {

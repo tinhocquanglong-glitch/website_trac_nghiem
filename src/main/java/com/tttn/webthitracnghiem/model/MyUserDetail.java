@@ -10,9 +10,24 @@ import java.util.List;
 
 public class MyUserDetail implements UserDetails {
     private User user;
+    private final boolean schoolLocked;
 
     public MyUserDetail(User user) {
         this.user = user;
+        this.schoolLocked = belongsToLockedSchool(user);
+    }
+
+    /** Accounts of a locked school cannot sign in; the system admin is never locked out. */
+    private static boolean belongsToLockedSchool(User user) {
+        boolean systemAdmin = user.getRoles() != null && user.getRoles().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()));
+        if (systemAdmin) {
+            return false;
+        }
+        School school = user.getTrackingClass() != null && user.getTrackingClass().getSchool() != null
+                ? user.getTrackingClass().getSchool()
+                : user.getSchool();
+        return school != null && !school.isActive();
     }
 
     @Override
@@ -42,7 +57,7 @@ public class MyUserDetail implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !schoolLocked;
     }
 
     @Override

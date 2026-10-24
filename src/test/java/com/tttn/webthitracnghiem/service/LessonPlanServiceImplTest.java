@@ -58,6 +58,8 @@ class LessonPlanServiceImplTest {
     private LessonRepository lessonRepository;
     @Mock
     private ISubjectClassService subjectClassService;
+    @Mock
+    private CurriculumService curriculumService;
     @InjectMocks
     private LessonPlanServiceImpl service;
 
@@ -276,6 +278,60 @@ class LessonPlanServiceImplTest {
                     assertThat(savedLesson.getAttachmentOriginalName()).isEqualTo("ham-so.docx");
                     assertThat(savedLesson.getAttachmentData()).isEqualTo("word-data".getBytes(StandardCharsets.UTF_8));
                 });
+    }
+
+    @Test
+    void saveLinksLessonsToTheSchoolCurriculumAndKeepsPlainText() {
+        Subject subject = new Subject();
+        subject.setId(7);
+        Classes grade = new Classes(3, "Khối 10", 10, null);
+        SubjectClasses curriculum = new SubjectClasses();
+        curriculum.setId(30);
+        User owner = user("teacher");
+        owner.setSchoolLevel(3);
+        Lesson ownLesson = new Lesson();
+        ownLesson.setId(100);
+        Lesson foreignLesson = new Lesson();
+        foreignLesson.setId(200);
+
+        LessonPlanLessonRequest lessonRequest = new LessonPlanLessonRequest();
+        lessonRequest.setName("Hàm số bậc nhất");
+        lessonRequest.setContent("<p>Hàm số <strong>bậc nhất</strong></p><ul><li>Định nghĩa</li></ul>");
+        lessonRequest.setCurriculumLessonId(100);
+        lessonRequest.setPeriods(2);
+        lessonRequest.setObjectives("Nhận biết hàm số bậc nhất");
+        LessonPlanChapterRequest topicRequest = new LessonPlanChapterRequest();
+        topicRequest.setName("Hàm số");
+        topicRequest.setLessons(List.of(lessonRequest));
+        LessonPlanRequest request = new LessonPlanRequest();
+        request.setName("Toán 10");
+        request.setSubjectId(7);
+        request.setGradeId(3);
+        request.setChapters(List.of(topicRequest));
+
+        when(subjectRepository.findById(7)).thenReturn(Optional.of(subject));
+        when(classesRepository.findById(3)).thenReturn(Optional.of(grade));
+        when(subjectClassRepository.findByClassesAndSubject(3, 7)).thenReturn(Optional.of(curriculum));
+        when(lessonRepository.findById(100)).thenReturn(Optional.of(ownLesson));
+        when(curriculumService.schoolIdOf(owner)).thenReturn(5);
+        when(curriculumService.belongsTo(ownLesson, 5, curriculum)).thenReturn(true);
+        when(lessonPlanRepository.save(any(LessonPlan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LessonPlan saved = service.save(request, owner);
+
+        com.tttn.webthitracnghiem.model.LessonPlanLesson savedLesson = saved.getPlanChapters().get(0).getLessons().get(0);
+        assertThat(savedLesson.getCurriculumLesson()).isSameAs(ownLesson);
+        assertThat(savedLesson.getPeriods()).isEqualTo(2);
+        assertThat(savedLesson.getObjectives()).isEqualTo("Nhận biết hàm số bậc nhất");
+        assertThat(savedLesson.getContentText()).isEqualTo("Hàm số bậc nhất\n- Định nghĩa");
+
+        // A lesson from another school's (or another subject's) curriculum is refused.
+        lessonRequest.setCurriculumLessonId(200);
+        when(lessonRepository.findById(200)).thenReturn(Optional.of(foreignLesson));
+        when(curriculumService.belongsTo(foreignLesson, 5, curriculum)).thenReturn(false);
+        assertThatThrownBy(() -> service.save(request, owner))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("không thuộc chương trình học");
     }
 
     @Test

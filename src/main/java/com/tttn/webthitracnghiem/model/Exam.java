@@ -84,6 +84,22 @@ public class Exam {
     @Column(name = "grade_month")
     private Integer gradeMonth;
 
+    // Curriculum scope: subject, grade and every lesson the exam covers. `lesson` stays the first scope lesson.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    @JsonIgnore
+    private Subject subject;
+
+    @Column(name = "grade_level")
+    private Integer gradeLevel;
+
+    @ManyToMany
+    @JoinTable(name = "exam_scope_lesson",
+            joinColumns = @JoinColumn(name = "exam_id"),
+            inverseJoinColumns = @JoinColumn(name = "lesson_id"))
+    @JsonIgnore
+    private java.util.Set<Lesson> scopeLessons = new java.util.LinkedHashSet<>();
+
     private long view;
     private long turn;
 
@@ -295,5 +311,12 @@ public class Exam {
 
     public Integer getGradeMonth() { return gradeMonth; }
     public void setGradeMonth(Integer gradeMonth) { this.gradeMonth = gradeMonth; }
+
+    public Subject getSubject() { return subject; }
+    public void setSubject(Subject subject) { this.subject = subject; }
+    public Integer getGradeLevel() { return gradeLevel; }
+    public void setGradeLevel(Integer gradeLevel) { this.gradeLevel = gradeLevel; }
+    public java.util.Set<Lesson> getScopeLessons() { return scopeLessons; }
+    public void setScopeLessons(java.util.Set<Lesson> scopeLessons) { this.scopeLessons = scopeLessons; }
 }
 
