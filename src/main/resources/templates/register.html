@@ -1,303 +1,486 @@
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
+    <title>Đăng kí tài khoản – Thi Trắc Nghiệm</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css}">
     <script th:src="@{https://code.jquery.com/jquery-3.5.1.min.js}"></script>
     <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js}"></script>
     <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <link rel="preconnect" th:href="@{https://fonts.googleapis.com}">
-    <link rel="preconnect" th:href="@{https://fonts.gstatic.com}" crossorigin>
-    <link th:href="@{https://fonts.googleapis.com/css2?family=Poppins&display=swap}" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/loader.css}">
     <link rel="stylesheet" th:href="@{/css/navbar.css}">
     <link rel="stylesheet" th:href="@{/css/slick.css}">
     <link rel="stylesheet" th:href="@{/css/blog.css}">
     <link href="../static/css/default-page.css" rel="stylesheet" th:href="@{/css/default-page.css}">
     <link rel="stylesheet" th:href="@{/css/dropdown.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css}"
-          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
-        .alert a {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            /* transform: translate(50%, 75%); */
-            cursor: pointer;
-            transform: translateY(-50%);
-            text-decoration: none;
-            color: white;
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+        body { background: #f0f4f8; }
+
+        /* ===== PAGE WRAPPER ===== */
+        .register-page {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 16px 60px;
         }
 
-        .alert a:hover {
+        /* ===== CARD ===== */
+        .register-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+            overflow: hidden;
+            width: 100%;
+            max-width: 860px;
+        }
 
+        /* ===== HEADER BANNER ===== */
+        .register-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            padding: 32px 40px 28px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .register-header .header-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: #fff;
+            flex-shrink: 0;
+        }
+        .register-header h2 {
+            margin: 0; color: #fff; font-size: 24px; font-weight: 700; line-height: 1.2;
+        }
+        .register-header p {
+            margin: 4px 0 0; color: rgba(255,255,255,0.82); font-size: 13.5px; font-weight: 400;
+        }
+        .register-header .back-btn {
+            margin-left: auto;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: #fff; border-radius: 10px;
+            padding: 8px 18px; font-size: 13px; font-weight: 500;
+            text-decoration: none; display: flex; align-items: center; gap: 7px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .register-header .back-btn:hover { background: rgba(255,255,255,0.3); color: #fff; }
+
+        /* ===== FORM BODY ===== */
+        .register-body {
+            padding: 36px 40px 32px;
+        }
+
+        /* section title */
+        .section-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
+            text-transform: uppercase; color: #64748b;
+            margin-bottom: 14px; margin-top: 28px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px; background: #e2e8f0;
+        }
+        .section-label:first-child { margin-top: 0; }
+
+        /* field group */
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .field-row.full { grid-template-columns: 1fr; }
+
+        .field-group {
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .field-group label {
+            font-size: 13px; font-weight: 600; color: #374151;
+        }
+        .field-group label .req { color: #ef4444; margin-left: 3px; }
+
+        .field-group .input-wrap {
+            position: relative;
+        }
+        .field-group .input-wrap .fi {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; font-size: 14px; pointer-events: none;
+        }
+        .field-group input,
+        .field-group select {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #1e293b;
+            background: #f8fafc;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .field-group input:focus,
+        .field-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+        }
+        .field-group .error-msg {
+            font-size: 12px; color: #ef4444; margin-top: 2px;
+        }
+
+        /* toggle password eye */
+        .eye-btn {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: #94a3b8; font-size: 15px; padding: 2px 4px;
+            transition: color 0.2s;
+        }
+        .eye-btn:hover { color: #3b82f6; }
+        .field-group .input-wrap input.has-eye { padding-right: 40px; }
+
+        /* helper text */
+        .field-helper {
+            font-size: 11.5px; color: #94a3b8; margin-top: 3px; line-height: 1.4;
+        }
+
+        /* ===== SUBMIT AREA ===== */
+        .submit-area {
+            margin-top: 30px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px;
+        }
+        .btn-register {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            color: #fff; border: none;
+            padding: 13px 48px; border-radius: 12px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.25);
+        }
+        .btn-register:hover { opacity: 0.93; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.32); }
+        .btn-register:active { transform: translateY(0); }
+
+        .login-link {
+            font-size: 13.5px; color: #64748b;
+        }
+        .login-link a {
+            color: #2563eb; font-weight: 600; text-decoration: none;
+        }
+        .login-link a:hover { text-decoration: underline; }
+
+        .required-note {
+            font-size: 12.5px; color: #94a3b8;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .register-body { padding: 24px 20px 24px; }
+            .register-header { padding: 22px 20px; flex-wrap: wrap; }
+            .register-header .back-btn { margin-left: 0; }
+            .field-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 <div id="preloader"></div>
 <th:block th:insert="~{default-page :: navbar}"></th:block>
-<div class="container" style="margin: 50px auto; max-width: 700px">
-    <div class="card border" style="border: 1px solid #d3d3d3;
-  box-shadow: 1px 1px 7px #ccc;">
-        <div class="alert"
-             style="background-color: deepskyblue; color: floralwhite; font-size: 20px;text-align: center;"
-             role="alert">
-            <a th:href="@{/login}"><i class="fa-solid fa-right-to-bracket"></i></a>
-            Đăng kí
+
+<div class="register-page">
+    <div class="register-card">
+
+        <!-- HEADER -->
+        <div class="register-header">
+            <div class="header-icon"><i class="fa-solid fa-user-plus"></i></div>
+            <div>
+                <h2>Tạo tài khoản mới</h2>
+                <p>Điền đầy đủ thông tin để bắt đầu học và thi trực tuyến</p>
+            </div>
+            <a th:href="@{/login}" class="back-btn">
+                <i class="fa-solid fa-arrow-left"></i> Đăng nhập
+            </a>
         </div>
-        <form class="mx-5 mb-3 mt-2 d-flex flex-column gap-10" th:object="${user}" method="post">
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Tên đăng nhập<span
-                        class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{id}" name="username" id="id" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('id')}" th:errors="*{id}" style="color: red"></label>
-                </div>
-            </div>
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Mật khẩu<span class="text-danger  ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{passWord}" name="password" id="pass" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}" style="color: red"></label>
-                </div>
-            </div>
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Nhập lại mật khẩu<span
-                        class="text-danger  ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{rePassWord}" name="password" id="repass" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('rePassWord')}" th:errors="*{rePassWord}"
-                           style="color: red"></label>
-                </div>
-            </div>
-            <script>
-                document.getElementById("pass").type = 'password';
-                document.getElementById("repass").type = 'password';
-            </script>
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Họ và Tên<span
-                        class="text-danger ml-3 ">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{fullName}" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" style="color: red"></label>
-                </div>
-            </div>
+        <!-- FORM -->
+        <div class="register-body">
+            <form th:object="${user}" method="post" id="registerForm">
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Email<span class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{email}" id="email" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: red"></label>
+                <!-- ── THÔNG TIN TÀI KHOẢN ── -->
+                <div class="section-label"><i class="fa-solid fa-lock" style="color:#3b82f6"></i> Thông tin tài khoản</div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="id">Tên đăng nhập <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-at fi"></i>
+                            <input type="text" th:field="*{id}" name="username" id="id" autocomplete="off" placeholder="Nhập tên đăng nhập...">
+                        </div>
+                        <label th:if="${#fields.hasErrors('id')}" th:errors="*{id}" class="error-msg"></label>
+                    </div>
+                    <div class="field-group">
+                        <label>Họ và Tên <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-user fi"></i>
+                            <input type="text" th:field="*{fullName}" autocomplete="off" placeholder="Nguyễn Văn A...">
+                        </div>
+                        <label th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="error-msg"></label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Tỉnh / Thành phố</label>
-                <div class="col-lg-8 col-sm-8">
-                    <select class="form-control" id="provinceSelect">
-                        <option value="">-- Chọn Tỉnh / TP --</option>
-                        <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
-                    </select>
+                <div class="field-row" style="margin-top:16px">
+                    <div class="field-group">
+                        <label>Mật khẩu <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-key fi"></i>
+                            <input type="password" th:field="*{passWord}" name="password" id="pass" autocomplete="off" placeholder="Ít nhất 6 ký tự..." class="has-eye">
+                            <button type="button" class="eye-btn" onclick="togglePass('pass',this)"><i class="fa-solid fa-eye-slash"></i></button>
+                        </div>
+                        <label th:if="${#fields.hasErrors('passWord')}" th:errors="*{passWord}" class="error-msg"></label>
+                    </div>
+                    <div class="field-group">
+                        <label>Nhập lại mật khẩu <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-key fi"></i>
+                            <input type="password" th:field="*{rePassWord}" name="password" id="repass" autocomplete="off" placeholder="Nhập lại mật khẩu..." class="has-eye">
+                            <button type="button" class="eye-btn" onclick="togglePass('repass',this)"><i class="fa-solid fa-eye-slash"></i></button>
+                        </div>
+                        <label th:if="${#fields.hasErrors('rePassWord')}" th:errors="*{rePassWord}" class="error-msg"></label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Quận / Huyện</label>
-                <div class="col-lg-8 col-sm-8">
-                    <select class="form-control" id="districtSelect">
-                        <option value="">-- Chọn Quận / Huyện --</option>
-                    </select>
+                <!-- ── THÔNG TIN CÁ NHÂN ── -->
+                <div class="section-label" style="margin-top:32px"><i class="fa-solid fa-id-card" style="color:#3b82f6"></i> Thông tin cá nhân</div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label>Email <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-envelope fi"></i>
+                            <input type="text" th:field="*{email}" id="email" autocomplete="off" placeholder="email@example.com">
+                        </div>
+                        <label th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-msg"></label>
+                    </div>
+                    <div class="field-group">
+                        <label>Số điện thoại <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-phone fi"></i>
+                            <input type="text" th:field="*{phoneNumber}" placeholder="0901 234 567...">
+                        </div>
+                        <label th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" class="error-msg"></label>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Trường học</label>
-                <div class="col-lg-8 col-sm-8">
-                    <select class="form-control" name="schoolId" id="schoolSelect">
-                        <option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>
-                        <option th:each="s : ${schools}" th:if="${s.id != 1}" th:value="${s.id}"
-                                th:text="${s.name + (s.districtName != null ? ' (' + s.districtName + ', ' + s.provinceName + ')' : (s.provinceName != null ? ' (' + s.provinceName + ')' : ''))}"
-                                th:selected="${selectedSchoolId != null and selectedSchoolId == s.id}"></option>
-                    </select>
-                    <small class="text-muted">Chọn trường của bạn (hoặc chọn Tỉnh/Huyện ở trên để lọc nhanh danh sách). Nếu chưa có trường của bạn trong hệ thống, hãy chọn "Thí sinh tự do / Khác".</small>
+                <div class="field-row full" style="margin-top:16px">
+                    <div class="field-group">
+                        <label>Địa chỉ <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-house fi"></i>
+                            <input type="text" th:field="*{address}" autocomplete="off" placeholder="Số nhà, tên đường...">
+                        </div>
+                        <label th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="error-msg"></label>
+                    </div>
                 </div>
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Cấp học<span class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <select class="form-control" name="schoolLevel" id="schoolLevelSelect" onchange="handleSchoolLevelChange()" required>
-                        <option value="">-- Chọn Cấp học --</option>
-                        <option value="1">Tiểu học (Cấp 1 - Khối 1 đến 5)</option>
-                        <option value="2">Trung học cơ sở (Cấp 2 - Khối 6 đến 9)</option>
-                        <option value="3">Trung học phổ thông (Cấp 3 - Khối 10 đến 12)</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="form-group row" id="gradeGroup" style="display: none;">
-                <label class="col-lg-4 col-sm-4 col-form-label">Khối học<span class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <select class="form-control" name="grade" id="gradeSelect">
-                        <option value="">-- Chọn Khối học --</option>
-                    </select>
+                <!-- hidden date field -->
+                <div style="display:none">
+                    <input type="text" th:field="*{createDate}" id="the-date">
                 </div>
-            </div>
 
+                <!-- ── ĐỊA PHƯƠNG & TRƯỜNG ── -->
+                <div class="section-label" style="margin-top:32px"><i class="fa-solid fa-school" style="color:#3b82f6"></i> Địa phương &amp; Trường học</div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label>Tỉnh / Thành phố</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-map-location-dot fi"></i>
+                            <select id="provinceSelect">
+                                <option value="">-- Chọn Tỉnh / TP --</option>
+                                <option th:each="p : ${provinces}" th:value="${p.code}" th:text="${p.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label>Quận / Huyện</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-location-dot fi"></i>
+                            <select id="districtSelect">
+                                <option value="">-- Chọn Quận / Huyện --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Địa chỉ<span class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{address}" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color: red"></label>
+                <div class="field-row full" style="margin-top:16px">
+                    <div class="field-group">
+                        <label>Trường học</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-building-columns fi"></i>
+                            <select name="schoolId" id="schoolSelect">
+                                <option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>
+                                <option th:each="s : ${schools}"
+                                        th:if="${s.id != 1}"
+                                        th:value="${s.id}"
+                                        th:text="${s.name + (s.districtName != null ? ' (' + s.districtName + ', ' + s.provinceName + ')' : (s.provinceName != null ? ' (' + s.provinceName + ')' : ''))}"
+                                        th:selected="${selectedSchoolId != null and selectedSchoolId == s.id}">
+                                </option>
+                            </select>
+                        </div>
+                        <p class="field-helper"><i class="fa-solid fa-circle-info"></i> Chọn tỉnh/huyện ở trên để lọc nhanh danh sách trường. Nếu chưa có trường của bạn, chọn "Thí sinh tự do / Khác".</p>
+                    </div>
                 </div>
-            </div>
 
-            <div class="form-group row" style="display:none">
-                <label class="col-lg-4 col-sm-4 col-form-label">Số Điện Thoại<span
-                        class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{createDate}" id="the-date" autocomplete="off">
-                    <label th:if="${#fields.hasErrors('createDate')}" th:errors="*{createDate}"
-                           style="color: red"></label>
+                <!-- ── HỌC VẤN ── -->
+                <div class="section-label" style="margin-top:32px"><i class="fa-solid fa-graduation-cap" style="color:#3b82f6"></i> Học vấn</div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label>Cấp học <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-layer-group fi"></i>
+                            <select name="schoolLevel" id="schoolLevelSelect" onchange="handleSchoolLevelChange()" required>
+                                <option value="">-- Chọn Cấp học --</option>
+                                <option value="1">Tiểu học (Cấp 1 – Khối 1 đến 5)</option>
+                                <option value="2">Trung học cơ sở (Cấp 2 – Khối 6 đến 9)</option>
+                                <option value="3">Trung học phổ thông (Cấp 3 – Khối 10 đến 12)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field-group" id="gradeGroup" style="display:none;">
+                        <label>Khối học <span class="req">*</span></label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-hashtag fi"></i>
+                            <select name="grade" id="gradeSelect">
+                                <option value="">-- Chọn Khối học --</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label">Số Điện Thoại<span
-                        class="text-danger ml-3">*</span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <input type="text" class="form-control" th:field="*{phoneNumber}">
-                    <label th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"
-                           style="color: red"></label>
-                </div>
-            </div>
-            <div class="form-group row">
-                <label class="col-lg-4 col-sm-4 col-form-label hiden"></span></label>
-                <div class="col-lg-8 col-sm-8">
-                    <label class="col-lg-10 col-sm-12 col-form-label "><span class="text-danger mr-1">*</span>Các trường
-                        bắt buộc điền</label>
-                </div>
-            </div>
-            <div class="form-group row" style="justify-content: center;">
-                <div class="">
-                    <button class="btn btn-primary " type="submit" style=""> Đăng kí tài khoản</button>
-                </div>
-            </div>
-        </form>
 
-    </div>
-</div>
+                <!-- ── SUBMIT ── -->
+                <div class="submit-area">
+                    <p class="required-note"><span style="color:#ef4444;font-size:15px">*</span> Các trường có dấu sao là bắt buộc điền</p>
+                    <button type="submit" class="btn-register">
+                        <i class="fa-solid fa-user-plus"></i> Đăng kí tài khoản
+                    </button>
+                    <p class="login-link">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập ngay</a></p>
+                </div>
+
+            </form>
+        </div><!-- /register-body -->
+    </div><!-- /register-card -->
+</div><!-- /register-page -->
+
 <!-- Footer -->
 <div th:replace="~{default-page :: footer}"></div>
-<!-- Footer -->
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script>
-    var date = new Date();
-    var day = date.getDate();
-    var month = date.getMonth() + 1;
-    var year = date.getFullYear();
-    if (month < 10)
-        month = "0" + month;
-    if (day < 10)
-        day = "0" + day;
-    var today = year + "-" + month + "-" + day;
-    document.getElementById('the-date').value = today;
-</script>
+
+<!-- Scripts -->
 <script type="text/javascript" th:src="@{//code.jquery.com/jquery-1.11.0.min.js}"></script>
 <script type="text/javascript" th:src="@{//code.jquery.com/jquery-migrate-1.2.1.min.js}"></script>
 <script type="text/javascript" th:src="@{//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js}"></script>
-<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js}" crossorigin="anonymous"></script>
+<script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js}" crossorigin="anonymous"></script>
 <script type="module" th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js}"></script>
 <script nomodule th:src="@{https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
 <script th:src="@{/js/slider.js}"></script>
-<script>
-$(document).ready(function() {
-    function loadSchools() {
-        var p = $('#provinceSelect').val();
-        var d = $('#districtSelect').val();
-        var url = '/api/location/schools?';
-        if (d) url += 'districtCode=' + d;
-        else if (p) url += 'provinceCode=' + p;
 
-        $.get(url, function(schools) {
-            var $schoolSelect = $('#schoolSelect');
-            var prevSelected = $schoolSelect.val();
-            $schoolSelect.empty();
-            $schoolSelect.append('<option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>');
-            $.each(schools, function(i, s) {
-                if (s.id !== 1) {
-                    var locationInfo = '';
-                    if (s.districtName && s.provinceName) {
-                        locationInfo = ' (' + s.districtName + ', ' + s.provinceName + ')';
-                    } else if (s.provinceName) {
-                        locationInfo = ' (' + s.provinceName + ')';
-                    }
-                    var isSelected = (prevSelected && parseInt(prevSelected) === s.id) ? ' selected' : '';
-                    $schoolSelect.append('<option value="' + s.id + '"' + isSelected + '>' + s.name + locationInfo + '</option>');
-                }
-            });
-        });
+<script>
+    // Auto-fill hidden date
+    (function() {
+        var d = new Date();
+        var m = d.getMonth() + 1;
+        var day = d.getDate();
+        document.getElementById('the-date').value =
+            d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+    })();
+
+    // Toggle password visibility
+    function togglePass(inputId, btn) {
+        var inp = document.getElementById(inputId);
+        var icon = btn.querySelector('i');
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        } else {
+            inp.type = 'password';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        }
     }
 
-    $('#provinceSelect').change(function() {
-        var provCode = $(this).val();
-        $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
-        if (provCode) {
-            $.get('/api/location/districts?provinceCode=' + provCode, function(data) {
-                $.each(data, function(index, d) {
-                    $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+    // School level → grade
+    function handleSchoolLevelChange() {
+        var lvl = $('#schoolLevelSelect').val();
+        var $gradeGroup = $('#gradeGroup');
+        var $gradeSelect = $('#gradeSelect');
+        $gradeSelect.empty();
+
+        if (!lvl) {
+            $gradeGroup.hide();
+            $gradeSelect.prop('required', false);
+            return;
+        }
+        $gradeGroup.show();
+        $gradeSelect.prop('required', true);
+        $gradeSelect.append('<option value="">-- Chọn Khối học --</option>');
+
+        var ranges = { '1': [1,5], '2': [6,9], '3': [10,12] };
+        var r = ranges[lvl];
+        for (var i = r[0]; i <= r[1]; i++) {
+            $gradeSelect.append('<option value="' + i + '">Khối ' + i + '</option>');
+        }
+    }
+
+    // Province → District → Schools
+    $(document).ready(function () {
+        function loadSchools() {
+            var p = $('#provinceSelect').val();
+            var d = $('#districtSelect').val();
+            var url = '/api/location/schools?';
+            if (d) url += 'districtCode=' + d;
+            else if (p) url += 'provinceCode=' + p;
+
+            $.get(url, function (schools) {
+                var $s = $('#schoolSelect');
+                var prev = $s.val();
+                $s.empty().append('<option value="1">-- Thí sinh tự do / Khác (Toàn quốc) --</option>');
+                $.each(schools, function (i, s) {
+                    if (s.id !== 1) {
+                        var loc = s.districtName && s.provinceName
+                            ? ' (' + s.districtName + ', ' + s.provinceName + ')'
+                            : (s.provinceName ? ' (' + s.provinceName + ')' : '');
+                        var sel = (prev && parseInt(prev) === s.id) ? ' selected' : '';
+                        $s.append('<option value="' + s.id + '"' + sel + '>' + s.name + loc + '</option>');
+                    }
                 });
             });
         }
-        loadSchools();
+
+        $('#provinceSelect').change(function () {
+            var code = $(this).val();
+            $('#districtSelect').empty().append('<option value="">-- Chọn Quận / Huyện --</option>');
+            if (code) {
+                $.get('/api/location/districts?provinceCode=' + code, function (data) {
+                    $.each(data, function (i, d) {
+                        $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+                    });
+                });
+            }
+            loadSchools();
+        });
+
+        $('#districtSelect').change(function () { loadSchools(); });
     });
-
-    $('#districtSelect').change(function() {
-        loadSchools();
-    });
-});
-
-function handleSchoolLevelChange() {
-    var lvl = $('#schoolLevelSelect').val();
-    var $gradeGroup = $('#gradeGroup');
-    var $gradeSelect = $('#gradeSelect');
-    $gradeSelect.empty();
-
-    if (!lvl) {
-        $gradeGroup.hide();
-        $gradeSelect.prop('required', false);
-        return;
-    }
-
-    $gradeGroup.show();
-    $gradeSelect.prop('required', true);
-    $gradeSelect.append('<option value="">-- Chọn Khối học --</option>');
-
-    if (lvl === '1') {
-        for (var i = 1; i <= 5; i++) {
-            $gradeSelect.append('<option value="' + i + '">Khối ' + i + '</option>');
-        }
-    } else if (lvl === '2') {
-        for (var i = 6; i <= 9; i++) {
-            $gradeSelect.append('<option value="' + i + '">Khối ' + i + '</option>');
-        }
-    } else if (lvl === '3') {
-        for (var i = 10; i <= 12; i++) {
-            $gradeSelect.append('<option value="' + i + '">Khối ' + i + '</option>');
-        }
-    }
-}
 </script>
 </body>
 </html>
