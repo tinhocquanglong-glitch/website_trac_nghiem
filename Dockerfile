@@ -10,5 +10,5 @@ FROM eclipse-temurin:17-jre-jammy AS runtime
 WORKDIR /app
 COPY --from=build /workspace/target/WebThiTracNghiem-0.0.1-SNAPSHOT.jar app.jar
 
-EXPOSE 8080
-CMD ["sh", "-c", "exec java -Xmx384m -Xms128m -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
+EXPOSE 10000
+CMD ["sh", "-c", "exec java -Xmx384m -Xms128m -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-10000} -jar /app/app.jar"]
