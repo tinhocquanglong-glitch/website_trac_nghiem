@@ -1,66 +1,59 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <link rel="apple-touch-icon" sizes="76x76" href="../assets/img/apple-icon.png">
-    <link rel="icon" type="image/png" href="../assets/img/favicon.png">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
-          integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css"
-          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons"/>
-    <title>Website Trắc nghiệm</title>
-    <link rel="icon" href=
-            "https://aztest.vn/uploads/news/2019/1_6.jpg"
-          type="image/x-icon">
-    <!-- Bootstrap -->
+    <title>Chỉnh Sửa Môn Học - Website Trắc Nghiệm</title>
+    <link rel="icon" href="https://aztest.vn/uploads/news/2019/1_6.jpg" type="image/x-icon">
     <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
-    <!-- Font Awesome -->
     <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
-    <!-- NProgress -->
-    <link th:href="@{/vendors/nprogress/nprogress.css}" rel="stylesheet">
-    <!-- iCheck -->
-    <link th:href="@{/vendors/iCheck/skins/flat/green.css}" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    <!-- bootstrap-progressbar -->
-    <link th:href="@{/vendors/bootstrap-progressbar/css/bootstrap-progressbar-3.3.4.min.css}" rel="stylesheet">
-    <!-- JQVMap -->
-    <link th:href="@{/vendors/jqvmap/dist/jqvmap.min.css}" rel="stylesheet"/>
-    <!-- bootstrap-daterangepicker -->
-    <link th:href="@{/vendors/bootstrap-daterangepicker/daterangepicker.css}" rel="stylesheet">
-
-    <!-- Custom Theme Style -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/loader.css}">
     <style>
         .profile-information__avatar {
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 20px;
         }
-
         .profile-information__avatar .avatar-upload img {
-            width: 400px;
-            height: 200px;
+            width: 240px;
+            height: 140px;
             object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
         }
-
         .profile-information__avatar .btn-upload-image label {
-            padding: 5px 20px;
-            background: #77beb0;
+            padding: 8px 18px;
+            background: #2a6f97;
             margin: 0;
-            text-transform: capitalize;
-            border-radius: 5px;
+            border-radius: 6px;
             color: white;
             cursor: pointer;
+            font-weight: 500;
         }
         .profile-information__avatar .btn-upload-image label:hover {
-            background: #50e4c7;
-            transition: all linear 0.2s;
+            background: #173042;
         }
-
-        #btn-choose-image {
-            margin: 0;
+        .class-card-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            margin-bottom: 0;
+        }
+        .class-card-label:hover {
+            background: #e0f2fe;
+            border-color: #38bdf8;
+        }
+        .class-card-label input:checked + span {
+            font-weight: 700;
+            color: #0369a1;
         }
     </style>
 </head>
@@ -71,120 +64,182 @@
         <div th:insert="~{index.html :: navbarAdmin}"></div>
         <div th:insert="~{index.html :: topnavAdmin}"></div>
         <div class="right_col" role="main">
-<div class="container-fluid" style="margin-bottom: 150px">
-    <div class="h4 text-center mb-4">
-        <p id="de">Chỉnh Sửa Môn Học</p>
-    </div>
+            <div class="container-fluid" style="margin-bottom: 100px">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="font-weight-bold text-dark mb-1">Chỉnh Sửa Môn Học</h4>
+                        <p class="text-muted small mb-0">Cập nhật thông tin và danh sách khối lớp áp dụng trong Khung chương trình.</p>
+                    </div>
+                    <a th:href="@{/subject/list}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left mr-1"></i>Trở lại danh sách
+                    </a>
+                </div>
 
-    <form style="max-width: 1200px; margin: 0 auto; background-color: #d8f5ff;">
-        <div id="wrapFormExam">
-            <input th:type="hidden" name="id" th:field="${subject.id}" id="subjectId">
-            <div class="border border-secondary rounded p-3 pt-5">
-                <div class="form-group row mg-16-auto">
-                    <label class="col-sm-3 col-form-label">Tên môn học</label>
-                    <div class="col-sm-8">
-                        <input type="text" class="form-control" th:field="${subject.name}" name="name" id="name"
-                               onblur="validate()">
-                    </div>
-                </div>
-                <div class="form-group row mg-16-auto">
-                    <label class="col-sm-3 col-form-label">Hình ảnh</label>
-                    <div class="col-sm-8 pt-2">
-                        <div class="profile-information__avatar">
-                            <div class="avatar-upload">
-                                <img id="view-avatar"
-                                     th:src="@{${subject.image}}" alt="">
+                <div class="card shadow-sm border-0 rounded-lg">
+                    <div class="card-body p-4">
+                        <form th:action="@{/subject/update}" method="post" enctype="multipart/form-data" id="subjectForm">
+                            <input type="hidden" name="id" th:value="${subject.id}" id="subjectId">
+
+                            <!-- PHẠM VI MÔN HỌC -->
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark mb-2">Phạm vi môn học</label>
+                                <div th:if="${subject.school == null}" class="alert alert-info py-3 mb-0 rounded-lg shadow-sm" style="border-left: 5px solid #0284c7;">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-globe-asia fa-2x mr-3 text-info"></i>
+                                        <div>
+                                            <h6 class="font-weight-bold mb-1">Môn học dùng chung toàn hệ thống</h6>
+                                            <p class="mb-0 small text-dark">
+                                                Môn học này hiển thị ở <strong>tất cả các trường</strong> trong các khối được chọn. Giáo viên của các trường đều có thể xây dựng khung bài học riêng cho trường của họ.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${subject.school != null}" class="alert alert-success py-3 mb-0 rounded-lg shadow-sm" style="border-left: 5px solid #16a34a;">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-school fa-2x mr-3 text-success"></i>
+                                        <div>
+                                            <h6 class="font-weight-bold mb-1">Môn học riêng của trường: <span th:text="${subject.school.name}"></span></h6>
+                                            <p class="mb-0 small text-dark">
+                                                Môn học riêng của trường, giáo viên thuộc trường sẽ thấy môn học trong Khung chương trình để phân bổ chương trình giảng dạy.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="btn-upload-image">
-                                <input style="display: none" type="file" id="upload" name="image"
-                                       onchange="preview()" th:field="${subject.image}">
-                                <label for="upload">
-                                    <p id="btn-choose-image">Chọn ảnh</p>
+
+                            <!-- TÊN MÔN HỌC -->
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark" for="name">Tên môn học <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" name="name" id="name"
+                                       th:value="${subject.name}" required>
+                            </div>
+
+                            <!-- KHỐI ÁP DỤNG -->
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark d-block mb-1">
+                                    Khối học áp dụng <span class="text-danger">*</span>
                                 </label>
+                                <p class="text-muted small mb-2">Chọn các khối lớp sẽ có môn học này trong Khung chương trình:</p>
+
+                                <div class="mb-3 d-flex flex-wrap" style="gap: 8px;">
+                                    <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold" onclick="selectGrades('ALL')">
+                                        <i class="fas fa-check-double mr-1"></i>Chọn tất cả (Khối 1 - 12)
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="selectGrades('C1')">
+                                        Tiểu học (Khối 1 - 5)
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="selectGrades('C2')">
+                                        THCS (Khối 6 - 9)
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="selectGrades('C3')">
+                                        THPT (Khối 10 - 12)
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectGrades('NONE')">
+                                        Bỏ chọn tất cả
+                                    </button>
+                                </div>
+
+                                <div class="p-3 bg-light rounded border row mx-0">
+                                    <div class="col-6 col-sm-4 col-md-3 mb-2" th:each="clazz : ${classesList}">
+                                        <label class="class-card-label" th:for="|class-cb-${clazz.id}|">
+                                            <input type="checkbox" class="class-cb" 
+                                                   th:id="|class-cb-${clazz.id}|" name="classIds" 
+                                                   th:value="${clazz.id}" th:attr="data-grade=${clazz.grade}"
+                                                   th:checked="${assignedClassIds != null and assignedClassIds.contains(clazz.id)}">
+                                            <span th:text="${clazz.nameClass}"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="gradeError" class="text-danger small mt-2" style="display: none;">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>Vui lòng chọn ít nhất một khối học áp dụng cho môn này.
+                                </div>
                             </div>
-                        </div>
+
+                            <!-- HÌNH ẢNH -->
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark d-block">Hình ảnh đại diện môn học</label>
+                                <div class="profile-information__avatar">
+                                    <div class="avatar-upload">
+                                        <img id="view-avatar" th:src="@{${subject.image != null ? subject.image : '/img/default.jpg'}}" alt="Avatar môn học">
+                                    </div>
+                                    <div class="btn-upload-image">
+                                        <input style="display: none" type="file" id="upload" name="image"
+                                               accept="image/*" onchange="preview(event)">
+                                        <label for="upload">
+                                            <i class="fas fa-camera mr-1"></i>Thay đổi ảnh
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- NÚT THAO TÁC -->
+                            <div class="d-flex align-items-center" style="gap: 12px;">
+                                <button type="submit" class="btn btn-primary px-4 font-weight-bold">
+                                    <i class="fas fa-save mr-1"></i>Lưu thay đổi
+                                </button>
+                                <a th:href="@{/subject/list}" class="btn btn-light px-4 border">Hủy bỏ</a>
+                            </div>
+                        </form>
                     </div>
                 </div>
-                <input type="button" id="saveBtn" value="Cập nhập" class="btn btn-primary">
-                <a th:href="@{/subject/list}" class="btn btn-warning">Trở lại</a>
             </div>
-        </div>
-    </form>
-</div>
         </div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>
-<!-- jQuery -->
-<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
-<!-- Bootstrap -->
-<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
-<!-- FastClick -->
-<script th:src="@{/vendors/fastclick/lib/fastclick.js}"></script>
-<!-- NProgress -->
-<script th:src="@{/vendors/nprogress/nprogress.js}"></script>
-<!-- Chart.js -->
-<script th:src="@{/vendors/Chart.js/dist/Chart.min.js}"></script>
-<!-- gauge.js -->
-<script th:src="@{/vendors/gauge.js/dist/gauge.min.js}"></script>
-<!-- bootstrap-progressbar -->
-<script th:src="@{/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js}"></script>
-<!-- iCheck -->
-<script th:src="@{/vendors/iCheck/icheck.min.js}"></script>
-<!-- Skycons -->
-<script th:src="@{/vendors/skycons/skycons.js}"></script>
-<!-- Flot -->
-<script th:src="@{/vendors/Flot/jquery.flot.js}"></script>
-<script th:src="@{/vendors/Flot/jquery.flot.pie.js}"></script>
-<script th:src="@{/vendors/Flot/jquery.flot.time.js}"></script>
-<script th:src="@{/vendors/Flot/jquery.flot.stack.js}"></script>
-<script th:src="@{/vendors/Flot/jquery.flot.resize.js}"></script>
-<!-- Flot plugins -->
-<script th:src="@{/vendors/flot.orderbars/js/jquery.flot.orderBars.js}"></script>
-<script th:src="@{/vendors/flot-spline/js/jquery.flot.spline.min.js}"></script>
-<script th:src="@{/vendors/flot.curvedlines/curvedLines.js}"></script>
-<!-- DateJS -->
-<script th:src="@{/vendors/DateJS/build/date.js}"></script>
-<!-- JQVMap -->
-<script th:src="@{/vendors/jqvmap/dist/jquery.vmap.js}"></script>
-<script th:src="@{/vendors/jqvmap/dist/maps/jquery.vmap.world.js}"></script>
-<script th:src="@{/vendors/jqvmap/examples/js/jquery.vmap.sampledata.js}"></script>
-<!-- bootstrap-daterangepicker -->
-<script th:src="@{/vendors/moment/min/moment.min.js}"></script>
-<script th:src="@{/vendors/bootstrap-daterangepicker/daterangepicker.js}"></script>
 
-<!-- Custom Theme Scripts -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/build/js/custom.min.js}"></script>
 <script th:src="@{/js/loader.js}"></script>
 <script>
-    function preview() {
-        document.getElementById("view-avatar").src = URL.createObjectURL(event.target.files[0]);
-    }
-    $("#saveBtn").click(function () {
-        var subjectId = $('#subjectId').val();
-        var subjectName = $('#name').val();
-        var subjectRequest = new FormData();
-        subjectRequest.append("id", subjectId);
-        subjectRequest.append("name", subjectName);
-
-        console.log(subjectId);
-        if (upload.files[0] !== undefined) {
-            subjectRequest.append("image", upload.files[0]);
+    function preview(event) {
+        if (event.target.files && event.target.files[0]) {
+            document.getElementById("view-avatar").src = URL.createObjectURL(event.target.files[0]);
         }
-        $.ajax({
-            type: 'POST',
-            url: '/api/subject',
-            data: subjectRequest,
-            enctype: 'multipart/form-data',
-            processData: false,
-            cache: false,
-            contentType: false,
-            error: function (error) {
-            },
-            success: function (response) {
-                window.location.replace('/subject/list?update='+true);
+    }
+
+    function selectGrades(scope) {
+        $('.class-cb').each(function() {
+            var g = parseInt($(this).attr('data-grade'));
+            if (scope === 'ALL') {
+                $(this).prop('checked', true);
+            } else if (scope === 'NONE') {
+                $(this).prop('checked', false);
+            } else if (scope === 'C1') {
+                $(this).prop('checked', g >= 1 && g <= 5);
+            } else if (scope === 'C2') {
+                $(this).prop('checked', g >= 6 && g <= 9);
+            } else if (scope === 'C3') {
+                $(this).prop('checked', g >= 10 && g <= 12);
             }
         });
+        validateGrades();
+    }
+
+    function validateGrades() {
+        var count = $('.class-cb:checked').length;
+        if (count === 0) {
+            $('#gradeError').show();
+            return false;
+        } else {
+            $('#gradeError').hide();
+            return true;
+        }
+    }
+
+    $('.class-cb').on('change', function() {
+        validateGrades();
+    });
+
+    $('#subjectForm').on('submit', function(e) {
+        if (!validateGrades()) {
+            e.preventDefault();
+            $('html, body').animate({ scrollTop: $('#gradeError').offset().top - 200 }, 200);
+            return false;
+        }
     });
 </script>
 </body>

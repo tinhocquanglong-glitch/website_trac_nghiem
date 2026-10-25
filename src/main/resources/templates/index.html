@@ -542,7 +542,7 @@
                         <h3>CHƯƠNG TRÌNH &amp; GIẢNG DẠY</h3>
                         <ul class="nav side-menu">
                             <!-- KHUNG MÔN HỌC & CHƯƠNG TRÌNH -->
-                            <li sec:authorize="hasAnyRole('ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
+                            <li sec:authorize="hasAnyRole('ROLE_ADMIN', 'ROLE_SCHOOL_ADMIN', 'ROLE_TEACHER')">
                                 <a>
                                     <i class="fa fa-book fas fa-book-open"></i>
                                     <span class="menu-title">Khung Danh mục Môn học</span>

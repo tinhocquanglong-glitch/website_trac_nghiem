@@ -151,9 +151,33 @@ public class SubjectController {
             ra.addFlashAttribute("error", "Bạn không có quyền chỉnh sửa môn học này!");
             return "redirect:/subject/list";
         }
+        List<SubjectClasses> existingSc = subjectClassRepository.findBySubject(subject.getId());
+        if (subject.getSchool() != null) {
+            existingSc = existingSc.stream()
+                    .filter(sc -> sc.getSchool() != null && sc.getSchool().getId().equals(subject.getSchool().getId()))
+                    .collect(java.util.stream.Collectors.toList());
+        } else {
+            existingSc = existingSc.stream()
+                    .filter(sc -> sc.getSchool() == null)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        List<Integer> assignedClassIds = existingSc.stream()
+                .filter(sc -> sc.getClasses() != null)
+                .map(sc -> sc.getClasses().getId())
+                .collect(java.util.stream.Collectors.toList());
+
+        SubjectRequest request = new SubjectRequest();
+        request.setId(subject.getId());
+        request.setName(subject.getName());
+        request.setClassIds(assignedClassIds);
+
         model.addAttribute("subject", subject);
+        model.addAttribute("subjectRequest", request);
+        model.addAttribute("assignedClassIds", assignedClassIds);
+        model.addAttribute("classesList", classesService.findAll());
         model.addAttribute("isAdmin", isAdmin());
         model.addAttribute("isSchoolAdmin", isSchoolAdmin());
+        model.addAttribute("currentSchool", currentSchool());
         return "subject/edit";
     }
 
@@ -163,8 +187,10 @@ public class SubjectController {
             return "redirect:/subject/list";
         }
         model.addAttribute("subject", new SubjectRequest());
+        model.addAttribute("classesList", classesService.findAll());
         model.addAttribute("isAdmin", isAdmin());
         model.addAttribute("isSchoolAdmin", isSchoolAdmin());
+        model.addAttribute("currentSchool", currentSchool());
         return "subject/add";
     }
 
@@ -175,8 +201,10 @@ public class SubjectController {
             return "redirect:/subject/list";
         }
         if (bindingResult.hasErrors()) {
+            model.addAttribute("classesList", classesService.findAll());
             model.addAttribute("isAdmin", isAdmin());
             model.addAttribute("isSchoolAdmin", isSchoolAdmin());
+            model.addAttribute("currentSchool", currentSchool());
             return "subject/add";
         } else {
             if (subject.getImage() != null && subject.getImage().getOriginalFilename() != null
@@ -185,9 +213,39 @@ public class SubjectController {
             }
             School school = isAdmin() ? null : currentSchool();
             subjectService.save(subject, school);
-            re.addFlashAttribute("message", "Tạo môn học thành công!");
+            String scopeMsg = isAdmin() ? "toàn quốc (tất cả các trường)" : (school != null ? "trường " + school.getName() : "");
+            re.addFlashAttribute("message", "Tạo môn học thành công cho " + scopeMsg + "!");
             return "redirect:/subject/list";
         }
+    }
+
+    @PostMapping("/update")
+    public String update(@Validated @ModelAttribute SubjectRequest subject, BindingResult bindingResult,
+                         RedirectAttributes re, Model model) {
+        if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
+        Subject existing = subjectService.findById(subject.getId());
+        if (existing == null || !subjectService.canManage(existing, currentUser(), isAdmin())) {
+            re.addFlashAttribute("error", "Bạn không có quyền chỉnh sửa môn học này!");
+            return "redirect:/subject/list";
+        }
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("subject", existing);
+            model.addAttribute("classesList", classesService.findAll());
+            model.addAttribute("isAdmin", isAdmin());
+            model.addAttribute("isSchoolAdmin", isSchoolAdmin());
+            model.addAttribute("currentSchool", currentSchool());
+            return "subject/edit";
+        }
+        if (subject.getImage() != null && subject.getImage().getOriginalFilename() != null
+                && subject.getImage().getOriginalFilename().isEmpty()) {
+            subject.setImage(null);
+        }
+        School school = existing.getSchool();
+        subjectService.save(subject, school);
+        re.addFlashAttribute("message", "Cập nhật môn học thành công!");
+        return "redirect:/subject/list";
     }
 
     @GetMapping("/delete/{id}")

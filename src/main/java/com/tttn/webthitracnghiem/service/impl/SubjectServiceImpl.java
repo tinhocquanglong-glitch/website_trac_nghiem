@@ -5,6 +5,10 @@ import com.tttn.webthitracnghiem.model.Subject;
 import com.tttn.webthitracnghiem.model.SubjectRequest;
 import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.repository.SubjectRepository;
+import com.tttn.webthitracnghiem.model.Classes;
+import com.tttn.webthitracnghiem.model.SubjectClasses;
+import com.tttn.webthitracnghiem.repository.ClassesRepository;
+import com.tttn.webthitracnghiem.repository.SubjectClassRepository;
 import com.tttn.webthitracnghiem.service.IFileService;
 import com.tttn.webthitracnghiem.service.ISubjectService;
 import org.modelmapper.ModelMapper;
@@ -25,6 +29,10 @@ public class SubjectServiceImpl implements ISubjectService {
     private IFileService fileService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private SubjectClassRepository subjectClassRepository;
+    @Autowired
+    private ClassesRepository classesRepository;
 
     @Override
     public Iterable<Subject> findAll() {
@@ -127,7 +135,37 @@ public class SubjectServiceImpl implements ISubjectService {
             avatarPath = oldUrl;
         }
         subject.setImage(avatarPath);
-        return subjectRepository.save(subject);
+        Subject saved = subjectRepository.save(subject);
+        if (subjectRequest.getClassIds() != null && !subjectRequest.getClassIds().isEmpty()) {
+            syncSubjectClasses(saved, subjectRequest.getClassIds(), school);
+        }
+        return saved;
+    }
+
+    private void syncSubjectClasses(Subject subject, List<Integer> classIds, School school) {
+        if (classIds == null || classIds.isEmpty()) return;
+        Integer schoolId = school != null ? school.getId() : null;
+        for (Integer classId : classIds) {
+            if (classId == null) continue;
+            Optional<Classes> optClass = classesRepository.findById(classId);
+            if (optClass.isEmpty()) continue;
+            Classes clazz = optClass.get();
+
+            Optional<SubjectClasses> existing;
+            if (schoolId == null) {
+                existing = subjectClassRepository.findByClassAndSubjectAndSchoolIsNull(classId, subject.getId());
+            } else {
+                existing = subjectClassRepository.findByClassAndSubjectAndSchool(classId, subject.getId(), schoolId);
+            }
+
+            if (existing.isEmpty()) {
+                SubjectClasses sc = new SubjectClasses();
+                sc.setSubject(subject);
+                sc.setClasses(clazz);
+                sc.setSchool(school);
+                subjectClassRepository.save(sc);
+            }
+        }
     }
 
     @Override

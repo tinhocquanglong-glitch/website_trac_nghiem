@@ -11,6 +11,15 @@ public class SubjectRequest {
     private MultipartFile image;
     private Set<Exam> exams;
     private Set<Question> questions;
+    private java.util.List<Integer> classIds = new java.util.ArrayList<>();
+
+    public java.util.List<Integer> getClassIds() {
+        return classIds;
+    }
+
+    public void setClassIds(java.util.List<Integer> classIds) {
+        this.classIds = classIds;
+    }
 
     public SubjectRequest() {
     }
