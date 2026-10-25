@@ -437,24 +437,11 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
 
     private boolean isGradeAllowed(User owner, int grade) {
         if (hasRole(owner, "ROLE_ADMIN") || hasRole(owner, "ROLE_SCHOOL_ADMIN")) return true;
+        if (owner == null) return true;
         if (owner.getSchoolLevel() != null) {
             return grade >= minGrade(owner.getSchoolLevel()) && grade <= maxGrade(owner.getSchoolLevel());
         }
-        if (owner.getSchool() != null && owner.getSchool().getName() != null) {
-            String sname = owner.getSchool().getName().toUpperCase();
-            if (sname.contains("TIỂU HỌC") || sname.contains("TIEU HOC") || sname.contains(" TH ")) {
-                return grade >= 1 && grade <= 5;
-            }
-            if (sname.contains("THCS") || sname.contains("TRUNG HỌC CƠ SỞ")) {
-                return grade >= 6 && grade <= 9;
-            }
-            if (sname.contains("THPT") || sname.contains("TRUNG HỌC PHỔ THÔNG")) {
-                return grade >= 10 && grade <= 12;
-            }
-        }
-        boolean hasInvolved = trackingClassRepository.findClassesByTeacherInvolved(owner.getId()).stream()
-                .anyMatch(item -> item.getGrade() != null && item.getGrade() == grade);
-        if (hasInvolved) return true;
+        // Khi owner.getSchoolLevel() == null: tài khoản là Toàn cấp / Liên cấp (Khối 1 đến 12)
         return true;
     }
 

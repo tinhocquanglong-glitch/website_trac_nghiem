@@ -381,6 +381,23 @@ class LessonPlanServiceImplTest {
     }
 
     @Test
+    void gradesForMultiLevelTeacherIncludesAllGrades() {
+        User teacher = user("teacher_multilevel");
+        teacher.setSchoolLevel(null);
+        School school = new School();
+        school.setName("Trường Phổ thông nội trú Tiểu học và THCS Ia Rve");
+        teacher.setSchool(school);
+        Classes grade3 = new Classes(1, "Khối 3", 3, null);
+        Classes grade8 = new Classes(2, "Khối 8", 8, null);
+        Classes grade11 = new Classes(3, "Khối 11", 11, null);
+        when(classesRepository.findAll()).thenReturn(List.of(grade3, grade8, grade11));
+
+        assertThat(service.findGrades(teacher, false))
+                .extracting(Classes::getGrade)
+                .containsExactly(3, 8, 11);
+    }
+
+    @Test
     void targetClassesAreLimitedToSelectedGradeAndTeacherSchool() {
         User teacher = user("teacher");
         teacher.setSchoolLevel(3);

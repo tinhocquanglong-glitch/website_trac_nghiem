@@ -332,6 +332,7 @@
                                 <span th:if="${teacher.schoolLevel == 1}" class="badge-level">Tiểu học</span>
                                 <span th:if="${teacher.schoolLevel == 2}" class="badge-level">THCS</span>
                                 <span th:if="${teacher.schoolLevel == 3}" class="badge-level">THPT</span>
+                                <span th:if="${teacher.schoolLevel == null}" class="badge-level" style="background:#e8f4fd;color:#0284c7;">Toàn cấp</span>
                             </div>
                             <div class="teacher-meta mt-1">
                                 <i class="fas fa-envelope mr-1"></i>

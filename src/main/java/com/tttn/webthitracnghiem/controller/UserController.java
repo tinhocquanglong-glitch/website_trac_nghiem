@@ -337,7 +337,10 @@ public class UserController {
                 schoolId = currentUser.getSchool().getId();
             }
             roleType = "ROLE_TEACHER";
-            schoolLevel = currentUser.getSchoolLevel(); // Giáo viên kế thừa cấp học từ Admin Trường
+            if (currentUser.getSchoolLevel() != null) {
+                schoolLevel = currentUser.getSchoolLevel(); // Trường đơn cấp: kế thừa cấp học của Admin Trường
+            }
+            // Trường toàn cấp/liên cấp (currentUser.getSchoolLevel() == null): nhận schoolLevel từ form (nếu để trống = toàn cấp)
         }
 
         if (schoolId == null) {

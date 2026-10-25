@@ -95,7 +95,7 @@
                                     <small class="text-muted">Admin Trường có quyền quản lý giáo viên, học sinh và các lớp thuộc trường của mình.</small>
                                 </div>
 
-                                <div class="form-group" th:if="${isAdmin}">
+                                <div class="form-group" th:if="${isAdmin or (isSchoolAdmin and currentUser != null and currentUser.schoolLevel == null)}">
                                     <label>Khoanh vùng Cấp học <span class="text-danger">*</span></label>
                                     <select class="form-control" name="schoolLevel" id="schoolLevelSelect">
                                         <option value="">-- Toàn cấp / Liên cấp (Khối 1 đến 12) --</option>
@@ -103,10 +103,10 @@
                                         <option value="2" th:selected="${selectedSchoolLevel == 2}">Cấp 2: THCS (Khối 6 đến 9)</option>
                                         <option value="3" th:selected="${selectedSchoolLevel == 3}">Cấp 3: THPT (Khối 10 đến 12)</option>
                                     </select>
-                                    <small class="text-muted">Khoanh vùng phạm vi: Tài khoản được tạo chỉ có tác dụng quản lý và tạo lớp trong các khối của cấp học này.</small>
+                                    <small class="text-muted">Khoanh vùng phạm vi: Chọn cấp học hoạt động của giáo viên (hoặc để Toàn cấp nếu giáo viên giảng dạy liên cấp).</small>
                                 </div>
 
-                                <div class="form-group" th:if="${isSchoolAdmin and currentUser != null}">
+                                <div class="form-group" th:if="${isSchoolAdmin and currentUser != null and currentUser.schoolLevel != null}">
                                     <label>Cấp học công tác</label>
                                     <input type="text" class="form-control" th:value="${currentUser.schoolLevelName}" readonly>
                                     <small class="text-muted">Giáo viên sẽ tự động hoạt động trong cấp học của trường bạn.</small>
