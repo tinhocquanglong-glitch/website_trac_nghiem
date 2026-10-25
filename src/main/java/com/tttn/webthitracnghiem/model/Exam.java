@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -65,8 +67,9 @@ public class Exam {
     @Column(name = "target_grade")
     private Integer targetGrade; // 1 to 12
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_class_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private StudentTrackingClass targetClass;
 
     @Column(name = "start_time")

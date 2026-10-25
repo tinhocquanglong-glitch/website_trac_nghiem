@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.validator.constraints.Length;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import javax.persistence.*;
 import javax.print.Doc;
 import javax.validation.constraints.NotBlank;
@@ -77,8 +79,9 @@ public class User {
     @JoinColumn(name = "school_id")
     private School school;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private StudentTrackingClass trackingClass;
 
     @Column(name = "school_level")
