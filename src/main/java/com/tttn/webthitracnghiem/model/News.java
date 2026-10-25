@@ -1,4 +1,6 @@
 package com.tttn.webthitracnghiem.model;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.NotFound;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -18,13 +20,15 @@ public class News {
     private Date lastModify;
     private String image;
     private long view;
-    @ManyToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "author",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private User users;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private School school;
 
     @Column(name = "is_public")

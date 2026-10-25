@@ -1,4 +1,6 @@
 package com.tttn.webthitracnghiem.model;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.NotFound;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -17,12 +19,14 @@ public class Document {
     private String avatar;
     @Column(columnDefinition = "text")
     private String content;
-    @ManyToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private User users;
-    @ManyToOne(targetEntity = Subject.class)
+    @ManyToOne(targetEntity = Subject.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private Subject subject;
 
@@ -30,8 +34,9 @@ public class Document {
     @Column(name = "grade")
     private Integer grade;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private School school;
 
     @Column(name = "is_public")

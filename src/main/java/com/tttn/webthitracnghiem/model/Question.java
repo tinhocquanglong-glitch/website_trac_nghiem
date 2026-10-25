@@ -1,4 +1,6 @@
 package com.tttn.webthitracnghiem.model;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.NotFound;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -25,31 +27,36 @@ public class Question {
     private int ans;
     private int chose;
     private int level;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private Lesson lesson;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_plan_lesson_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private LessonPlanLesson lessonPlanLesson;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private Subject subject;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private Classes classes;
     @ManyToMany(mappedBy = "questions")
     @JsonManagedReference
     private Set<Exam> exams;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private School school;
 
     @Column(name = "is_public")
@@ -74,6 +81,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private User author;
 

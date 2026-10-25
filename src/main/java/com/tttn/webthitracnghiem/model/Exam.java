@@ -30,16 +30,18 @@ public class Exam {
     @NotBlank(message = "Tên đề thi không được bỏ trống")
     private String nameExam;
 
-    @ManyToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id", referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private User users;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE)
     @JsonManagedReference
     private List<Result> results;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private Lesson lesson;
 
@@ -54,8 +56,9 @@ public class Exam {
     @JsonBackReference
     private List<Question> questions;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private School school;
 
     @Column(name = "is_public")
@@ -90,6 +93,7 @@ public class Exam {
     // Curriculum scope: subject, grade and every lesson the exam covers. `lesson` stays the first scope lesson.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonIgnore
     private Subject subject;
 

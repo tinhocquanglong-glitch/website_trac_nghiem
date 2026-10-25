@@ -1,4 +1,6 @@
 package com.tttn.webthitracnghiem.model;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.NotFound;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import org.springframework.stereotype.Component;
@@ -17,14 +19,16 @@ public class Result {
     private Timestamp startTime;
     private Timestamp endTime;
 
-    @ManyToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "username",referencedColumnName = "id" )
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private User users;
 
 
-    @ManyToOne(targetEntity = Exam.class)
+    @ManyToOne(targetEntity = Exam.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_exam",referencedColumnName = "id")
+    @NotFound(action = NotFoundAction.IGNORE)
     @JsonBackReference
     private Exam exam;
 
