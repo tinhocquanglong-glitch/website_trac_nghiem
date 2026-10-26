@@ -25,6 +25,7 @@ import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -415,6 +417,112 @@ class StudentTrackingControllerTest {
             SecurityContextHolder.clearContext();
         }
         verify(service).importWorkbook(any(), eq(1), eq(9), eq(3));
+    }
+
+    @Test
+    void adminCanOpenSubjectBookOfClass() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        IClassAssignmentService assignmentService = mock(IClassAssignmentService.class);
+        User subjectTeacher = user("gvbm");
+        subjectTeacher.setFullName("Thầy Toán");
+        User adminUser = user("admin");
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setClassName("10A1");
+        trackingClass.setHomeroomTeacher(user("gvcn"));
+
+        TrackingSheetForm subjectBook = new TrackingSheetForm();
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(service.defaultMonth(1)).thenReturn(9);
+        when(service.monthsForSemester(1)).thenReturn(List.of(9, 10, 11, 12, 1));
+        when(service.getSheet(7, 1, 9, "gvbm", 5)).thenReturn(subjectBook);
+        when(userService.findById("admin")).thenReturn(adminUser);
+        when(assignmentService.findByClassId(7)).thenReturn(List.of(assignment(trackingClass, 5, "Toán", subjectTeacher)));
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, assignmentService)).build();
+
+        authenticate("admin", "ROLE_ADMIN");
+        try {
+            mvc.perform(get("/student-tracking/classes/7").param("subjectId", "5"))
+                    .andExpect(status().isOk())
+                    .andExpect(model().attribute("sheetForm", subjectBook))
+                    .andExpect(model().attribute("homeroomBook", false))
+                    .andExpect(model().attribute("bookSubjectId", 5))
+                    .andExpect(model().attribute("bookSubjectName", "Toán"))
+                    .andExpect(model().attribute("bookTeacherId", "gvbm"))
+                    .andExpect(model().attribute("bookTeacherName", "Thầy Toán"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service).getSheet(7, 1, 9, "gvbm", 5);
+    }
+
+    @Test
+    void homeroomTeacherCannotAssignOrDeleteSubjectTeacher() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        IClassAssignmentService assignmentService = mock(IClassAssignmentService.class);
+        User gvcn = user("gvcn");
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setHomeroomTeacher(gvcn);
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(userService.findById("gvcn")).thenReturn(gvcn);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, assignmentService)).build();
+
+        authenticate("gvcn", "ROLE_TEACHER");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/assignments")
+                            .param("subjectId", "5").param("teacherId", "gvbm"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Chỉ Ban giám hiệu / Quản trị viên")));
+
+            mvc.perform(post("/student-tracking/classes/7/assignments/10/delete"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Chỉ Ban giám hiệu / Quản trị viên")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(assignmentService, never()).assignTeacher(anyInt(), anyInt(), anyString());
+        verify(assignmentService, never()).removeAssignment(anyInt());
+    }
+
+    @Test
+    void adminCanAssignAndRemoveSubjectTeacher() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        IClassAssignmentService assignmentService = mock(IClassAssignmentService.class);
+        User admin = user("admin");
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(userService.findById("admin")).thenReturn(admin);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, assignmentService)).build();
+
+        authenticate("admin", "ROLE_ADMIN");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/assignments")
+                            .param("subjectId", "5").param("teacherId", "gvbm"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("message", org.hamcrest.Matchers.containsString("Đã phân công giáo viên bộ môn")));
+
+            mvc.perform(post("/student-tracking/classes/7/assignments/10/delete"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("message", org.hamcrest.Matchers.containsString("Đã hủy phân công")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(assignmentService).assignTeacher(7, 5, "gvbm");
+        verify(assignmentService).removeAssignment(10);
     }
 
     private static void authenticate(String username, String role) {

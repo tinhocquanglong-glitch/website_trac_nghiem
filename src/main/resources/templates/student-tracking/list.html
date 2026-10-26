@@ -46,13 +46,13 @@
                             th:text="|${selectedSchool.name} - Chọn khối|"></h2>
                         <h2 th:if="${selectedSchool != null and selectedGrade != null}"
                             th:text="|${selectedSchool.name} - Khối ${selectedGrade}|"></h2>
-                        <p th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch != true}">Nhập địa chỉ để tìm trường, sau đó chọn trường để tiếp tục đến danh sách khối.</p>
+                        <p th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch != true}">Chọn trường bên dưới hoặc tìm theo địa chỉ để xem sổ theo dõi các khối lớp.</p>
                         <p th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true}">Chọn một trường trong kết quả tìm kiếm để tiếp tục đến danh sách khối.</p>
                         <p th:if="${selectedUnassigned == true}">Các lớp này chưa được gắn với trường nên được tách riêng khỏi thống kê từng trường.</p>
                         <p th:if="${selectedSchool != null and selectedGrade == null}">Chọn khối để mở sổ theo dõi các lớp thuộc trường này.</p>
                     </div>
 
-                    <div class="tracking-hierarchy-grid" th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true and !#lists.isEmpty(trackingSchools)}">
+                    <div class="tracking-hierarchy-grid" th:if="${selectedSchool == null and selectedUnassigned != true and !#lists.isEmpty(trackingSchools)}">
                         <a class="tracking-hierarchy-item" th:each="school : ${trackingSchools}"
                            th:href="@{/student-tracking(schoolId=${school.id},address=${addressKeyword})}">
                             <span class="tracking-hierarchy-item-title" th:text="${school.name}"></span>
@@ -63,8 +63,8 @@
                             </span>
                         </a>
                     </div>
-                    <p class="tracking-empty" th:if="${selectedSchool == null and selectedUnassigned != true and hasAddressSearch == true and #lists.isEmpty(trackingSchools)}" role="status">
-                        Không tìm thấy trường phù hợp với địa chỉ đã nhập.
+                    <p class="tracking-empty" th:if="${selectedSchool == null and selectedUnassigned != true and #lists.isEmpty(trackingSchools)}" role="status">
+                        Không tìm thấy trường nào phù hợp.
                     </p>
 
                     <a class="tracking-hierarchy-item tracking-hierarchy-item-warning"

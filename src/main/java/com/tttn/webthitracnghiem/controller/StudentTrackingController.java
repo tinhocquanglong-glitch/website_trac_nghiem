@@ -110,6 +110,8 @@ public class StudentTrackingController {
                         trackingSchools.add(school);
                     }
                 }
+            } else {
+                trackingSchools.addAll(activeSchools);
             }
             List<StudentTrackingClass> allClasses = trackingService.listClasses();
             unassignedClasses = trackingService.listClassesWithoutSchool();
@@ -239,6 +241,12 @@ public class StudentTrackingController {
         String exportSubjectName = null;
 
         if (classId != null) {
+            List<ClassSubjectAssignment> classAssignments = (assignmentService != null)
+                    ? assignmentService.findByClassId(classId) : List.of();
+            if (classAssignments == null) {
+                classAssignments = List.of();
+            }
+
             if (exportSubjectId == null && !canManage && currentUser != null) {
                 List<ClassSubjectAssignment> myAssignments = assignmentsOf(currentUser, classId);
                 if (!myAssignments.isEmpty()) {
@@ -247,11 +255,21 @@ public class StudentTrackingController {
             }
 
             if (exportSubjectId != null) {
-                Subject subject = subjectService != null ? subjectService.findById(exportSubjectId) : null;
-                if (subject != null) {
-                    exportSubjectName = subject.getName();
+                final Integer sId = exportSubjectId;
+                ClassSubjectAssignment assignment = classAssignments.stream()
+                        .filter(a -> a.getSubject() != null && sId.equals(a.getSubject().getId()))
+                        .findFirst()
+                        .orElse(null);
+                if (assignment != null) {
+                    exportSubjectName = assignment.getSubject().getName();
+                    exportTeacherId = assignment.getTeacher() != null ? assignment.getTeacher().getId() : null;
+                } else if (subjectService != null) {
+                    Subject subject = subjectService.findById(exportSubjectId);
+                    if (subject != null) {
+                        exportSubjectName = subject.getName();
+                    }
+                    exportTeacherId = currentUser != null ? currentUser.getId() : null;
                 }
-                exportTeacherId = currentUser != null ? currentUser.getId() : null;
             }
         }
 
@@ -369,19 +387,43 @@ public class StudentTrackingController {
                 && trackingClass.getHomeroomTeacher().getId().equals(currentUser.getId()));
         boolean canManage = isAdmin || isSchoolAdmin || isHomeroom;
 
-        // Each subject teacher writes in their own book; only managers open the homeroom book.
-        List<ClassSubjectAssignment> myAssignments = assignmentsOf(currentUser, classId);
-        ClassSubjectAssignment bookAssignment = myAssignments.stream()
-                .filter(a -> subjectId != null && a.getSubject() != null && subjectId.equals(a.getSubject().getId()))
-                .findFirst()
-                .orElse(canManage || myAssignments.isEmpty() ? null : myAssignments.get(0));
-        if (bookAssignment == null && !canManage) {
-            redirectAttributes.addFlashAttribute("error", "Bạn chưa được phân công dạy môn nào ở lớp "
-                    + trackingClass.getClassName() + " nên không thể mở sổ theo dõi của lớp này.");
-            return "redirect:/student-tracking";
+        List<ClassSubjectAssignment> classAssignments = (assignmentService != null)
+                ? assignmentService.findByClassId(classId) : List.of();
+        if (classAssignments == null) {
+            classAssignments = List.of();
         }
+        List<ClassSubjectAssignment> myAssignments = assignmentsOf(currentUser, classId);
+
+        // Danh sách sổ môn khả dụng:
+        // Quản lý (Admin, BGH, GVCN) được xem tất cả các môn đã phân công của lớp.
+        // GVBM chỉ được xem các môn mà mình được phân công dạy ở lớp này.
+        List<ClassSubjectAssignment> availableBooks = canManage ? classAssignments : myAssignments;
+
+        ClassSubjectAssignment bookAssignment = null;
+        if (subjectId != null) {
+            bookAssignment = availableBooks.stream()
+                    .filter(a -> a.getSubject() != null && subjectId.equals(a.getSubject().getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (bookAssignment == null) {
+                redirectAttributes.addFlashAttribute("error", "Môn học này chưa được phân công hoặc bạn không có quyền xem sổ môn này.");
+                return "redirect:/student-tracking/classes/" + classId + "?semester=" + semester + "&month=" + selectedMonth;
+            }
+        } else if (!canManage) {
+            if (!myAssignments.isEmpty()) {
+                bookAssignment = myAssignments.get(0);
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Bạn chưa được phân công dạy môn nào ở lớp "
+                        + trackingClass.getClassName() + " nên không thể mở sổ theo dõi của lớp này.");
+                return "redirect:/student-tracking";
+            }
+        }
+
         Integer bookSubjectId = bookAssignment == null ? null : bookAssignment.getSubject().getId();
-        String bookTeacherId = bookAssignment == null ? null : currentUser.getId();
+        String bookSubjectName = bookAssignment == null ? null : (bookAssignment.getSubject() != null ? bookAssignment.getSubject().getName() : null);
+        String bookTeacherId = bookAssignment == null ? null : (bookAssignment.getTeacher() != null ? bookAssignment.getTeacher().getId() : null);
+        String bookTeacherName = bookAssignment == null ? null : (bookAssignment.getTeacher() != null ? bookAssignment.getTeacher().getFullName() : null);
+        boolean isAssignedTeacherOfBook = (currentUser != null && bookTeacherId != null && bookTeacherId.equals(currentUser.getId()));
 
         model.addAttribute("trackingClass", trackingClass);
         model.addAttribute("trackingClasses", trackingService.listClasses());
@@ -390,10 +432,16 @@ public class StudentTrackingController {
         model.addAttribute("month", selectedMonth);
         model.addAttribute("months", trackingService.monthsForSemester(semester));
         model.addAttribute("attendanceStatuses", AttendanceStatus.values());
+        model.addAttribute("availableBooks", availableBooks);
+        model.addAttribute("assignments", classAssignments);
         model.addAttribute("myAssignments", myAssignments);
         model.addAttribute("homeroomBook", bookAssignment == null);
         model.addAttribute("bookSubjectId", bookSubjectId);
-        model.addAttribute("bookSubjectName", bookAssignment == null ? null : bookAssignment.getSubject().getName());
+        model.addAttribute("bookSubjectName", bookSubjectName);
+        model.addAttribute("bookTeacherId", bookTeacherId);
+        model.addAttribute("bookTeacherName", bookTeacherName);
+        model.addAttribute("isAssignedTeacherOfBook", isAssignedTeacherOfBook);
+        model.addAttribute("canEditThisBook", (bookAssignment == null ? canManage : (isAssignedTeacherOfBook || canManage)));
 
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("isHomeroom", isHomeroom);
@@ -552,8 +600,11 @@ public class StudentTrackingController {
                                        @RequestParam Integer subjectId,
                                        @RequestParam String teacherId,
                                        RedirectAttributes redirectAttributes) {
-        if (!checkCanManageClass(classId)) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ GVCN hoặc Quản trị viên mới có quyền phân công giáo viên bộ môn.");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        if (!isAdmin && !isSchoolAdmin) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên mới có quyền phân công giáo viên bộ môn.");
             return "redirect:/student-tracking/classes/" + classId;
         }
         if (assignmentService == null) {
@@ -573,8 +624,11 @@ public class StudentTrackingController {
     public String removeAssignment(@PathVariable Integer classId,
                                    @PathVariable Integer assignmentId,
                                    RedirectAttributes redirectAttributes) {
-        if (!checkCanManageClass(classId)) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ GVCN hoặc Quản trị viên mới có quyền hủy phân công bộ môn.");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        if (!isAdmin && !isSchoolAdmin) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên mới có quyền hủy phân công giáo viên bộ môn.");
             return "redirect:/student-tracking/classes/" + classId;
         }
         if (assignmentService == null) {
@@ -722,15 +776,27 @@ public class StudentTrackingController {
             } else {
                 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                 User currentUser = auth != null && userService != null ? userService.findById(auth.getName()) : null;
-                ClassSubjectAssignment assignment = assignmentsOf(currentUser, classId).stream()
+                List<ClassSubjectAssignment> classAssignments = (assignmentService != null)
+                        ? assignmentService.findByClassId(classId) : List.of();
+                if (classAssignments == null) {
+                    classAssignments = List.of();
+                }
+                ClassSubjectAssignment assignment = classAssignments.stream()
                         .filter(a -> a.getSubject() != null && subjectId.equals(a.getSubject().getId()))
                         .findFirst()
                         .orElse(null);
                 if (assignment == null) {
-                    redirectAttributes.addFlashAttribute("error", "Bạn không được phân công dạy môn này ở lớp.");
+                    redirectAttributes.addFlashAttribute("error", "Môn học này chưa được phân công cho giáo viên nào ở lớp.");
                     return redirectToSheet(classId, semester, month);
                 }
-                trackingService.saveSheet(classId, sheetForm, currentUser.getId(), subjectId);
+                String targetTeacherId = assignment.getTeacher() != null ? assignment.getTeacher().getId() : null;
+                boolean isAssignedTeacher = currentUser != null && targetTeacherId != null && targetTeacherId.equals(currentUser.getId());
+                boolean canManage = checkCanManageClass(classId);
+                if (!isAssignedTeacher && !canManage) {
+                    redirectAttributes.addFlashAttribute("error", "Bạn không có quyền chỉnh sửa sổ môn học này.");
+                    return redirectToSheet(classId, semester, month, subjectId);
+                }
+                trackingService.saveSheet(classId, sheetForm, targetTeacherId, subjectId);
                 redirectAttributes.addFlashAttribute("message", "Đã lưu sổ môn " + assignment.getSubject().getName()
                         + " tháng " + month + ".");
             }

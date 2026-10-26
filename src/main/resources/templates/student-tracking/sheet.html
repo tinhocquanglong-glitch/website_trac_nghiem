@@ -120,8 +120,8 @@
                         <span class="badge badge-secondary" th:text="|${assignments != null ? assignments.size() : 0} môn được phân công|"></span>
                     </div>
                     <div class="card-body" style="padding: 15px;">
-                        <!-- Form phân công (chỉ hiện với GVCN hoặc Admin) -->
-                        <div th:if="${canManage == true and schoolTeachers != null and !schoolTeachers.isEmpty() and allSubjects != null and !allSubjects.isEmpty()}" style="margin-bottom: 15px;">
+                        <!-- Form phân công (chỉ hiện với Admin / School Admin, GVCN chỉ được xem) -->
+                        <div th:if="${isAdminOrSchoolAdmin == true and schoolTeachers != null and !schoolTeachers.isEmpty() and allSubjects != null and !allSubjects.isEmpty()}" style="margin-bottom: 15px;">
                             <form method="post" th:action="@{/student-tracking/classes/{id}/assignments(id=${trackingClass.id})}" class="form-inline" style="gap: 10px; display: flex; flex-wrap: wrap;">
                                 <div class="form-group mb-0">
                                     <label for="assignSubject" class="sr-only">Môn học</label>
@@ -147,7 +147,13 @@
                                 <div th:each="asg : ${assignments}" class="badge badge-light" style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; display: inline-flex; align-items: center; gap: 8px;">
                                     <strong th:text="${asg.subject != null ? asg.subject.name : 'Môn học'}"></strong>:
                                     <span th:text="${asg.teacher != null ? asg.teacher.fullName : 'Chưa rõ'}"></span>
-                                    <form th:if="${canManage == true}" method="post" th:action="@{/student-tracking/classes/{classId}/assignments/{aid}/delete(classId=${trackingClass.id},aid=${asg.id})}" style="display:inline; margin:0;" onsubmit="return confirm('Hủy phân công môn này?');">
+                                    <!-- Nút xem nhanh sổ môn -->
+                                    <a th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month},subjectId=${asg.subject.id})}"
+                                       class="btn btn-xs btn-outline-primary" style="padding: 1px 6px; font-size: 11px; margin-left: 2px;" title="Xem sổ theo dõi môn này">
+                                        <i class="fa fa-book"></i> Xem sổ
+                                    </a>
+                                    <!-- Nút xóa phân công CHỈ ADMIN / SCHOOL ADMIN MỚI THẤY (GVCN không có quyền này) -->
+                                    <form th:if="${isAdminOrSchoolAdmin == true}" method="post" th:action="@{/student-tracking/classes/{classId}/assignments/{aid}/delete(classId=${trackingClass.id},aid=${asg.id})}" style="display:inline; margin:0;" onsubmit="return confirm('Hủy phân công môn này?');">
                                         <button type="submit" class="btn btn-link text-danger p-0 m-0" style="font-size: 12px; line-height: 1;" title="Hủy phân công">
                                             <i class="fa fa-times"></i>
                                         </button>
@@ -161,28 +167,43 @@
                     </div>
                 </div>
 
-                <!-- Chọn sổ: sổ chủ nhiệm (GVCN / BGH) hoặc sổ riêng của từng môn mình dạy -->
+                <!-- Chọn sổ: sổ chủ nhiệm (GVCN / BGH / Admin) hoặc sổ riêng của từng bộ môn -->
                 <div class="card mb-3" style="border-left: 5px solid #28a745; border-radius: 4px;">
                     <div class="card-body p-3">
-                        <div style="font-size: 14px; margin-bottom: 8px;">
+                        <div style="font-size: 14px; margin-bottom: 10px;">
                             <i class="fa fa-book text-success"></i>
-                            <strong>Đang ghi:</strong>
+                            <strong>Đang xem:</strong>
                             <span th:if="${homeroomBook}" class="text-success font-weight-bold">Sổ chủ nhiệm của lớp</span>
-                            <span th:unless="${homeroomBook}" class="text-success font-weight-bold"
-                                  th:text="|Sổ bộ môn ${bookSubjectName} (của riêng bạn)|">Sổ bộ môn</span>
-                            <span th:unless="${homeroomBook}" class="small text-muted d-block">
-                                Điểm và nhận xét môn này được lưu riêng, không ghi đè sổ chủ nhiệm. Điểm danh do GVCN ghi.
+                            <th:block th:unless="${homeroomBook}">
+                                <span class="text-success font-weight-bold"
+                                      th:if="${isAssignedTeacherOfBook == true or canManage != true or (isAssignedTeacherOfBook == null and myAssignments != null and !#lists.isEmpty(myAssignments))}"
+                                      th:text="|Sổ bộ môn ${bookSubjectName} (của riêng bạn)|">Sổ bộ môn</span>
+                                <span class="text-success font-weight-bold"
+                                      th:unless="${isAssignedTeacherOfBook == true or canManage != true or (isAssignedTeacherOfBook == null and myAssignments != null and !#lists.isEmpty(myAssignments))}"
+                                      th:text="|Sổ bộ môn: ${bookSubjectName}|">Sổ bộ môn</span>
+                                <span class="badge badge-info ml-2" th:if="${bookTeacherName != null}" th:text="|GV phụ trách: ${bookTeacherName}|"></span>
+                                <span class="badge badge-success ml-1" th:if="${isAssignedTeacherOfBook == true}">Môn bạn phụ trách</span>
+                                <span class="badge badge-secondary ml-1" th:if="${isAssignedTeacherOfBook != true and canManage == true}">Chế độ xem sổ bộ môn</span>
+                            </th:block>
+                            <span class="small text-muted d-block mt-1">
+                                Điểm và nhận xét từng môn học được lưu độc lập, không ghi đè sổ chủ nhiệm. Điểm danh chuyên cần do GVCN ghi.
                             </span>
                         </div>
-                        <nav class="semester-tabs" aria-label="Chọn sổ"
-                             th:if="${(canManage == true ? 1 : 0) + (myAssignments != null ? myAssignments.size() : 0) > 1}">
-                            <a th:if="${canManage == true}" th:classappend="${homeroomBook} ? 'active'"
-                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month})}">Sổ chủ nhiệm</a>
-                            <a th:each="asg : ${myAssignments}"
-                               th:classappend="${asg.subject.id == bookSubjectId} ? 'active'"
-                               th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month},subjectId=${asg.subject.id})}"
-                               th:text="|Môn ${asg.subject.name}|">Môn</a>
-                        </nav>
+                        <th:block th:with="booksList=${availableBooks != null ? availableBooks : myAssignments}">
+                            <nav class="semester-tabs" aria-label="Chọn sổ" style="display: flex; flex-wrap: wrap; gap: 4px;"
+                                 th:if="${(canManage == true ? 1 : 0) + (booksList != null ? booksList.size() : 0) > 1}">
+                                <a th:if="${canManage == true}" th:classappend="${homeroomBook} ? 'active'"
+                                   th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month})}">
+                                    <i class="fa fa-bookmark"></i> Sổ chủ nhiệm
+                                </a>
+                                <a th:each="asg : ${booksList}"
+                                   th:classappend="${asg.subject != null and asg.subject.id == bookSubjectId} ? 'active'"
+                                   th:href="@{/student-tracking/classes/{id}(id=${trackingClass.id},semester=${semester},month=${month},subjectId=${asg.subject.id})}">
+                                    <span th:text="|Môn ${asg.subject != null ? asg.subject.name : ''}|"></span>
+                                    <span th:if="${canManage == true and asg.teacher != null}" class="small" th:text="|(${asg.teacher.fullName})|"></span>
+                                </a>
+                            </nav>
+                        </th:block>
                     </div>
                 </div>
 
