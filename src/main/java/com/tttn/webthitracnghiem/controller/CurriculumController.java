@@ -45,6 +45,8 @@ public class CurriculumController {
     private final ExamRepository examRepository;
     private final ILessonPlanService lessonPlanService;
     private final IUserService userService;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
 
     public CurriculumController(CurriculumService curriculumService,
                                 SubjectClassRepository subjectClassRepository,
@@ -165,7 +167,25 @@ public class CurriculumController {
 
     @PostMapping("/chapters/{id}/delete")
     public String deleteChapter(@PathVariable int id, @RequestParam int subjectClassId,
-                                @RequestParam(required = false) Integer schoolId, RedirectAttributes ra) {
+                                @RequestParam(required = false) Integer schoolId,
+                                @RequestParam(value = "password", required = false) String password,
+                                RedirectAttributes ra) {
+        User user = currentUser();
+        if (user == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return "redirect:/login";
+        }
+        if (!isAdmin() && !isSchoolAdmin()) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống hoặc Hiệu trưởng mới có quyền xóa chủ đề trong chương trình học!");
+            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        }
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), user.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa chủ đề.");
+            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        }
         return run(ra, subjectClassId, schoolId, "Đã xóa chủ đề.",
                 () -> curriculumService.deleteChapter(currentUser(), id));
     }
@@ -193,7 +213,25 @@ public class CurriculumController {
 
     @PostMapping("/lessons/{id}/delete")
     public String deleteLesson(@PathVariable int id, @RequestParam int subjectClassId,
-                               @RequestParam(required = false) Integer schoolId, RedirectAttributes ra) {
+                               @RequestParam(required = false) Integer schoolId,
+                               @RequestParam(value = "password", required = false) String password,
+                               RedirectAttributes ra) {
+        User user = currentUser();
+        if (user == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return "redirect:/login";
+        }
+        if (!isAdmin() && !isSchoolAdmin()) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống hoặc Hiệu trưởng mới có quyền xóa bài học trong chương trình học!");
+            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        }
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), user.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa bài học.");
+            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        }
         return run(ra, subjectClassId, schoolId, "Đã xóa bài.",
                 () -> curriculumService.deleteLesson(currentUser(), id));
     }
@@ -232,6 +270,11 @@ public class CurriculumController {
     private boolean isAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private boolean isSchoolAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
     }
 
     // Plain getters (not records) so Thymeleaf's SpEL can read them as properties.

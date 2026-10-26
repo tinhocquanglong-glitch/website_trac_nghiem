@@ -127,12 +127,10 @@
                                 <button class="icon-btn" name="direction" value="-1" title="Lên" th:disabled="${chapterStat.first}"><i class="fas fa-arrow-up"></i></button>
                                 <button class="icon-btn" name="direction" value="1" title="Xuống" th:disabled="${chapterStat.last}"><i class="fas fa-arrow-down"></i></button>
                             </form>
-                            <form class="inline-form" method="post" th:action="@{/curriculum/chapters/{id}/delete(id=${chapter.id})}"
-                                  onsubmit="return confirm('Xóa chủ đề này và các bài trong đó? Chủ đề còn câu hỏi hoặc đề thi sẽ không xóa được.')">
-                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
-                                <input type="hidden" name="schoolId" th:value="${schoolId}">
-                                <button class="icon-btn danger" title="Xóa chủ đề"><i class="fas fa-trash"></i></button>
-                            </form>
+                            <button type="button" class="icon-btn danger" title="Xóa chủ đề"
+                                    th:onclick="|openCurriculumDeleteModal('/curriculum/chapters/${chapter.id}/delete', 'Chủ đề: ${chapter.chapterName}', '${selected.id}', '${schoolId != null ? schoolId : \'\'}')|">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </th:block>
                     </div>
 
@@ -157,13 +155,11 @@
                                 <button class="icon-btn" name="direction" value="-1" title="Lên" th:disabled="${lessonStat.first}"><i class="fas fa-arrow-up"></i></button>
                                 <button class="icon-btn" name="direction" value="1" title="Xuống" th:disabled="${lessonStat.last}"><i class="fas fa-arrow-down"></i></button>
                             </form>
-                            <form class="inline-form" method="post" th:action="@{/curriculum/lessons/{id}/delete(id=${lesson.id})}"
-                                  onsubmit="return confirm('Xóa bài này?')">
-                                <input type="hidden" name="subjectClassId" th:value="${selected.id}">
-                                <input type="hidden" name="schoolId" th:value="${schoolId}">
-                                <button class="icon-btn danger" title="Xóa bài"
-                                        th:disabled="${item.questionCount > 0 or item.examCount > 0}"><i class="fas fa-trash"></i></button>
-                            </form>
+                            <button type="button" class="icon-btn danger" title="Xóa bài"
+                                    th:disabled="${item.questionCount > 0 or item.examCount > 0}"
+                                    th:onclick="|openCurriculumDeleteModal('/curriculum/lessons/${lesson.id}/delete', 'Bài: ${lesson.nameLesson}', '${selected.id}', '${schoolId != null ? schoolId : \'\'}')|">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </th:block>
                     </div>
 
@@ -187,6 +183,53 @@
             </th:block>
         </div>
     </main>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="deleteCurriculumModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Cảnh báo: Xác nhận xóa trong chương trình học</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="deleteCurriculumForm" method="post" action="">
+                    <input type="hidden" name="subjectClassId" id="deleteCurriculumSubjectClassId">
+                    <input type="hidden" name="schoolId" id="deleteCurriculumSchoolId">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Bạn đang thực hiện xóa <strong id="deleteCurriculumTargetName"></strong> khỏi khung chương trình học.
+                            (Lưu ý: Nếu bài học hoặc chủ đề đã gắn câu hỏi, đề thi hoặc giáo án, hệ thống sẽ tự động chặn xóa để bảo vệ toàn vẹn dữ liệu).
+                        </div>
+                        <p class="text-danger font-weight-bold">Chỉ Quản trị viên và Hiệu trưởng có quyền xóa. Vui lòng nhập mật khẩu tài khoản của bạn để xác nhận:</p>
+                        <div class="form-group">
+                            <input type="password" name="password" id="deleteCurriculumPassword" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openCurriculumDeleteModal(actionUrl, targetName, subjectClassId, schoolId) {
+            document.getElementById('deleteCurriculumForm').action = actionUrl;
+            document.getElementById('deleteCurriculumTargetName').textContent = targetName;
+            document.getElementById('deleteCurriculumSubjectClassId').value = subjectClassId;
+            document.getElementById('deleteCurriculumSchoolId').value = schoolId || '';
+            var pwd = document.getElementById('deleteCurriculumPassword');
+            pwd.value = '';
+            window.jQuery('#deleteCurriculumModal')
+                .one('shown.bs.modal', function () { pwd.focus(); })
+                .modal('show');
+        }
+    </script>
+
     <div th:insert="~{index.html :: footerAdmin}"></div>
 </div></div>
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>

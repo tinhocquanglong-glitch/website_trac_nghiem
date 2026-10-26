@@ -153,11 +153,10 @@
                                         <i class="fa fa-book"></i> Xem sổ
                                     </a>
                                     <!-- Nút xóa phân công CHỈ ADMIN / SCHOOL ADMIN MỚI THẤY (GVCN không có quyền này) -->
-                                    <form th:if="${isAdminOrSchoolAdmin == true}" method="post" th:action="@{/student-tracking/classes/{classId}/assignments/{aid}/delete(classId=${trackingClass.id},aid=${asg.id})}" style="display:inline; margin:0;" onsubmit="return confirm('Hủy phân công môn này?');">
-                                        <button type="submit" class="btn btn-link text-danger p-0 m-0" style="font-size: 12px; line-height: 1;" title="Hủy phân công">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </form>
+                                    <button th:if="${isAdminOrSchoolAdmin == true}" type="button" class="btn btn-link text-danger p-0 m-0" style="font-size: 12px; line-height: 1;" title="Hủy phân công giáo viên bộ môn"
+                                            th:onclick="|openDeleteAssignmentModal(${asg.id}, '${asg.subject != null ? asg.subject.name : \'\'}', '${asg.teacher != null ? asg.teacher.fullName : \'\'}')|">
+                                        <i class="fa fa-times"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -512,5 +511,49 @@
     });
     /*]]>*/
 </script>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="deleteAssignmentModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title font-weight-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Xác nhận hủy phân công bộ môn</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="deleteAssignmentForm" method="post" action="">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Bạn có chắc chắn muốn hủy phân công giáo viên <strong id="deleteAssignmentTeacherName"></strong> phụ trách môn <strong id="deleteAssignmentSubjectName"></strong> của lớp này?
+                        </div>
+                        <p class="text-danger font-weight-bold">Chỉ Quản trị viên và Ban giám hiệu có quyền thực hiện. Vui lòng nhập mật khẩu tài khoản của bạn để xác nhận:</p>
+                        <div class="form-group">
+                            <input type="password" name="password" id="deleteAssignmentPassword" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận hủy phân công</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeleteAssignmentModal(assignmentId, subjectName, teacherName) {
+            var classId = '[[${trackingClass.id}]]';
+            document.getElementById('deleteAssignmentForm').action = '/student-tracking/classes/' + classId + '/assignments/' + assignmentId + '/delete';
+            document.getElementById('deleteAssignmentSubjectName').textContent = subjectName;
+            document.getElementById('deleteAssignmentTeacherName').textContent = teacherName;
+            var pwd = document.getElementById('deleteAssignmentPassword');
+            pwd.value = '';
+            window.jQuery('#deleteAssignmentModal')
+                .one('shown.bs.modal', function () { pwd.focus(); })
+                .modal('show');
+        }
+    </script>
+
 </body>
 </html>

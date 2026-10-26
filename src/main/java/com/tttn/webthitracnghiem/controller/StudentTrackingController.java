@@ -660,6 +660,7 @@ public class StudentTrackingController {
     @PostMapping("/classes/{classId}/assignments/{assignmentId}/delete")
     public String removeAssignment(@PathVariable Integer classId,
                                    @PathVariable Integer assignmentId,
+                                   @RequestParam(value = "password", required = false) String password,
                                    RedirectAttributes redirectAttributes) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
@@ -668,13 +669,18 @@ public class StudentTrackingController {
             redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên mới có quyền hủy phân công giáo viên bộ môn.");
             return "redirect:/student-tracking/classes/" + classId;
         }
+        User currentUser = currentUser();
+        if (password == null || password.trim().isEmpty() || currentUser == null || !passwordEncoder.matches(password.trim(), currentUser.getPassWord())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể hủy phân công giáo viên bộ môn.");
+            return "redirect:/student-tracking/classes/" + classId;
+        }
         if (assignmentService == null) {
             redirectAttributes.addFlashAttribute("error", "Chức năng phân công chưa khả dụng");
             return "redirect:/student-tracking/classes/" + classId;
         }
         try {
             assignmentService.removeAssignment(assignmentId);
-            redirectAttributes.addFlashAttribute("message", "Đã hủy phân công bộ môn.");
+            redirectAttributes.addFlashAttribute("message", "Đã hủy phân công bộ môn thành công.");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
