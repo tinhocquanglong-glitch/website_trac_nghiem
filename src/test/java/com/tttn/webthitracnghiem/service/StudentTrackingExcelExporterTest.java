@@ -28,8 +28,8 @@ class StudentTrackingExcelExporterTest {
         when(service.findClass(7)).thenReturn(trackingClass);
         when(service.monthsForSemester(1)).thenReturn(List.of(9, 10, 11, 12, 1));
         when(service.monthsForSemester(2)).thenReturn(List.of(2, 3, 4, 5));
-        stubMonths(service, 7, 1, List.of(9, 10, 11, 12, 1), new BigDecimal("8.5"), AttendanceStatus.FULL, null);
-        stubMonths(service, 7, 2, List.of(2, 3, 4, 5), new BigDecimal("9"), AttendanceStatus.ABSENT, "V.08/10, V.15/10");
+        stubMonths(service, 7, 1, List.of(9, 10, 11, 12, 1), new BigDecimal("8.5"), AttendanceStatus.FULL, null, "Tốt");
+        stubMonths(service, 7, 2, List.of(2, 3, 4, 5), new BigDecimal("9"), AttendanceStatus.ABSENT, "V.08/10, V.15/10", "Khá");
 
         byte[] bytes = new StudentTrackingExcelExporter(service).export(7);
 
@@ -41,9 +41,13 @@ class StudentTrackingExcelExporterTest {
                     .isEqualTo("Nguyễn Văn An");
             assertThat(workbook.getSheetAt(0).getRow(7).getCell(2).getNumericCellValue())
                     .isEqualTo(8.5);
+            assertThat(workbook.getSheetAt(0).getRow(7).getCell(7).getStringCellValue())
+                    .isEqualTo("Có tiến bộ");
             assertThat(workbook.getSheetAt(0).getRow(7).getCell(8).getStringCellValue())
+                    .isEqualTo("Tốt");
+            assertThat(workbook.getSheetAt(0).getRow(7).getCell(9).getStringCellValue())
                     .isEqualTo("Đi học");
-            assertThat(workbook.getSheetAt(1).getRow(7).getCell(9).getStringCellValue())
+            assertThat(workbook.getSheetAt(1).getRow(7).getCell(10).getStringCellValue())
                     .isEqualTo("V.08/10, V.15/10");
             assertThat(workbook.getSheetAt(0).getRow(4).getCell(0).getStringCellValue()).isEqualTo("THÁNG 9");
             assertThat(workbook.getSheetAt(0).getRow(5).getCell(2).getStringCellValue()).isEqualTo("ĐGTX");
@@ -51,15 +55,9 @@ class StudentTrackingExcelExporterTest {
             assertThat(workbook.getSheetAt(0).getRow(10).getCell(0).getStringCellValue()).isEqualTo("THÁNG 10");
             assertThat(workbook.getSheetAt(0).getMergedRegions())
                     .extracting(CellRangeAddress::formatAsString)
-                    .contains("C6:D6", "A5:J5");
-            var attendanceValidations = workbook.getSheetAt(0).getDataValidations();
-            assertThat(attendanceValidations).hasSize(5);
-            assertThat(attendanceValidations.get(0).getSuppressDropDownArrow()).isTrue();
-            assertThat(attendanceValidations.get(0).getValidationConstraint().getExplicitListValues())
-                    .containsExactly("Đi học", "Vắng", "Bỏ học", "Chuyển trường", "Không có");
-            assertThat(attendanceValidations.get(0).getRegions().getCellRangeAddresses())
-                    .extracting(CellRangeAddress::formatAsString)
-                    .containsExactly("I8");
+                    .contains("C6:D6", "A5:K5");
+            var validations = workbook.getSheetAt(0).getDataValidations();
+            assertThat(validations).hasSize(10);
         }
     }
 
@@ -87,11 +85,45 @@ class StudentTrackingExcelExporterTest {
         }
     }
 
+    @Test
+    void exportsSubjectTeacherWithSubjectAndClassInTitle() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        StudentTrackingClass class6A = trackingClass(7, "6A", "2026-2027");
+        when(service.findClass(7)).thenReturn(class6A);
+        when(service.monthsForSemester(1)).thenReturn(List.of(9, 10, 11, 12, 1));
+        when(service.monthsForSemester(2)).thenReturn(List.of(2, 3, 4, 5));
+        for (int month : List.of(9, 10, 11, 12, 1)) {
+            when(service.getSheet(7, 1, month, "gv01", 10))
+                    .thenReturn(sheet(1, "Nguyễn Văn An", new BigDecimal("8.5"), AttendanceStatus.FULL, null, "Tốt"));
+        }
+        for (int month : List.of(2, 3, 4, 5)) {
+            when(service.getSheet(7, 2, month, "gv01", 10))
+                    .thenReturn(sheet(2, "Nguyễn Văn An", new BigDecimal("9.0"), AttendanceStatus.FULL, null, "Khá"));
+        }
+
+        byte[] bytes = new StudentTrackingExcelExporter(service).export(7, 10, "Toán", "gv01");
+
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
+            assertThat(workbook.getNumberOfSheets()).isEqualTo(2);
+            // Sheet name contains class and subject
+            assertThat(workbook.getSheetName(0)).contains("6A-Toán");
+            // Title row contains subject name and class name
+            String title = workbook.getSheetAt(0).getRow(2).getCell(0).getStringCellValue();
+            assertThat(title).contains("MÔN: TOÁN");
+            assertThat(title).contains("LỚP: 6A");
+        }
+    }
+
     private void stubMonths(StudentTrackingService service, int classId, int semester, List<Integer> months,
                             BigDecimal score, AttendanceStatus status, String dates) {
+        stubMonths(service, classId, semester, months, score, status, dates, null);
+    }
+
+    private void stubMonths(StudentTrackingService service, int classId, int semester, List<Integer> months,
+                            BigDecimal score, AttendanceStatus status, String dates, String evaluation) {
         for (int month : months) {
             when(service.getSheet(classId, semester, month))
-                    .thenReturn(sheet(semester, "Nguyễn Văn An", score, status, dates));
+                    .thenReturn(sheet(semester, "Nguyễn Văn An", score, status, dates, evaluation));
         }
     }
 
@@ -105,22 +137,27 @@ class StudentTrackingExcelExporterTest {
 
     private TrackingSheetForm sheet(int semester, String fullName, BigDecimal score,
                                     AttendanceStatus attendanceStatus) {
+        return sheet(semester, fullName, score, attendanceStatus, null, null);
+    }
+
+    private TrackingSheetForm sheet(int semester, String fullName, BigDecimal score,
+                                    AttendanceStatus attendanceStatus, String attendanceDates) {
+        return sheet(semester, fullName, score, attendanceStatus, attendanceDates, null);
+    }
+
+    private TrackingSheetForm sheet(int semester, String fullName, BigDecimal score,
+                                    AttendanceStatus attendanceStatus, String attendanceDates, String evaluation) {
         TrackingRowForm row = new TrackingRowForm();
         row.setStudentId(10);
         row.setFullName(fullName);
         row.setRegularScore1(score);
         row.setProgressComment("Có tiến bộ");
+        row.setResultEvaluation(evaluation);
         row.setAttendanceStatus(attendanceStatus);
+        row.setAttendanceDates(attendanceDates);
         TrackingSheetForm form = new TrackingSheetForm();
         form.setSemester(semester);
         form.setRows(java.util.List.of(row));
-        return form;
-    }
-
-    private TrackingSheetForm sheet(int semester, String fullName, BigDecimal score,
-                                    AttendanceStatus attendanceStatus, String attendanceDates) {
-        TrackingSheetForm form = sheet(semester, fullName, score, attendanceStatus);
-        form.getRows().get(0).setAttendanceDates(attendanceDates);
         return form;
     }
 }

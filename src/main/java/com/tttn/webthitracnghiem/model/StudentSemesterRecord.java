@@ -43,6 +43,9 @@ public class StudentSemesterRecord {
     @Column(name = "progress_comment", length = 2000)
     private String progressComment;
 
+    @Column(name = "result_evaluation", length = 50)
+    private String resultEvaluation;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "attendance_status", length = 20)
     private AttendanceStatus attendanceStatus;
@@ -68,6 +71,8 @@ public class StudentSemesterRecord {
     public void setAverageScore(BigDecimal averageScore) { this.averageScore = averageScore; }
     public String getProgressComment() { return progressComment; }
     public void setProgressComment(String progressComment) { this.progressComment = progressComment; }
+    public String getResultEvaluation() { return resultEvaluation; }
+    public void setResultEvaluation(String resultEvaluation) { this.resultEvaluation = resultEvaluation; }
     public AttendanceStatus getAttendanceStatus() { return attendanceStatus; }
     public void setAttendanceStatus(AttendanceStatus attendanceStatus) { this.attendanceStatus = attendanceStatus; }
     public String getAttendanceDates() { return attendanceDates; }

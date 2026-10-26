@@ -30,7 +30,7 @@
                         </div>
                     </div>
                     <div class="tracking-header-actions">
-                        <a class="btn btn-success" th:href="@{/student-tracking/export(classId=${trackingClass.id})}" download>
+                        <a class="btn btn-success" th:href="@{/student-tracking/export(classId=${trackingClass.id},subjectId=${bookSubjectId})}" download>
                             <i class="fa fa-file-excel-o" aria-hidden="true"></i> Xuất Excel
                         </a>
                         <a class="btn btn-outline-secondary" th:href="@{/student-tracking}"><i class="fa fa-arrow-left" aria-hidden="true"></i> Danh sách lớp</a>
@@ -260,13 +260,14 @@
                                 <th class="cell-score" colspan="2">ĐGTX</th>
                                 <th class="cell-score" rowspan="2">ĐGK</th><th class="cell-score" rowspan="2">ĐCK</th><th class="cell-score" rowspan="2">ĐTBM</th>
                                 <th class="cell-comment" rowspan="2">Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu</th>
+                                <th class="cell-evaluation" rowspan="2">Đánh giá KQ</th>
                                 <th class="cell-status" rowspan="2">Điểm danh</th><th class="cell-days" rowspan="2">Số ngày</th>
                                 <th th:if="${editRoster}" class="cell-order" rowspan="2">Xóa</th>
                             </tr>
                             <tr><th class="cell-score">ĐGTX 1</th><th class="cell-score">ĐGTX 2</th></tr>
                             </thead>
                             <tbody>
-                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td th:colspan="${editRoster ? 11 : 10}" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
+                            <tr th:if="${#lists.isEmpty(sheetForm.rows)}"><td th:colspan="${editRoster ? 12 : 11}" class="tracking-empty">Chưa có học sinh trong lớp</td></tr>
                             <tr th:each="row, stat : ${sheetForm.rows}">
                                 <td class="cell-order" th:text="${stat.count}"></td>
                                 <td class="cell-name">
@@ -283,6 +284,15 @@
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].finalScore|" th:value="${row.finalScore}" aria-label="Điểm cuối kỳ"></td>
                                 <td class="cell-score"><input type="number" min="0" max="10" step="0.01" th:name="|rows[${stat.index}].averageScore|" th:value="${row.averageScore}" aria-label="Điểm trung bình môn"></td>
                                 <td class="cell-comment"><textarea th:name="|rows[${stat.index}].progressComment|" th:text="${row.progressComment}" maxlength="2000" aria-label="Nhận xét sự tiến bộ"></textarea></td>
+                                <td class="cell-evaluation">
+                                    <select th:name="|rows[${stat.index}].resultEvaluation|" aria-label="Đánh giá KQ">
+                                        <option value="">-- Chọn --</option>
+                                        <option value="Tốt" th:selected="${row.resultEvaluation == 'Tốt'}">Tốt</option>
+                                        <option value="Khá" th:selected="${row.resultEvaluation == 'Khá'}">Khá</option>
+                                        <option value="Đạt" th:selected="${row.resultEvaluation == 'Đạt'}">Đạt</option>
+                                        <option value="Chưa đạt" th:selected="${row.resultEvaluation == 'Chưa đạt'}">Chưa đạt</option>
+                                    </select>
+                                </td>
                                 <td class="cell-status">
                                     <select th:if="${editRoster}" th:name="|rows[${stat.index}].attendanceStatus|" aria-label="Điểm danh">
                                         <option th:each="status : ${attendanceStatuses}" th:value="${status}" th:text="${status.displayName}"

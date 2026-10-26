@@ -34,6 +34,7 @@
 .tracking-table .cell-name { min-width: 230px; }
 .tracking-table .cell-score { width: 92px; }
 .tracking-table .cell-comment { min-width: 320px; }
+.tracking-table .cell-evaluation { min-width: 130px; }
 .tracking-table .cell-status { min-width: 150px; }
 .tracking-table .cell-days { min-width: 190px; }
 .tracking-table input, .tracking-table select, .tracking-table textarea { width: 100%; min-height: 38px; border: 1px solid #c8d3da; border-radius: 4px; background: #fff; padding: 7px 8px; }

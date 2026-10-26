@@ -197,6 +197,37 @@ class StudentTrackingControllerTest {
     }
 
     @Test
+    void downloadsExcelForSubjectTeacherWithSubjectAndClassInFilename() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        StudentTrackingExcelExporter exporter = mock(StudentTrackingExcelExporter.class);
+        com.tttn.webthitracnghiem.service.ISubjectService subjectService = mock(com.tttn.webthitracnghiem.service.ISubjectService.class);
+        com.tttn.webthitracnghiem.model.Subject subject = new com.tttn.webthitracnghiem.model.Subject();
+        subject.setId(10);
+        subject.setName("Toán học");
+        when(subjectService.findById(10)).thenReturn(subject);
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setClassName("10A1");
+        when(service.findClass(7)).thenReturn(trackingClass);
+
+        when(exporter.export(org.mockito.ArgumentMatchers.eq(7),
+                org.mockito.ArgumentMatchers.eq(10),
+                org.mockito.ArgumentMatchers.eq("Toán học"),
+                org.mockito.ArgumentMatchers.any())).thenReturn(new byte[]{4, 5, 6});
+
+        StudentTrackingController controller = new StudentTrackingController(service, exporter);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "subjectService", subjectService);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller).build();
+
+        mvc.perform(get("/student-tracking/export").param("classId", "7").param("subjectId", "10"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("so-theo-doi-lop-10A1-mon-Toan_hoc.xlsx")))
+                .andExpect(content().bytes(new byte[]{4, 5, 6}));
+    }
+
+    @Test
     void showsSelectedSemesterSheet() throws Exception {
         StudentTrackingService service = mock(StudentTrackingService.class);
         StudentTrackingClass trackingClass = new StudentTrackingClass();

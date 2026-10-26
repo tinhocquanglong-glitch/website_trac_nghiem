@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 public class StudentTrackingExcelExporter {
     private static final String[] PARENT_HEADERS = {
             "STT", "HỌ VÀ TÊN", "ĐGTX", "", "ĐGK", "ĐCK", "ĐTBM",
-            "Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu", "Điểm danh", "Số ngày"
+            "Nhận xét sự tiến bộ, ưu điểm nổi bật, hạn chế chủ yếu", "Đánh giá KQ", "Điểm danh", "Số ngày"
     };
 
     private final StudentTrackingService trackingService;
@@ -45,6 +45,10 @@ public class StudentTrackingExcelExporter {
     }
 
     public byte[] export(Integer classId) throws IOException {
+        return export(classId, null, null, null);
+    }
+
+    public byte[] export(Integer classId, Integer subjectId, String subjectName, String teacherId) throws IOException {
         List<StudentTrackingClass> classes = classId == null
                 ? trackingService.listClasses()
                 : List.of(trackingService.findClass(classId));
@@ -53,8 +57,8 @@ public class StudentTrackingExcelExporter {
             WorkbookStyles styles = new WorkbookStyles(workbook);
             Set<String> sheetNames = new HashSet<>();
             for (StudentTrackingClass trackingClass : classes) {
-                createSheet(workbook, trackingClass, 1, styles, sheetNames);
-                createSheet(workbook, trackingClass, 2, styles, sheetNames);
+                createSheet(workbook, trackingClass, 1, styles, sheetNames, subjectId, subjectName, teacherId);
+                createSheet(workbook, trackingClass, 2, styles, sheetNames, subjectId, subjectName, teacherId);
             }
             if (classes.isEmpty()) {
                 workbook.createSheet("Khong co du lieu").createRow(0).createCell(0)
@@ -66,29 +70,43 @@ public class StudentTrackingExcelExporter {
     }
 
     private void createSheet(XSSFWorkbook workbook, StudentTrackingClass trackingClass,
-                             int semesterNumber, WorkbookStyles styles, Set<String> usedNames) {
-        String baseName = trackingClass.getClassName() + "-" + trackingClass.getSchoolYear()
-                + "-HK" + semesterNumber;
+                             int semesterNumber, WorkbookStyles styles, Set<String> usedNames,
+                             Integer subjectId, String subjectName, String teacherId) {
+        String baseName = trackingClass.getClassName();
+        if (subjectName != null && !subjectName.isBlank()) {
+            baseName += "-" + subjectName;
+        } else {
+            baseName += "-" + trackingClass.getSchoolYear();
+        }
+        baseName += "-HK" + semesterNumber;
         Sheet sheet = workbook.createSheet(uniqueSheetName(baseName, usedNames));
         sheet.setDisplayGridlines(false);
         sheet.createFreezePane(0, 7);
 
         Row titleRow = sheet.createRow(2);
         Cell title = titleRow.createCell(0);
-        title.setCellValue("SỔ THEO DÕI HỌC SINH LỚP " + trackingClass.getClassName()
-                + " NĂM HỌC " + trackingClass.getSchoolYear());
+        if (subjectName != null && !subjectName.isBlank()) {
+            title.setCellValue("SỔ THEO DÕI HỌC SINH - MÔN: " + subjectName.toUpperCase()
+                    + " - LỚP: " + trackingClass.getClassName()
+                    + " (NĂM HỌC " + trackingClass.getSchoolYear() + ")");
+        } else {
+            title.setCellValue("SỔ THEO DÕI HỌC SINH LỚP " + trackingClass.getClassName()
+                    + " NĂM HỌC " + trackingClass.getSchoolYear());
+        }
         title.setCellStyle(styles.title);
-        sheet.addMergedRegion(new CellRangeAddress(2, 2, 0, 9));
+        sheet.addMergedRegion(new CellRangeAddress(2, 2, 0, 10));
 
         Row semesterRow = sheet.createRow(3);
         Cell semester = semesterRow.createCell(0);
         semester.setCellValue("Học kỳ " + semesterNumber);
         semester.setCellStyle(styles.semester);
-        sheet.addMergedRegion(new CellRangeAddress(3, 3, 0, 9));
+        sheet.addMergedRegion(new CellRangeAddress(3, 3, 0, 10));
 
         int nextRow = 4;
         for (int month : trackingService.monthsForSemester(semesterNumber)) {
-            TrackingSheetForm form = trackingService.getSheet(trackingClass.getId(), semesterNumber, month);
+            TrackingSheetForm form = (subjectId != null && teacherId != null)
+                    ? trackingService.getSheet(trackingClass.getId(), semesterNumber, month, teacherId, subjectId)
+                    : trackingService.getSheet(trackingClass.getId(), semesterNumber, month);
             nextRow = writeMonthTable(sheet, form, month, nextRow, styles);
         }
         setColumnWidths(sheet);
@@ -100,7 +118,7 @@ public class StudentTrackingExcelExporter {
         Cell monthCell = monthRow.createCell(0);
         monthCell.setCellValue("THÁNG " + month);
         monthCell.setCellStyle(styles.semester);
-        sheet.addMergedRegion(new CellRangeAddress(startRow, startRow, 0, 9));
+        sheet.addMergedRegion(new CellRangeAddress(startRow, startRow, 0, 10));
 
         int parentHeaderIndex = startRow + 1;
         int childHeaderIndex = startRow + 2;
@@ -119,7 +137,7 @@ public class StudentTrackingExcelExporter {
         childHeader.getCell(2).setCellValue("ĐGTX 1");
         childHeader.getCell(3).setCellValue("ĐGTX 2");
         sheet.addMergedRegion(new CellRangeAddress(parentHeaderIndex, parentHeaderIndex, 2, 3));
-        for (int column : new int[] {0, 1, 4, 5, 6, 7, 8, 9}) {
+        for (int column : new int[] {0, 1, 4, 5, 6, 7, 8, 9, 10}) {
             sheet.addMergedRegion(new CellRangeAddress(parentHeaderIndex, childHeaderIndex, column, column));
         }
 
@@ -127,8 +145,26 @@ public class StudentTrackingExcelExporter {
         for (int index = 0; index < rows.size(); index++) {
             writeStudentRow(sheet.createRow(index + firstStudentRow), rows.get(index), index + 1, styles);
         }
+        addEvaluationValidation(sheet, firstStudentRow, rows.size());
         addAttendanceValidation(sheet, firstStudentRow, rows.size());
         return firstStudentRow + rows.size() + 2;
+    }
+
+    private void addEvaluationValidation(Sheet sheet, int firstRowIndex, int studentCount) {
+        if (studentCount == 0) {
+            return;
+        }
+        String[] options = {"Tốt", "Khá", "Đạt", "Chưa đạt"};
+        DataValidationHelper helper = sheet.getDataValidationHelper();
+        DataValidationConstraint constraint = helper.createExplicitListConstraint(options);
+        int lastRowIndex = firstRowIndex + studentCount - 1;
+        DataValidation validation = helper.createValidation(
+                constraint, new CellRangeAddressList(firstRowIndex, lastRowIndex, 8, 8));
+        validation.setEmptyCellAllowed(true);
+        validation.setSuppressDropDownArrow(true);
+        validation.setShowErrorBox(true);
+        validation.createErrorBox("Đánh giá không hợp lệ", "Hãy chọn một giá trị: Tốt, Khá, Đạt, Chưa đạt.");
+        sheet.addValidationData(validation);
     }
 
     private void addAttendanceValidation(Sheet sheet, int firstRowIndex, int studentCount) {
@@ -142,7 +178,7 @@ public class StudentTrackingExcelExporter {
         DataValidationConstraint constraint = helper.createExplicitListConstraint(options);
         int lastRowIndex = firstRowIndex + studentCount - 1;
         DataValidation validation = helper.createValidation(
-                constraint, new CellRangeAddressList(firstRowIndex, lastRowIndex, 8, 8));
+                constraint, new CellRangeAddressList(firstRowIndex, lastRowIndex, 9, 9));
         validation.setEmptyCellAllowed(true);
         // XSSF maps true to showDropDown=false; Excel displays the arrow only with that OOXML value.
         validation.setSuppressDropDownArrow(true);
@@ -160,9 +196,10 @@ public class StudentTrackingExcelExporter {
         setDecimal(excelRow.createCell(5), row.getFinalScore(), styles.score);
         setDecimal(excelRow.createCell(6), row.getAverageScore(), styles.score);
         setText(excelRow.createCell(7), row.getProgressComment(), styles.comment);
-        setText(excelRow.createCell(8), row.getAttendanceStatus() == null
+        setText(excelRow.createCell(8), row.getResultEvaluation(), styles.center);
+        setText(excelRow.createCell(9), row.getAttendanceStatus() == null
                 ? "" : row.getAttendanceStatus().getDisplayName(), styles.center);
-        setText(excelRow.createCell(9), row.getAttendanceDates(), styles.center);
+        setText(excelRow.createCell(10), row.getAttendanceDates(), styles.center);
     }
 
     private void setNumber(Cell cell, int value, CellStyle style) {
@@ -200,9 +237,10 @@ public class StudentTrackingExcelExporter {
         for (int column = 2; column <= 6; column++) {
             sheet.setColumnWidth(column, 12 * 256);
         }
-        sheet.setColumnWidth(7, 55 * 256);
-        sheet.setColumnWidth(8, 20 * 256);
-        sheet.setColumnWidth(9, 28 * 256);
+        sheet.setColumnWidth(7, 50 * 256);
+        sheet.setColumnWidth(8, 16 * 256);
+        sheet.setColumnWidth(9, 20 * 256);
+        sheet.setColumnWidth(10, 28 * 256);
     }
 
     private static class WorkbookStyles {

@@ -562,6 +562,7 @@ public class StudentTrackingService {
         if (row.getProgressComment() != null && row.getProgressComment().length() > 2000) {
             throw new IllegalArgumentException("Nhan xet toi da 2000 ky tu");
         }
+        row.setResultEvaluation(cleanEvaluation(row.getResultEvaluation()));
         row.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
     }
 
@@ -627,6 +628,7 @@ public class StudentTrackingService {
         row.setFinalScore(record.getFinalScore());
         row.setAverageScore(record.getAverageScore());
         row.setProgressComment(record.getProgressComment());
+        row.setResultEvaluation(record.getResultEvaluation());
         row.setAttendanceStatus(record.getAttendanceStatus());
         row.setAttendanceDates(record.getAttendanceDates());
     }
@@ -638,6 +640,7 @@ public class StudentTrackingService {
         row.setFinalScore(record.getFinalScore());
         row.setAverageScore(record.getAverageScore());
         row.setProgressComment(record.getProgressComment());
+        row.setResultEvaluation(record.getResultEvaluation());
         row.setAttendanceStatus(record.getAttendanceStatus());
         row.setAttendanceDates(record.getAttendanceDates());
     }
@@ -649,6 +652,7 @@ public class StudentTrackingService {
         record.setFinalScore(row.getFinalScore());
         record.setAverageScore(row.getAverageScore());
         record.setProgressComment(row.getProgressComment() == null ? null : row.getProgressComment().trim());
+        record.setResultEvaluation(cleanEvaluation(row.getResultEvaluation()));
         if (includeAttendance) {
             record.setAttendanceStatus(row.getAttendanceStatus());
             record.setAttendanceDates(cleanAttendanceNote(row.getAttendanceDates()));
@@ -663,8 +667,30 @@ public class StudentTrackingService {
         record.setFinalScore(imported.getFinalScore());
         record.setAverageScore(imported.getAverageScore());
         record.setProgressComment(imported.getProgressComment());
+        record.setResultEvaluation(cleanEvaluation(imported.getResultEvaluation()));
         record.setAttendanceStatus(imported.getAttendanceStatus());
         record.setAttendanceDates(cleanAttendanceNote(imported.getAttendanceDates()));
+    }
+
+    public static final Set<String> VALID_EVALUATIONS = Set.of("Tốt", "Khá", "Đạt", "Chưa đạt");
+
+    private String cleanEvaluation(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        for (String valid : VALID_EVALUATIONS) {
+            if (valid.equalsIgnoreCase(trimmed)) {
+                return valid;
+            }
+        }
+        if (trimmed.length() > 50) {
+            throw new IllegalArgumentException("Danh gia ket qua toi da 50 ky tu");
+        }
+        return trimmed;
     }
 
     private String cleanAttendanceNote(String value) {

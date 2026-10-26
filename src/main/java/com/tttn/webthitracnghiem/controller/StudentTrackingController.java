@@ -4,6 +4,7 @@ import com.tttn.webthitracnghiem.model.AttendanceStatus;
 import com.tttn.webthitracnghiem.model.ClassSubjectAssignment;
 import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.StudentTrackingClass;
+import com.tttn.webthitracnghiem.model.Subject;
 import com.tttn.webthitracnghiem.model.TrackingSheetForm;
 import com.tttn.webthitracnghiem.model.User;
 import com.tttn.webthitracnghiem.repository.SchoolRepository;
@@ -33,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -219,11 +221,62 @@ public class StudentTrackingController {
     private com.tttn.webthitracnghiem.service.IRoleService roleService;
 
     @GetMapping("/export")
-    public ResponseEntity<byte[]> exportWorkbook(@RequestParam(required = false) Integer classId) throws IOException {
-        byte[] workbook = excelExporter.export(classId);
-        String filename = classId == null
-                ? "so-theo-doi-tat-ca-lop.xlsx"
-                : "so-theo-doi-lop-" + classId + ".xlsx";
+    public ResponseEntity<byte[]> exportWorkbook(@RequestParam(required = false) Integer classId,
+                                                @RequestParam(required = false) Integer subjectId) throws IOException {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (auth != null && auth.isAuthenticated() && userService != null)
+                ? userService.findById(auth.getName()) : null;
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        StudentTrackingClass trackingClass = classId == null ? null : trackingService.findClass(classId);
+        boolean isHomeroom = (currentUser != null && trackingClass != null && trackingClass.getHomeroomTeacher() != null
+                && trackingClass.getHomeroomTeacher().getId().equals(currentUser.getId()));
+        boolean canManage = isAdmin || isSchoolAdmin || isHomeroom;
+
+        Integer exportSubjectId = subjectId;
+        String exportTeacherId = null;
+        String exportSubjectName = null;
+
+        if (classId != null) {
+            if (exportSubjectId == null && !canManage && currentUser != null) {
+                List<ClassSubjectAssignment> myAssignments = assignmentsOf(currentUser, classId);
+                if (!myAssignments.isEmpty()) {
+                    exportSubjectId = myAssignments.get(0).getSubject().getId();
+                }
+            }
+
+            if (exportSubjectId != null) {
+                Subject subject = subjectService != null ? subjectService.findById(exportSubjectId) : null;
+                if (subject != null) {
+                    exportSubjectName = subject.getName();
+                }
+                exportTeacherId = currentUser != null ? currentUser.getId() : null;
+            }
+        }
+
+        byte[] workbook = (exportSubjectId != null)
+                ? excelExporter.export(classId, exportSubjectId, exportSubjectName, exportTeacherId)
+                : excelExporter.export(classId);
+
+        String filename;
+        if (classId == null) {
+            filename = "so-theo-doi-tat-ca-lop.xlsx";
+        } else {
+            String classNameSafe = trackingClass != null
+                    ? trackingClass.getClassName().replaceAll("[^a-zA-Z0-9_-]", "_")
+                    : String.valueOf(classId);
+            if (exportSubjectName != null && !exportSubjectName.isBlank()) {
+                String subSlug = Normalizer.normalize(exportSubjectName, Normalizer.Form.NFD)
+                        .replaceAll("\\p{M}", "")
+                        .replace('đ', 'd').replace('Đ', 'D')
+                        .replaceAll("[^a-zA-Z0-9_-]", "_");
+                filename = "so-theo-doi-lop-" + classNameSafe + "-mon-" + subSlug + ".xlsx";
+            } else {
+                filename = "so-theo-doi-lop-" + classNameSafe + ".xlsx";
+            }
+        }
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))

@@ -64,6 +64,10 @@ public class StudentTrackingExcelParser {
             throw new IllegalArgumentException("Sheet " + className + " co pham vi dong qua lon");
         }
 
+        Row headerRow = sheet.getRow(headerRowIndex);
+        boolean hasEvaluationCol = headerRow != null
+                && normalize(cellText(headerRow.getCell(8), formatter)).contains("danh gia");
+
         List<ImportedStudent> students = new ArrayList<>();
         for (int rowIndex = headerRowIndex + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
             Row row = sheet.getRow(rowIndex);
@@ -95,9 +99,15 @@ public class StudentTrackingExcelParser {
             if (student.progressComment.length() > 2000) {
                 throw new IllegalArgumentException("Nhan xet qua dai tai sheet " + className + ", dong " + (rowIndex + 1));
             }
-            student.attendanceStatus = AttendanceStatus.fromText(cellText(row.getCell(8), formatter));
-            student.attendanceDates = cellText(row.getCell(9), formatter).trim();
-            if (student.attendanceDates.length() > 500) {
+            if (hasEvaluationCol) {
+                student.resultEvaluation = cellText(row.getCell(8), formatter).trim();
+                student.attendanceStatus = AttendanceStatus.fromText(cellText(row.getCell(9), formatter));
+                student.attendanceDates = cellText(row.getCell(10), formatter).trim();
+            } else {
+                student.attendanceStatus = AttendanceStatus.fromText(cellText(row.getCell(8), formatter));
+                student.attendanceDates = cellText(row.getCell(9), formatter).trim();
+            }
+            if (student.attendanceDates != null && student.attendanceDates.length() > 500) {
                 throw new IllegalArgumentException("So ngay qua dai tai sheet " + className + ", dong " + (rowIndex + 1));
             }
             students.add(student);
@@ -199,6 +209,7 @@ public class StudentTrackingExcelParser {
         private BigDecimal finalScore;
         private BigDecimal averageScore;
         private String progressComment;
+        private String resultEvaluation;
         private AttendanceStatus attendanceStatus;
         private String attendanceDates;
 
@@ -209,6 +220,7 @@ public class StudentTrackingExcelParser {
         public BigDecimal getFinalScore() { return finalScore; }
         public BigDecimal getAverageScore() { return averageScore; }
         public String getProgressComment() { return progressComment; }
+        public String getResultEvaluation() { return resultEvaluation; }
         public AttendanceStatus getAttendanceStatus() { return attendanceStatus; }
         public String getAttendanceDates() { return attendanceDates; }
     }

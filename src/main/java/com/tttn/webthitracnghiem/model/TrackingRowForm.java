@@ -11,6 +11,7 @@ public class TrackingRowForm {
     private BigDecimal finalScore;
     private BigDecimal averageScore;
     private String progressComment;
+    private String resultEvaluation;
     private AttendanceStatus attendanceStatus;
     private String attendanceDates;
 
@@ -30,6 +31,8 @@ public class TrackingRowForm {
     public void setAverageScore(BigDecimal averageScore) { this.averageScore = averageScore; }
     public String getProgressComment() { return progressComment; }
     public void setProgressComment(String progressComment) { this.progressComment = progressComment; }
+    public String getResultEvaluation() { return resultEvaluation; }
+    public void setResultEvaluation(String resultEvaluation) { this.resultEvaluation = resultEvaluation; }
     public AttendanceStatus getAttendanceStatus() { return attendanceStatus; }
     public void setAttendanceStatus(AttendanceStatus attendanceStatus) { this.attendanceStatus = attendanceStatus; }
     public String getAttendanceDates() { return attendanceDates; }
