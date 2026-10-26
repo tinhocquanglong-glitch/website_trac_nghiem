@@ -291,7 +291,8 @@ public class LessonPlanController {
         }
 
         try {
-            lessonPlanService.delete(id, currentUser.getId());
+            String targetOwnerId = (plan.getOwner() != null) ? plan.getOwner().getId() : currentUser.getId();
+            lessonPlanService.delete(id, targetOwnerId);
             ra.addFlashAttribute("message", "Đã xóa (ẩn) kế hoạch bài dạy thành công!");
         } catch (SecurityException | IllegalArgumentException ex) {
             ra.addFlashAttribute("error", ex.getMessage());
