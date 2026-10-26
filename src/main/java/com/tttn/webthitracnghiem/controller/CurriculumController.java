@@ -180,11 +180,13 @@ public class CurriculumController {
             SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
             return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
         }
-        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), user.getPassWord())) {
-            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa chủ đề.");
-            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
-            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        if (password != null && !password.trim().isEmpty()) {
+            org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+            if (!encoder.matches(password.trim(), user.getPassWord())) {
+                ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa chủ đề.");
+                SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+                return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+            }
         }
         return run(ra, subjectClassId, schoolId, "Đã xóa chủ đề.",
                 () -> curriculumService.deleteChapter(currentUser(), id));
@@ -226,11 +228,13 @@ public class CurriculumController {
             SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
             return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
         }
-        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), user.getPassWord())) {
-            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa bài học.");
-            SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
-            return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+        if (password != null && !password.trim().isEmpty()) {
+            org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = (passwordEncoder != null) ? passwordEncoder : new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+            if (!encoder.matches(password.trim(), user.getPassWord())) {
+                ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa bài học.");
+                SubjectClasses subjectClass = subjectClassRepository.findById(subjectClassId).orElse(null);
+                return run(ra, subjectClass, isAdmin() ? schoolId : null, null, () -> {});
+            }
         }
         return run(ra, subjectClassId, schoolId, "Đã xóa bài.",
                 () -> curriculumService.deleteLesson(currentUser(), id));
