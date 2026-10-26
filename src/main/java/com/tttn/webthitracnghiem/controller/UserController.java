@@ -477,49 +477,115 @@ public class UserController {
         return auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority(authority));
     }
 
-    @GetMapping("/user/delete/{id}")
-    public String delete(@PathVariable("id") String id,
-                         @RequestParam(value = "returnUrl", required = false) String returnUrl,
-                         RedirectAttributes ra) {
-        User user = userService.findById(id);
+    @PostMapping("/user/delete")
+    public String deletePost(@RequestParam("id") String id,
+                             @RequestParam(value = "password", required = false) String password,
+                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                             RedirectAttributes ra) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = authentication != null && authentication.getAuthorities()
-                .contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        boolean isSchoolAdmin = authentication != null && authentication.getAuthorities()
-                .contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
-        User currentUser = authentication != null ? userService.findById(authentication.getName()) : null;
+        if (authentication == null || !authentication.isAuthenticated()) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return "redirect:/login";
+        }
+        User currentUser = userService.findById(authentication.getName());
+        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
 
         String fallbackUrl = isSchoolAdmin ? "/school-admin/users" : "/user/list";
         String redirectTarget = (returnUrl != null && !returnUrl.trim().isEmpty() && returnUrl.startsWith("/"))
                 ? returnUrl : fallbackUrl;
 
-        if (user == null || user.getRoles() == null || user.getRoles().stream()
-                .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()))) {
-            ra.addFlashAttribute("error", "Không thể xóa tài khoản quản trị hệ thống.");
+        if (!isAdmin && !isSchoolAdmin) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống hoặc Hiệu trưởng mới có quyền xóa tài khoản!");
             return "redirect:" + redirectTarget;
         }
-        if (isSchoolAdmin) {
-            boolean isStudent = user.getRoles().stream()
-                    .anyMatch(role -> "ROLE_USER".equals(role.getRoleName()));
-            boolean isTeacher = user.getRoles().stream()
-                    .anyMatch(role -> "ROLE_TEACHER".equals(role.getRoleName()));
+
+        User user = userService.findById(id);
+        if (user == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy tài khoản cần xóa!");
+            return "redirect:" + redirectTarget;
+        }
+
+        if (user.getRoles() != null && user.getRoles().stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()))) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản Quản trị viên hệ thống.");
+            return "redirect:" + redirectTarget;
+        }
+
+        if (isSchoolAdmin && !isAdmin) {
+            boolean isStudent = user.getRoles().stream().anyMatch(role -> "ROLE_USER".equals(role.getRoleName()));
+            boolean isTeacher = user.getRoles().stream().anyMatch(role -> "ROLE_TEACHER".equals(role.getRoleName()));
             Integer currentSchoolId = currentUser != null && currentUser.getSchool() != null
                     ? currentUser.getSchool().getId() : null;
             Integer targetSchoolId = schoolIdForUser(user);
-            boolean sameSchool = currentSchoolId != null
-                    && Objects.equals(currentSchoolId, targetSchoolId);
+            boolean sameSchool = currentSchoolId != null && Objects.equals(currentSchoolId, targetSchoolId);
             if ((!isStudent && !isTeacher) || !sameSchool) {
                 ra.addFlashAttribute("error", "Hiệu trưởng chỉ được xóa giáo viên hoặc học sinh thuộc trường mình.");
                 return "redirect:" + redirectTarget;
             }
         }
-        try {
-            userService.delete(user);
-        } catch (DataAccessException ex) {
-            ra.addFlashAttribute("error", "Không thể xóa tài khoản vì vẫn còn dữ liệu liên quan.");
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || currentUser == null || !encoder.matches(password.trim(), currentUser.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa (ẩn) tài khoản.");
             return "redirect:" + redirectTarget;
         }
-        ra.addFlashAttribute("message", "Đã xóa (vô hiệu hóa) tài khoản " + user.getFullName() + " thành công!");
+
+        try {
+            userService.delete(user);
+            ra.addFlashAttribute("message", "Đã xóa (vô hiệu hóa) tài khoản " + user.getFullName() + " thành công!");
+        } catch (DataAccessException ex) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản vì vẫn còn dữ liệu liên quan.");
+        }
+        return "redirect:" + redirectTarget;
+    }
+
+    @GetMapping("/user/delete/{id}")
+    public String deleteLegacy(@PathVariable("id") String id,
+                               @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                               RedirectAttributes ra) {
+        String fallbackUrl = "/user/list";
+        String redirectTarget = (returnUrl != null && !returnUrl.trim().isEmpty() && returnUrl.startsWith("/"))
+                ? returnUrl : fallbackUrl;
+        ra.addFlashAttribute("error", "Hành động xóa tài khoản yêu cầu xác thực mật khẩu qua biểu mẫu bảo mật!");
+        return "redirect:" + redirectTarget;
+    }
+
+    public String delete(String id, String returnUrl, RedirectAttributes ra) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = authentication != null ? userService.findById(authentication.getName()) : null;
+        boolean isSchoolAdmin = authentication != null && authentication.getAuthorities()
+                .contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        String fallbackUrl = isSchoolAdmin ? "/school-admin/users" : "/user/list";
+        String redirectTarget = (returnUrl != null && !returnUrl.trim().isEmpty() && returnUrl.startsWith("/"))
+                ? returnUrl : fallbackUrl;
+
+        User user = userService.findById(id);
+        if (user == null || user.getRoles() == null || user.getRoles().stream()
+                .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()))) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản quản trị hệ thống.");
+            return "redirect:" + redirectTarget;
+        }
+
+        if (isSchoolAdmin) {
+            boolean isStudent = user.getRoles().stream().anyMatch(role -> "ROLE_USER".equals(role.getRoleName()));
+            boolean isTeacher = user.getRoles().stream().anyMatch(role -> "ROLE_TEACHER".equals(role.getRoleName()));
+            Integer currentSchoolId = currentUser != null && currentUser.getSchool() != null
+                    ? currentUser.getSchool().getId() : null;
+            Integer targetSchoolId = schoolIdForUser(user);
+            boolean sameSchool = currentSchoolId != null && Objects.equals(currentSchoolId, targetSchoolId);
+            if ((!isStudent && !isTeacher) || !sameSchool) {
+                ra.addFlashAttribute("error", "Hiệu trưởng chỉ được xóa giáo viên hoặc học sinh thuộc trường mình.");
+                return "redirect:" + redirectTarget;
+            }
+        }
+
+        try {
+            userService.delete(user);
+            ra.addFlashAttribute("message", "Đã xóa (vô hiệu hóa) tài khoản " + user.getFullName() + " thành công!");
+        } catch (DataAccessException ex) {
+            ra.addFlashAttribute("error", "Không thể xóa tài khoản vì vẫn còn dữ liệu liên quan.");
+        }
         return "redirect:" + redirectTarget;
     }
 

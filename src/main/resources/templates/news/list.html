@@ -110,11 +110,12 @@
               <td th:text="${news.createDate}"></td>
               <td th:text="${news.users.id}"></td>
               <td class="text-center wt-nowrap">
-                <a th:href="@{/news/edit/{id}(id=${news.id})}"><i
-                        class="fas fa-info text-info"></i></a>
-                &nbsp;
-                <a th:href="@{/news/delete/{id}(id=${news.id})}" id="deleteButton"><i
-                        class="far fa-trash-alt text-danger"></i></a>
+                <a th:href="@{/news/edit/{id}(id=${news.id})}" title="Chỉnh sửa"><i
+                        class="fas fa-info text-info mr-2"></i></a>
+                <th:block sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')">
+                    <a type="button" href="javascript:void(0)" th:onclick="|openDeleteNewsModal(${news.id}, '${news.title}')|" title="Xóa (ẩn) tin tức"><i
+                            class="far fa-trash-alt text-danger"></i></a>
+                </th:block>
               </td>
             </tr>
             </tbody>
@@ -159,22 +160,32 @@
       </div>
     </div>
 
-    <div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
+    <div class="modal fade" tabindex="-1" role="dialog" id="deleteNewsModal">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
-          <div class="modal-header bg-info">
-            <h5 class="modal-title">Xác nhận</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Cảnh báo: Xác nhận xóa (ẩn) tin tức</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div class="modal-body">
-            <p>Bạn có muốn xoá tin tức này không ?<a></a></p>
-          </div>
-          <div class="modal-footer">
-            <a href="" type="button" class="btn btn-primary" id="delRef">Có</a>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
-          </div>
+          <form th:action="@{/news/delete}" method="post">
+            <input type="hidden" name="id" id="deleteNewsId">
+            <div class="modal-body">
+              <div class="alert alert-warning">
+                <i class="fas fa-info-circle mr-1"></i>
+                Tin tức <strong id="deleteNewsTitle"></strong> sẽ được <strong>chuyển sang trạng thái ẩn</strong> và không còn xuất hiện trên trang tin.
+              </div>
+              <p class="text-danger font-weight-bold">Chỉ Quản trị viên và Hiệu trưởng có quyền xóa. Vui lòng nhập mật khẩu tài khoản của bạn để xác nhận:</p>
+              <div class="form-group">
+                <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+              <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa (ẩn)</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -224,14 +235,11 @@
 
 
 <script>
-  $(document).ready(function () {
-    $(".table #deleteButton").on('click', function (event) {
-      event.preventDefault();
-      var href = $(this).attr('href');
-      $('#deleteModal #delRef').attr('href', href);
-      $('#deleteModal').modal();
-    })
-  })
+  function openDeleteNewsModal(id, title) {
+    $('#deleteNewsId').val(id);
+    $('#deleteNewsTitle').text(title || ('#' + id));
+    $('#deleteNewsModal').modal('show');
+  }
 
   $("#showExam").click(function () {
     $("#question").toggle();

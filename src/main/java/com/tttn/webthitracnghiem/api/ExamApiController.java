@@ -525,8 +525,16 @@ public class ExamApiController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@RequestParam Integer id){
+    public ResponseEntity<?> delete(@PathVariable Integer id){
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || (!auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"))
+                && !auth.getAuthorities().contains(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN")))) {
+            return ResponseEntity.status(403).body("Chỉ Quản trị viên hoặc Hiệu trưởng mới có quyền xóa (ẩn) đề thi.");
+        }
         Exam exam = examService.findById(id);
+        if (exam == null) {
+            return ResponseEntity.notFound().build();
+        }
         examService.delete(exam);
         return ResponseEntity.ok(exam);
     }

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modal">
+    <div class="modal fade" id="deleteUserModal" tabindex="-1" role="dialog"
+         aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;" method="post" action="/user/delete">
+                <input type="hidden" name="id" id="deleteUserId">
+                <input type="hidden" name="returnUrl" id="deleteUserReturnUrl">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title font-weight-bold" id="deleteUserModalLabel" style="font-size: 16px;">
+                        <i class="fas fa-trash-alt mr-2"></i>Cảnh báo: Xác nhận xóa (vô hiệu hóa) tài khoản
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Đóng" style="opacity: 0.9;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="font-size: 38px; color: #dc3545;">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                        <p class="mb-1 text-muted" style="font-size: 14px;">Bạn có chắc chắn muốn xóa (vô hiệu hóa) tài khoản sau?</p>
+                        <h4 class="font-weight-bold text-dark mb-0" id="deleteUserFullName"></h4>
+                        <div class="small text-muted mt-1" id="deleteUserUsername"></div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small py-2 px-3 mb-3" style="background-color: #fff3cd; color: #856404; border-radius: 8px; font-size: 12.5px;">
+                        <i class="fas fa-exclamation-triangle mr-1 text-warning"></i>
+                        <strong>Lưu ý quan trọng:</strong>
+                        <ul class="mb-0 pl-3 mt-1 text-left">
+                            <li>Tài khoản sẽ được chuyển sang <strong>trạng thái ẩn</strong> và <strong>không thể đăng nhập</strong> vào hệ thống nữa.</li>
+                            <li>Tất cả phân công chủ nhiệm và phân công giảng dạy của tài khoản này sẽ được gỡ bỏ.</li>
+                            <li>Toàn bộ đề thi, kết quả thi và dữ liệu lịch sử trước đây vẫn được bảo toàn nguyên vẹn.</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group text-left mb-0">
+                        <label for="deleteUserPassword" class="font-weight-bold text-dark mb-1" style="font-size: 13px;">
+                            <i class="fas fa-key mr-1 text-danger"></i>Nhập mật khẩu của bạn để xác nhận: <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="deleteUserPassword" name="password"
+                                   required autocomplete="current-password" placeholder="Nhập mật khẩu xác thực..."
+                                   style="border-radius: 6px 0 0 6px; font-size: 14px; height: 42px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleUserDeletePasswordBtn"
+                                        style="border-radius: 0 6px 6px 0; border-color: #ced4da;" title="Hiện/Ẩn mật khẩu">
+                                    <i class="fas fa-eye" id="toggleUserDeletePasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal" style="border-radius: 6px;">
+                        <i class="fas fa-times mr-1"></i>Hủy bỏ
+                    </button>
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold" style="border-radius: 6px;">
+                        <i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa (ẩn)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function openDeleteUserModal(userId, fullName, returnUrl) {
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserReturnUrl').value = returnUrl || '';
+            document.getElementById('deleteUserFullName').textContent = fullName || userId;
+            document.getElementById('deleteUserUsername').textContent = 'Tài khoản: ' + userId;
+            var pwd = document.getElementById('deleteUserPassword');
+            pwd.value = '';
+            window.jQuery('#deleteUserModal')
+                .one('shown.bs.modal', function () { pwd.focus(); })
+                .modal('show');
+        }
+
+        document.getElementById('toggleUserDeletePasswordBtn')?.addEventListener('click', function () {
+            var input = document.getElementById('deleteUserPassword');
+            var icon = document.getElementById('toggleUserDeletePasswordIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

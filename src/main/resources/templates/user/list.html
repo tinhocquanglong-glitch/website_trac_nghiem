@@ -299,8 +299,8 @@
                                 </form>
                                 <a th:href="@{/user/editMember/{id}(id=${user.id})}" title="Chỉnh sửa"><i class="fas fa-edit text-primary"></i></a>
                                 <span>&nbsp;&nbsp;</span>
-                                <a th:href="@{/user/delete/{id}(id=${user.id}, returnUrl=@{/user/list(viewMode='all', page=${users.number}, size=${users.size})})}" title="Xóa"
-                                   onclick="return confirm('Bạn có chắc muốn xóa người dùng này? (Tài khoản sẽ bị vô hiệu hóa và ẩn khỏi hệ thống)')"><i class="far fa-trash-alt text-danger"></i></a>
+                                <a href="javascript:void(0)" title="Xóa (vô hiệu hóa) tài khoản"
+                                   th:onclick="|openDeleteUserModal('${user.id}', '${user.fullName}', '@{/user/list(viewMode=\'all\', page=${users.number}, size=${users.size})}')|"><i class="far fa-trash-alt text-danger"></i></a>
                                 <span>&nbsp;&nbsp;</span>
                                 <a th:href="@{/user/editPass/{id}(id=${user.id})}" title="Cấp lại mật khẩu"
                                    data-toggle="modal" data-target="#resetPasswordModal"
@@ -330,6 +330,7 @@
         </div>
         <div th:replace="~{school/delete-modal :: modal(${returnUrl})}"></div>
         <div th:replace="~{user/reset-password-modal :: modal}"></div>
+        <div th:replace="~{user/delete-modal :: modal}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

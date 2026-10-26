@@ -28,12 +28,12 @@ public class NewsServiceImpl implements INewsService {
 
     @Override
     public Page<News> findAll(Pageable pageable) {
-        return newsRepository.findAll(pageable);
+        return newsRepository.findAllActive(pageable);
     }
 
     @Override
     public Page<News> findByTitle(String name, Pageable pageable) {
-        return newsRepository.findAllByTitleContaining(name, pageable);
+        return newsRepository.findAllByTitleContainingActive(name, pageable);
     }
 
     @Override
@@ -84,12 +84,15 @@ public class NewsServiceImpl implements INewsService {
 
     @Override
     public void remove(News news) {
-        newsRepository.delete(news);
+        if (news != null) {
+            news.setStatus(0);
+            newsRepository.save(news);
+        }
     }
 
     @Override
     public List<News> findAll() {
-        return newsRepository.findAll();
+        return newsRepository.findAllActive();
     }
 
     @Override

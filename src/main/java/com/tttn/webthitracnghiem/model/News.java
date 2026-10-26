@@ -34,6 +34,9 @@ public class News {
     @Column(name = "is_public")
     private Boolean isPublic = true;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     public News() {
     }
 
@@ -127,4 +130,7 @@ public class News {
     public void setIsPublic(Boolean isPublic) {
         this.isPublic = isPublic;
     }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public boolean isActive() { return status == null || status == 1; }
 }

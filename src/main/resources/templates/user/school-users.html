@@ -397,12 +397,10 @@
                                     th:data-return-url="@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='teacher')}">
                                 <i class="fas fa-key mr-1"></i>Cấp lại MK
                             </button>
-                            <a th:href="@{/user/delete/{id}(id=${teacher.id}, returnUrl=@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='teacher')})}"
-                               class="btn btn-outline-danger btn-sm" title="Xóa tài khoản"
-                               th:attr="data-name=${teacher.fullName}"
-                               onclick="return confirm('Bạn có chắc muốn xóa giáo viên ' + this.dataset.name + '? (Tài khoản sẽ bị vô hiệu hóa và ẩn khỏi hệ thống)')">
+                            <button type="button" class="btn btn-outline-danger btn-sm" title="Xóa tài khoản"
+                                    th:onclick="|openDeleteUserModal('${teacher.id}', '${teacher.fullName}', '@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : \'\'}, activeTab=\'teacher\')}')|">
                                 <i class="fas fa-trash mr-1"></i>Xóa
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -530,13 +528,11 @@
                                                                 th:data-return-url="@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='student')}">
                                                             <i class="fas fa-key"></i>
                                                         </button>
-                                                        <a th:href="@{/user/delete/{id}(id=${student.id}, returnUrl=@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='student')})}"
-                                                           class="btn btn-outline-danger btn-sm py-1 px-2 ml-1"
-                                                           title="Xóa" style="font-size:.72rem;"
-                                                           th:attr="data-name=${student.fullName}"
-                                                           onclick="return confirm('Bạn có chắc muốn xóa học sinh ' + this.dataset.name + '? (Tài khoản sẽ bị vô hiệu hóa và ẩn khỏi hệ thống)')">
+                                                        <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2 ml-1"
+                                                                title="Xóa tài khoản" style="font-size:.72rem;"
+                                                                th:onclick="|openDeleteUserModal('${student.id}', '${student.fullName}', '@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : \'\'}, activeTab=\'student\')}')|">
                                                             <i class="fas fa-trash"></i>
-                                                        </a>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -556,6 +552,7 @@
             </div>
         </div>
         <div th:replace="~{user/reset-password-modal :: modal}"></div>
+    <div th:replace="~{user/delete-modal :: modal}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

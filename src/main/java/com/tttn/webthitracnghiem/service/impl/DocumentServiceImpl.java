@@ -27,7 +27,7 @@ public class DocumentServiceImpl implements IDocumentService {
     private ModelMapper modelMapper;
     @Override
     public Page<Document> findAll(Pageable pageable) {
-        return documentRepository.findAll(pageable);
+        return documentRepository.findAllActive(pageable);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public Page<Document> findByTitle(String title, Pageable pageable) {
-        return documentRepository.findByTitleContaining(title,pageable);
+        return documentRepository.findByTitleContainingActive(title, pageable);
     }
 
     @Override
@@ -83,12 +83,15 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public void remove(Document document) {
-        documentRepository.delete(document);
+        if (document != null) {
+            document.setStatus(0);
+            documentRepository.save(document);
+        }
     }
 
     @Override
     public List<Document> findAll() {
-        return documentRepository.findAll();
+        return documentRepository.findAllActive();
     }
 
     @Override
