@@ -141,6 +141,9 @@ public class ExamController {
             }
         }
 
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        model.addAttribute("isAdminOrSchoolAdmin", isAdmin || isSchoolAdmin);
         model.addAttribute("exams", exams);
         return "exam/listExam";
     }
@@ -215,22 +218,56 @@ public class ExamController {
         return "exam/editExam";
     }
 
-    @GetMapping("/exam/delete/{id}")
-    public String delete(@PathVariable("id") Integer id, RedirectAttributes re) {
-        Exam exam = examService.findById(id);
-
-        // Giáo viên chỉ xóa đề của mình
+    @PostMapping("/exam/delete")
+    public String delete(@RequestParam("id") Integer id,
+                         @RequestParam(value = "password", required = false) String password,
+                         RedirectAttributes re) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (isTeacherOnly(auth)) {
-            User currentUser = getCurrentUser(auth);
-            if (currentUser != null && (exam.getUsers() == null || !exam.getUsers().getId().equals(currentUser.getId()))) {
-                re.addFlashAttribute("error", "Bạn không có quyền xóa đề thi này!");
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        if (!isAdmin && !isSchoolAdmin) {
+            re.addFlashAttribute("error", "Chỉ Ban giám hiệu (Hiệu trưởng) hoặc Quản trị viên mới có quyền xóa đề thi.");
+            return "redirect:/exam/list";
+        }
+
+        User currentUser = getCurrentUser(auth);
+        if (currentUser == null) {
+            re.addFlashAttribute("error", "Vui lòng đăng nhập lại!");
+            return "redirect:/exam/list";
+        }
+
+        // Xác thực mật khẩu
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), currentUser.getPassWord())) {
+            re.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa đề thi.");
+            return "redirect:/exam/list";
+        }
+
+        Exam exam = examService.findById(id);
+        if (exam == null) {
+            re.addFlashAttribute("error", "Không tìm thấy đề thi cần xóa.");
+            return "redirect:/exam/list";
+        }
+
+        // Hiệu trưởng chỉ được xóa đề thi thuộc trường mình
+        if (isSchoolAdmin && !isAdmin) {
+            Integer userSchoolId = currentUser.getSchool() != null ? currentUser.getSchool().getId() : null;
+            Integer examSchoolId = exam.getSchool() != null ? exam.getSchool().getId() : null;
+            if (userSchoolId == null || !userSchoolId.equals(examSchoolId)) {
+                re.addFlashAttribute("error", "Hiệu trưởng chỉ được quyền xóa đề thi thuộc trường mình quản lý!");
                 return "redirect:/exam/list";
             }
         }
 
         examService.delete(exam);
-        re.addFlashAttribute("message", "Xóa đề thi thành công!");
+        re.addFlashAttribute("message", "Đã xóa (ẩn) đề thi " + exam.getNameExam() + " thành công!");
+        return "redirect:/exam/list";
+    }
+
+    @GetMapping("/exam/delete/{id}")
+    public String deleteGet(@PathVariable("id") Integer id, RedirectAttributes re) {
+        re.addFlashAttribute("error", "Hành động xóa đề thi yêu cầu xác thực mật khẩu qua biểu mẫu!");
         return "redirect:/exam/list";
     }
 

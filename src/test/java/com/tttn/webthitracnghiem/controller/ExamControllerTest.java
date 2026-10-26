@@ -213,4 +213,81 @@ class ExamControllerTest {
         assertThat(model.get("lessonPlanCandidate")).isSameAs(customLesson);
         assertThat(model.get("lessonPlanCandidatePath")).isEqualTo("/listExamSubject/lesson-plan/2");
     }
+
+    @Test
+    void adminCanDeleteExamWithCorrectPassword() {
+        Exam exam = new Exam();
+        exam.setId(10);
+        exam.setNameExam("De thi giua ky 1");
+
+        com.tttn.webthitracnghiem.model.User admin = new com.tttn.webthitracnghiem.model.User();
+        admin.setId("admin");
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        admin.setPassWord(encoder.encode("adminpass"));
+
+        IExamService examService = mock(IExamService.class);
+        com.tttn.webthitracnghiem.service.IUserService userService = mock(com.tttn.webthitracnghiem.service.IUserService.class);
+        when(examService.findById(10)).thenReturn(exam);
+        when(userService.findById("admin")).thenReturn(admin);
+
+        ExamController controller = new ExamController();
+        ReflectionTestUtils.setField(controller, "examService", examService);
+        ReflectionTestUtils.setField(controller, "userService", userService);
+
+        SecurityContextHolder.getContext().setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"))));
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        String result = controller.delete(10, "adminpass", ra);
+
+        assertThat(result).isEqualTo("redirect:/exam/list");
+        assertThat((String) ra.getFlashAttributes().get("message")).contains("Đã xóa (ẩn) đề thi De thi giua ky 1 thành công!");
+        verify(examService).delete(exam);
+    }
+
+    @Test
+    void cannotDeleteExamWithWrongPassword() {
+        Exam exam = new Exam();
+        exam.setId(10);
+
+        com.tttn.webthitracnghiem.model.User admin = new com.tttn.webthitracnghiem.model.User();
+        admin.setId("admin");
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        admin.setPassWord(encoder.encode("adminpass"));
+
+        IExamService examService = mock(IExamService.class);
+        com.tttn.webthitracnghiem.service.IUserService userService = mock(com.tttn.webthitracnghiem.service.IUserService.class);
+        when(userService.findById("admin")).thenReturn(admin);
+
+        ExamController controller = new ExamController();
+        ReflectionTestUtils.setField(controller, "examService", examService);
+        ReflectionTestUtils.setField(controller, "userService", userService);
+
+        SecurityContextHolder.getContext().setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "admin", "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"))));
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        String result = controller.delete(10, "wrongpass", ra);
+
+        assertThat(result).isEqualTo("redirect:/exam/list");
+        assertThat((String) ra.getFlashAttributes().get("error")).contains("Mật khẩu xác nhận không chính xác!");
+        org.mockito.Mockito.verify(examService, org.mockito.Mockito.never()).delete(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void teacherCannotDeleteExam() {
+        IExamService examService = mock(IExamService.class);
+        ExamController controller = new ExamController();
+        ReflectionTestUtils.setField(controller, "examService", examService);
+
+        SecurityContextHolder.getContext().setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "teacher1", "n/a", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_TEACHER"))));
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        String result = controller.delete(10, "any", ra);
+
+        assertThat(result).isEqualTo("redirect:/exam/list");
+        assertThat((String) ra.getFlashAttributes().get("error")).contains("Chỉ Ban giám hiệu (Hiệu trưởng) hoặc Quản trị viên");
+        org.mockito.Mockito.verify(examService, org.mockito.Mockito.never()).delete(org.mockito.ArgumentMatchers.any());
+    }
 }

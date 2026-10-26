@@ -131,8 +131,12 @@
                             </a>
                             <a th:href="@{/exam/editExam/{id}(id=${exam.getId()})}"><i
                                     class="fas fa-edit text-primary"></i></a>
-                            <a th:href="@{/exam/delete/{id}(id=${exam.getId()})}" id="deleteButton"><i
-                                    class="far fa-trash-alt text-danger"></i></a>
+                            <a th:if="${isAdminOrSchoolAdmin == true}"
+                               href="javascript:void(0)"
+                               class="btn-delete-exam ml-2"
+                               th:data-id="${exam.getId()}"
+                               th:data-name="${exam.getNameExam()}"
+                               title="Xóa (ẩn) đề thi"><i class="far fa-trash-alt text-danger"></i></a>
                         </td>
                     </tr>
                     </tbody>
@@ -183,24 +187,47 @@
 </div>
 
 
-<div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info">
-                <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<div class="modal fade" tabindex="-1" role="dialog" id="deleteModal" th:if="${isAdminOrSchoolAdmin == true}">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-danger shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold text-white">
+                    <i class="fa fa-exclamation-triangle mr-2"></i> Xác nhận xóa (ẩn) đề thi
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p>Bạn có muốn xoá đề thi này không ?<a></a></p>
-            </div>
-            <div class="modal-footer">
-                <a href="" type="button" class="btn btn-primary" id="delRef">Có</a>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
-            </div>
+            <form method="post" th:action="@{/exam/delete}">
+                <input type="hidden" name="id" id="deleteExamId">
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <i class="fa fa-exclamation-circle mr-1"></i>
+                        <strong>CẢNH BÁO:</strong> Đề thi <strong id="deleteExamName"></strong> sẽ bị <strong>ẨN</strong> khỏi hệ thống. Học sinh sẽ không thể tiếp tục làm bài thi này nữa.
+                        <div class="small mt-1 text-muted">
+                            (Toàn bộ điểm thi, kết quả và lịch sử làm bài trước đây của học sinh vẫn được lưu giữ an toàn trong hệ thống).
+                        </div>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label class="font-weight-bold text-dark">
+                            <i class="fa fa-lock mr-1 text-danger"></i>Nhập mật khẩu tài khoản của bạn để xác nhận:
+                        </label>
+                        <input type="password" name="password" class="form-control"
+                               placeholder="Mật khẩu tài khoản đang đăng nhập..." required autocomplete="current-password">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                        <i class="fa fa-times mr-1"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-danger btn-sm font-weight-bold">
+                        <i class="fa fa-trash mr-1"></i> Xác nhận Xóa Đề Thi
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 <!-- jQuery -->
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
@@ -244,12 +271,14 @@
 <script th:src="@{/js/loader.js}"></script>
 <script>
     $(document).ready(function () {
-        $(".table #deleteButton").on('click', function (event) {
+        $(".table .btn-delete-exam").on('click', function (event) {
             event.preventDefault();
-            var href = $(this).attr('href');
-            $('#deleteModal #delRef').attr('href', href);
-            $('#deleteModal').modal();
-        })
+            var examId = $(this).data('id');
+            var examName = $(this).data('name');
+            $('#deleteModal #deleteExamId').val(examId);
+            $('#deleteModal #deleteExamName').text(examName);
+            $('#deleteModal').modal('show');
+        });
     })
 
     $("#showExam").click(function () {

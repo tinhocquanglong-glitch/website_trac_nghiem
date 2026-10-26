@@ -466,6 +466,44 @@ class StudentTrackingServiceTest {
         return captor.getValue().iterator().next();
     }
 
+    @Test
+    void softDeletesTrackingClassInsteadOfHardDeleting() {
+        StudentTrackingClass trackingClass = trackingClass(5, "12A1", "2026-2027");
+        trackingClass.setStatus(1);
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        StudentTrackingService trackingService = new StudentTrackingService(
+                classRepository, mock(TrackedStudentRepository.class), mock(StudentSemesterRecordRepository.class),
+                mock(StudentMonthlyRecordRepository.class), mock(StudentTrackingExcelParser.class));
+        when(classRepository.findById(5)).thenReturn(Optional.of(trackingClass));
+
+        trackingService.deleteClass(5);
+
+        assertThat(trackingClass.getStatus()).isEqualTo(0);
+        verify(classRepository).save(trackingClass);
+        verify(classRepository, never()).delete(trackingClass);
+    }
+
+    @Test
+    void softDeletesTrackedStudentInsteadOfHardDeleting() {
+        StudentTrackingClass trackingClass = trackingClass(5, "12A1", "2026-2027");
+        TrackedStudent student = student(15, "Nguyen Van B", trackingClass);
+        student.setStatus(1);
+
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        TrackedStudentRepository studentRepository = mock(TrackedStudentRepository.class);
+        StudentTrackingService trackingService = new StudentTrackingService(
+                classRepository, studentRepository, mock(StudentSemesterRecordRepository.class),
+                mock(StudentMonthlyRecordRepository.class), mock(StudentTrackingExcelParser.class));
+
+        when(studentRepository.findById(15)).thenReturn(Optional.of(student));
+
+        trackingService.deleteStudent(5, 15);
+
+        assertThat(student.getStatus()).isEqualTo(0);
+        verify(studentRepository).save(student);
+        verify(studentRepository, never()).delete(student);
+    }
+
     private StudentTrackingClass trackingClass(int id, String className, String schoolYear) {
         StudentTrackingClass trackingClass = new StudentTrackingClass();
         trackingClass.setId(id);

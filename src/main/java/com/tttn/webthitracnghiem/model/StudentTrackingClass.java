@@ -36,6 +36,9 @@ public class StudentTrackingClass {
     @Column(name = "grade")
     private Integer grade;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
     private School school;
@@ -76,4 +79,8 @@ public class StudentTrackingClass {
     public void setStudents(List<TrackedStudent> students) { this.students = students; }
     public List<ClassSubjectAssignment> getAssignments() { return assignments; }
     public void setAssignments(List<ClassSubjectAssignment> assignments) { this.assignments = assignments; }
+
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public boolean isActive() { return status == null || status == 1; }
 }

@@ -333,9 +333,14 @@
                                     </th:block>
                                 </td>
                                 <td th:if="${editRoster}" class="cell-order">
-                                    <button class="btn btn-sm btn-outline-danger" type="submit" title="Xóa học sinh" name="semester" th:value="${semester}"
-                                            th:formaction="@{/student-tracking/classes/{classId}/students/{studentId}/delete(classId=${trackingClass.id},studentId=${row.studentId})}"
-                                            onclick="return confirm('Xóa học sinh này khỏi lớp?');">
+                                    <!-- Nút xóa học sinh: Chỉ Admin hoặc School Admin mới có quyền -->
+                                    <button th:if="${isAdminOrSchoolAdmin == true}"
+                                            type="button" class="btn btn-sm btn-outline-danger"
+                                            data-toggle="modal"
+                                            data-target="#deleteStudentModal"
+                                            th:data-student-id="${row.studentId}"
+                                            th:data-student-name="${row.fullName}"
+                                            title="Xóa (ẩn) học sinh">
                                         <i class="fa fa-trash" aria-hidden="true"></i><span class="sr-only">Xóa học sinh</span>
                                     </button>
                                 </td>
@@ -346,6 +351,50 @@
                     <div class="tracking-save-bar"><button class="btn btn-success" type="submit"><i class="fa fa-save" aria-hidden="true"></i>
                         <span th:text="${homeroomBook} ? 'Lưu sổ chủ nhiệm' : |Lưu sổ môn ${bookSubjectName}|">Lưu sổ theo dõi</span></button></div>
                 </form>
+
+                <!-- Modal xác nhận xóa (ẩn) học sinh khỏi lớp -->
+                <div class="modal fade" id="deleteStudentModal" tabindex="-1" role="dialog" aria-hidden="true" th:if="${isAdminOrSchoolAdmin == true}">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content border-danger shadow">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title font-weight-bold text-white">
+                                    <i class="fa fa-exclamation-triangle mr-2"></i> Xác nhận xóa (ẩn) học sinh
+                                </h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form id="deleteStudentForm" method="post" action="">
+                                <input type="hidden" name="semester" th:value="${semester}">
+                                <input type="hidden" name="month" th:value="${month}">
+                                <div class="modal-body">
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="fa fa-exclamation-circle mr-1"></i>
+                                        <strong>CẢNH BÁO:</strong> Học sinh <strong id="deleteStudentNameDisplay"></strong> sẽ bị <strong>ẨN</strong> khỏi danh sách lớp <strong th:text="${trackingClass.className}"></strong>.
+                                        <div class="small mt-1 text-muted">
+                                            (Dữ liệu điểm số, đánh giá và học bạ của các tháng đã học trước đó vẫn được lưu giữ an toàn trong hệ thống).
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-2">
+                                        <label class="font-weight-bold text-dark">
+                                            <i class="fa fa-lock mr-1 text-danger"></i>Nhập mật khẩu tài khoản của bạn để xác nhận:
+                                        </label>
+                                        <input type="password" name="password" class="form-control"
+                                               placeholder="Mật khẩu tài khoản đang đăng nhập..." required autocomplete="current-password">
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                                        <i class="fa fa-times mr-1"></i> Hủy
+                                    </button>
+                                    <button type="submit" class="btn btn-danger btn-sm font-weight-bold">
+                                        <i class="fa fa-trash mr-1"></i> Xác nhận Xóa Học Sinh
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Modal Cấp tài khoản Học sinh cho GVCN / Admin -->
                 <div class="modal fade" id="createStudentAccountModal" tabindex="-1" role="dialog" aria-labelledby="createStudentAccountModalLabel" aria-hidden="true" th:if="${canManage != false}">
@@ -448,5 +497,20 @@
 <script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/build/js/custom.min.js}"></script>
 <script th:src="@{/js/student-tracking.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    $(function() {
+        var classId = /*[[${trackingClass.id}]]*/ 0;
+        $('#deleteStudentModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var studentId = button.data('student-id');
+            var studentName = button.data('student-name');
+            var modal = $(this);
+            modal.find('#deleteStudentNameDisplay').text(studentName);
+            modal.find('#deleteStudentForm').attr('action', '/student-tracking/classes/' + classId + '/students/' + studentId + '/delete');
+        });
+    });
+    /*]]>*/
+</script>
 </body>
 </html>

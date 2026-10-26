@@ -525,6 +525,131 @@ class StudentTrackingControllerTest {
         verify(assignmentService).removeAssignment(10);
     }
 
+    @Test
+    void adminCanDeleteClassWithCorrectPassword() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+
+        User admin = user("admin");
+        admin.setPassWord(encoder.encode("secret123"));
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setClassName("10A1");
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(userService.findById("admin")).thenReturn(admin);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, mock(IClassAssignmentService.class))).build();
+
+        authenticate("admin", "ROLE_ADMIN");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/delete")
+                            .param("password", "secret123"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("message", org.hamcrest.Matchers.containsString("Đã xóa (ẩn) lớp 10A1 thành công!")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service).deleteClass(7);
+    }
+
+    @Test
+    void cannotDeleteClassWithIncorrectPassword() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+
+        User admin = user("admin");
+        admin.setPassWord(encoder.encode("secret123"));
+
+        when(userService.findById("admin")).thenReturn(admin);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, mock(IClassAssignmentService.class))).build();
+
+        authenticate("admin", "ROLE_ADMIN");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/delete")
+                            .param("password", "wrongpassword"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Mật khẩu xác nhận không chính xác!")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service, never()).deleteClass(any());
+    }
+
+    @Test
+    void teacherCannotDeleteClass() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, mock(IClassAssignmentService.class))).build();
+
+        authenticate("teacher1", "ROLE_TEACHER");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/delete")
+                            .param("password", "any"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Chỉ Ban giám hiệu")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service, never()).deleteClass(any());
+    }
+
+    @Test
+    void adminCanDeleteStudentWithCorrectPassword() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+
+        User admin = user("admin");
+        admin.setPassWord(encoder.encode("secret123"));
+
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        when(service.findClass(7)).thenReturn(trackingClass);
+        when(userService.findById("admin")).thenReturn(admin);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, mock(IClassAssignmentService.class))).build();
+
+        authenticate("admin", "ROLE_ADMIN");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/students/15/delete")
+                            .param("password", "secret123"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("message", org.hamcrest.Matchers.containsString("Đã xóa (ẩn) học sinh khỏi lớp thành công.")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service).deleteStudent(7, 15);
+    }
+
+    @Test
+    void teacherCannotDeleteStudentFromClass() throws Exception {
+        StudentTrackingService service = mock(StudentTrackingService.class);
+        IUserService userService = mock(IUserService.class);
+
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(
+                trackingController(service, userService, mock(IClassAssignmentService.class))).build();
+
+        authenticate("teacher1", "ROLE_TEACHER");
+        try {
+            mvc.perform(post("/student-tracking/classes/7/students/15/delete")
+                            .param("password", "any"))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(flash().attribute("error", org.hamcrest.Matchers.containsString("Chỉ Ban giám hiệu")));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        verify(service, never()).deleteStudent(anyInt(), anyInt());
+    }
+
     private static void authenticate(String username, String role) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                 username, "n/a", List.of(new SimpleGrantedAuthority(role))));

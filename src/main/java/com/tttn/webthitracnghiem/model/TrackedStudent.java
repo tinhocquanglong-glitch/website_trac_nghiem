@@ -31,6 +31,9 @@ public class TrackedStudent {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentSemesterRecord> semesterRecords = new ArrayList<>();
 
@@ -49,4 +52,8 @@ public class TrackedStudent {
     public void setSemesterRecords(List<StudentSemesterRecord> semesterRecords) { this.semesterRecords = semesterRecords; }
     public List<StudentMonthlyRecord> getMonthlyRecords() { return monthlyRecords; }
     public void setMonthlyRecords(List<StudentMonthlyRecord> monthlyRecords) { this.monthlyRecords = monthlyRecords; }
+
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public boolean isActive() { return status == null || status == 1; }
 }

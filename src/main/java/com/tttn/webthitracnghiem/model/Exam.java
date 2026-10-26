@@ -90,6 +90,9 @@ public class Exam {
     @Column(name = "grade_month")
     private Integer gradeMonth;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     // Curriculum scope: subject, grade and every lesson the exam covers. `lesson` stays the first scope lesson.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
@@ -325,5 +328,9 @@ public class Exam {
     public void setGradeLevel(Integer gradeLevel) { this.gradeLevel = gradeLevel; }
     public java.util.Set<Lesson> getScopeLessons() { return scopeLessons; }
     public void setScopeLessons(java.util.Set<Lesson> scopeLessons) { this.scopeLessons = scopeLessons; }
+
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public boolean isActive() { return status == null || status == 1; }
 }
 

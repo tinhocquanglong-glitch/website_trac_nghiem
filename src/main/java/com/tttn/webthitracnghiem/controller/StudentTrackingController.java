@@ -350,21 +350,58 @@ public class StudentTrackingController {
     }
 
     @PostMapping("/classes/{classId}/delete")
-    public String deleteClass(@PathVariable Integer classId, RedirectAttributes redirectAttributes) {
+    public String deleteClass(@PathVariable Integer classId,
+                              @RequestParam(value = "password", required = false) String password,
+                              RedirectAttributes redirectAttributes) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
         boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
         if (!isAdmin && !isSchoolAdmin) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên trường mới có quyền xóa lớp học.");
+            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu (Hiệu trưởng) hoặc Quản trị viên mới có quyền xóa lớp học.");
             return "redirect:/student-tracking";
         }
+        User currentUser = (auth != null && userService != null) ? userService.findById(auth.getName()) : null;
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập lại!");
+            return "redirect:/student-tracking";
+        }
+
+        // Xác thực mật khẩu tài khoản người thực hiện
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), currentUser.getPassWord())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa lớp học.");
+            return "redirect:/student-tracking";
+        }
+
+        StudentTrackingClass trackingClass;
+        try {
+            trackingClass = trackingService.findClass(classId);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy lớp học cần xóa.");
+            return "redirect:/student-tracking";
+        }
+
+        // Hiệu trưởng chỉ được xóa lớp thuộc trường của mình
+        if (isSchoolAdmin && !isAdmin) {
+            Integer userSchoolId = currentUser.getSchool() != null ? currentUser.getSchool().getId() : null;
+            Integer classSchoolId = trackingClass.getSchool() != null ? trackingClass.getSchool().getId() : null;
+            if (userSchoolId == null || !userSchoolId.equals(classSchoolId)) {
+                redirectAttributes.addFlashAttribute("error", "Hiệu trưởng chỉ được quyền xóa lớp thuộc trường mình quản lý!");
+                return "redirect:/student-tracking";
+            }
+        }
+
         try {
             trackingService.deleteClass(classId);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa lớp theo dõi.");
-        } catch (IllegalArgumentException ex) {
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Đã xóa (ẩn) lớp " + trackingClass.getClassName() + " thành công!");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa lớp: " + ex.getMessage());
         }
         return "redirect:/student-tracking";
+    }
+
+    public String deleteClass(Integer classId, RedirectAttributes redirectAttributes) {
+        return deleteClass(classId, null, redirectAttributes);
     }
 
     @GetMapping("/classes/{classId}")
@@ -824,20 +861,61 @@ public class StudentTrackingController {
     @PostMapping("/classes/{classId}/students/{studentId}/delete")
     public String deleteStudent(@PathVariable Integer classId,
                                 @PathVariable Integer studentId,
+                                @RequestParam(value = "password", required = false) String password,
                                 @RequestParam(defaultValue = "1") int semester,
                                 @RequestParam(required = false) Integer month,
                                 RedirectAttributes redirectAttributes) {
-        if (!checkCanManageClass(classId)) {
-            redirectAttributes.addFlashAttribute("error", "Chỉ GVCN hoặc Quản trị viên mới có quyền xóa học sinh khỏi lớp.");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        if (!isAdmin && !isSchoolAdmin) {
+            redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu (Hiệu trưởng) hoặc Quản trị viên mới có quyền xóa học sinh khỏi lớp.");
             return redirectToSheet(classId, semester, safeMonth(semester, month));
         }
+
+        User currentUser = (auth != null && userService != null) ? userService.findById(auth.getName()) : null;
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập lại!");
+            return redirectToSheet(classId, semester, safeMonth(semester, month));
+        }
+
+        // Xác thực mật khẩu tài khoản người thực hiện
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), currentUser.getPassWord())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa học sinh.");
+            return redirectToSheet(classId, semester, safeMonth(semester, month));
+        }
+
+        StudentTrackingClass trackingClass;
+        try {
+            trackingClass = trackingService.findClass(classId);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/student-tracking";
+        }
+
+        // Hiệu trưởng chỉ được xóa học sinh trong lớp thuộc trường mình quản lý
+        if (isSchoolAdmin && !isAdmin) {
+            Integer userSchoolId = currentUser.getSchool() != null ? currentUser.getSchool().getId() : null;
+            Integer classSchoolId = trackingClass.getSchool() != null ? trackingClass.getSchool().getId() : null;
+            if (userSchoolId == null || !userSchoolId.equals(classSchoolId)) {
+                redirectAttributes.addFlashAttribute("error", "Hiệu trưởng chỉ được quyền xóa học sinh trong lớp thuộc trường mình quản lý!");
+                return redirectToSheet(classId, semester, safeMonth(semester, month));
+            }
+        }
+
         try {
             trackingService.deleteStudent(classId, studentId);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa học sinh khỏi lớp.");
+            redirectAttributes.addFlashAttribute("message", "Đã xóa (ẩn) học sinh khỏi lớp thành công.");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return redirectToSheet(classId, semester, safeMonth(semester, month));
+    }
+
+    public String deleteStudent(Integer classId, Integer studentId, int semester, Integer month, RedirectAttributes redirectAttributes) {
+        return deleteStudent(classId, studentId, null, semester, month, redirectAttributes);
     }
 
     @PostMapping("/import")

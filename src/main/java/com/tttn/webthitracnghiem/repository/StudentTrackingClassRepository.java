@@ -9,29 +9,38 @@ import java.util.List;
 import java.util.Optional;
 
 public interface StudentTrackingClassRepository extends JpaRepository<StudentTrackingClass, Integer> {
+
+    @Query("SELECT c FROM StudentTrackingClass c WHERE (c.status IS NULL OR c.status = 1) ORDER BY c.schoolYear DESC, c.className ASC")
     List<StudentTrackingClass> findAllByOrderBySchoolYearDescClassNameAsc();
 
     /** Class names are unique per school and school year; a null schoolId matches classes without a school. */
     Optional<StudentTrackingClass> findFirstBySchoolIdAndClassNameIgnoreCaseAndSchoolYear(
             Integer schoolId, String className, String schoolYear);
 
-    List<StudentTrackingClass> findBySchoolId(Integer schoolId);
+    @Query("SELECT c FROM StudentTrackingClass c WHERE c.school.id = :schoolId AND (c.status IS NULL OR c.status = 1)")
+    List<StudentTrackingClass> findBySchoolId(@Param("schoolId") Integer schoolId);
 
-    List<StudentTrackingClass> findBySchoolIdOrderBySchoolYearDescClassNameAsc(Integer schoolId);
+    @Query("SELECT c FROM StudentTrackingClass c WHERE c.school.id = :schoolId AND (c.status IS NULL OR c.status = 1) ORDER BY c.schoolYear DESC, c.className ASC")
+    List<StudentTrackingClass> findBySchoolIdOrderBySchoolYearDescClassNameAsc(@Param("schoolId") Integer schoolId);
 
-    List<StudentTrackingClass> findBySchoolIdAndGradeOrderByClassNameAsc(Integer schoolId, Integer grade);
+    @Query("SELECT c FROM StudentTrackingClass c WHERE c.school.id = :schoolId AND c.grade = :grade AND (c.status IS NULL OR c.status = 1) ORDER BY c.className ASC")
+    List<StudentTrackingClass> findBySchoolIdAndGradeOrderByClassNameAsc(@Param("schoolId") Integer schoolId, @Param("grade") Integer grade);
 
+    @Query("SELECT c FROM StudentTrackingClass c WHERE c.school IS NULL AND (c.status IS NULL OR c.status = 1) ORDER BY c.schoolYear DESC, c.className ASC")
     List<StudentTrackingClass> findBySchoolIdIsNullOrderBySchoolYearDescClassNameAsc();
 
-    long countBySchoolId(Integer schoolId);
+    @Query("SELECT COUNT(c) FROM StudentTrackingClass c WHERE c.school.id = :schoolId AND (c.status IS NULL OR c.status = 1)")
+    long countBySchoolId(@Param("schoolId") Integer schoolId);
 
-    long countBySchoolIdAndGrade(Integer schoolId, Integer grade);
+    @Query("SELECT COUNT(c) FROM StudentTrackingClass c WHERE c.school.id = :schoolId AND c.grade = :grade AND (c.status IS NULL OR c.status = 1)")
+    long countBySchoolIdAndGrade(@Param("schoolId") Integer schoolId, @Param("grade") Integer grade);
 
-    List<StudentTrackingClass> findByHomeroomTeacherIdOrderBySchoolYearDescClassNameAsc(String teacherId);
+    @Query("SELECT c FROM StudentTrackingClass c WHERE c.homeroomTeacher.id = :teacherId AND (c.status IS NULL OR c.status = 1) ORDER BY c.schoolYear DESC, c.className ASC")
+    List<StudentTrackingClass> findByHomeroomTeacherIdOrderBySchoolYearDescClassNameAsc(@Param("teacherId") String teacherId);
 
     @Query("SELECT DISTINCT c FROM StudentTrackingClass c " +
            "LEFT JOIN c.assignments a " +
-           "WHERE c.homeroomTeacher.id = :teacherId OR a.teacher.id = :teacherId " +
+           "WHERE (c.status IS NULL OR c.status = 1) AND (c.homeroomTeacher.id = :teacherId OR a.teacher.id = :teacherId) " +
            "ORDER BY c.schoolYear DESC, c.className ASC")
     List<StudentTrackingClass> findClassesByTeacherInvolved(@Param("teacherId") String teacherId);
 }

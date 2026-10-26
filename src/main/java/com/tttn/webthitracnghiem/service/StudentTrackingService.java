@@ -208,7 +208,9 @@ public class StudentTrackingService {
 
     @Transactional
     public void deleteClass(Integer classId) {
-        classRepository.delete(findClass(classId));
+        StudentTrackingClass trackingClass = findClass(classId);
+        trackingClass.setStatus(0);
+        classRepository.save(trackingClass);
     }
 
     @Transactional
@@ -293,7 +295,8 @@ public class StudentTrackingService {
             throw new IllegalArgumentException("Hoc sinh khong thuoc lop nay");
         }
 
-        studentRepository.delete(student);
+        student.setStatus(0);
+        studentRepository.save(student);
     }
 
     @Transactional(readOnly = true)

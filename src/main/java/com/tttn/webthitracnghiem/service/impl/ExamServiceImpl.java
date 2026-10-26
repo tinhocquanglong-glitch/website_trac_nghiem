@@ -23,7 +23,7 @@ public class ExamServiceImpl implements IExamService {
 
     @Override
     public Page<Exam> findAll(Pageable pageable) {
-        return examRepository.findAll(pageable);
+        return examRepository.findAllActive(pageable);
     }
 
     @Override
@@ -60,7 +60,8 @@ public class ExamServiceImpl implements IExamService {
 
     @Override
     public void delete(Exam exam) {
-        examRepository.delete(exam);
+        exam.setStatus(0);
+        examRepository.save(exam);
     }
 
     @Override
