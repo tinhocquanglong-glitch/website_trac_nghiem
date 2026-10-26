@@ -93,6 +93,36 @@ class SubjectControllerTest {
         verify(subjectService).remove(subject);
     }
 
+    @Test
+    void schoolAdminCannotDeleteGlobalSubjectOrOtherSchoolSubject() {
+        SubjectController controller = controller();
+        IUserService userService = (IUserService) org.springframework.test.util.ReflectionTestUtils.getField(controller, "userService");
+        ISubjectService subjectService = (ISubjectService) org.springframework.test.util.ReflectionTestUtils.getField(controller, "subjectService");
+
+        User principalUser = new User();
+        principalUser.setId("principal");
+        principalUser.setPassWord(new BCryptPasswordEncoder().encode("pass123"));
+        when(userService.findById("principal")).thenReturn(principalUser);
+
+        // Global subject (Admin created)
+        Subject globalSubject = new Subject();
+        globalSubject.setId(1);
+        globalSubject.setName("Toán Chung");
+        globalSubject.setSchool(null);
+        when(subjectService.findById(1)).thenReturn(globalSubject);
+        when(subjectService.canManage(eq(globalSubject), eq(principalUser), eq(false))).thenReturn(false);
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "principal", "password", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"))));
+
+        RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
+        String result = controller.remove(1, "pass123", ra);
+        assertThat(result).isEqualTo("redirect:/subject/list");
+        assertThat(ra.getFlashAttributes().get("error")).isEqualTo("Bạn không có quyền xóa môn học này!");
+        verify(subjectService, never()).remove(globalSubject);
+    }
+
     private SubjectController controller() {
         SubjectController controller = new SubjectController();
         org.springframework.test.util.ReflectionTestUtils.setField(controller, "subjectService", mock(ISubjectService.class));
