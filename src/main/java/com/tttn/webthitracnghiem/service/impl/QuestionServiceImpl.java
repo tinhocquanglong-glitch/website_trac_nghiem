@@ -18,7 +18,7 @@ public class QuestionServiceImpl implements IQuestionService {
 
     @Override
     public Page<Question> findAll(Pageable pageable) {
-        return questionRepository.findAll(pageable);
+        return questionRepository.findAllActive(pageable);
     }
 
     @Override
@@ -52,7 +52,8 @@ public class QuestionServiceImpl implements IQuestionService {
     }
     @Override
     public void delete(Question question) {
-        questionRepository.delete(question);
+        question.setStatus(0);
+        questionRepository.save(question);
     }
     @Override
     public Page<Question> findAllByExams(int id, Pageable pageable) {
@@ -60,7 +61,7 @@ public class QuestionServiceImpl implements IQuestionService {
     }
     @Override
     public Page<Question> findAllByTitleContaining(String title, Pageable pageable) {
-        return questionRepository.findAllByTitleContaining(title, pageable);
+        return questionRepository.findActiveByTitleContaining(title, pageable);
     }
     @Override
     public Page<Question> findAllBySubject(Optional<Integer> id, Pageable pageable) {

@@ -79,6 +79,9 @@ public class Question {
     @Column(name = "source_plan_lesson_id")
     private Integer sourcePlanLessonId;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     @NotFound(action = NotFoundAction.IGNORE)
@@ -266,5 +269,17 @@ public class Question {
 
     public void setClasses(Classes classes) {
         this.classes = classes;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public boolean isActive() {
+        return status == null || status == 1;
     }
 }

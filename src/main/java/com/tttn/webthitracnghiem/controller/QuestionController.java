@@ -49,6 +49,8 @@ public class QuestionController {
     private com.tttn.webthitracnghiem.service.CurriculumService curriculumService;
     @Autowired
     private com.tttn.webthitracnghiem.repository.QuestionRepository questionRepository;
+    @Autowired
+    private org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
 
     @ModelAttribute("exams")
     public Iterable<Exam> exams() {
@@ -206,24 +208,58 @@ public class QuestionController {
         return "redirect:/question/list";
     }
 
-    @GetMapping("/question/delete/{id}")
-    public String delete(@PathVariable("id") Integer id, RedirectAttributes ra) {
-        Question question = questionService.findById(id);
-
-        // Giáo viên chỉ xóa câu hỏi của trường mình (private)
+    @PostMapping("/question/delete")
+    public String deleteQuestionPost(@RequestParam("id") Integer id,
+                                     @RequestParam(value = "password", required = false) String password,
+                                     RedirectAttributes ra) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (isTeacherOnly(auth)) {
-            School school = getCurrentUserSchool(auth);
+        if (auth == null || !auth.isAuthenticated()) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return "redirect:/login";
+        }
+        User currentUser = userService.findById(auth.getName());
+        if (currentUser == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy thông tin tài khoản!");
+            return "redirect:/question/list";
+        }
+
+        boolean isAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        if (!isAdmin && !isSchoolAdmin) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống hoặc Hiệu trưởng mới có quyền xóa (ẩn) câu hỏi!");
+            return "redirect:/question/list";
+        }
+
+        Question question = questionService.findById(id);
+        if (question == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy câu hỏi cần xóa!");
+            return "redirect:/question/list";
+        }
+
+        if (isSchoolAdmin && !isAdmin) {
+            School school = currentUser.getSchool();
             int schoolId = (school != null) ? school.getId() : -1;
             boolean sameSchool = (question.getSchool() != null && question.getSchool().getId() == schoolId);
             if (!sameSchool) {
-                ra.addFlashAttribute("error", "Bạn không có quyền xóa câu hỏi này!");
+                ra.addFlashAttribute("error", "Bạn chỉ có thể xóa câu hỏi thuộc trường học của mình!");
                 return "redirect:/question/list";
             }
         }
 
+        if (password == null || password.trim().isEmpty() || !passwordEncoder.matches(password.trim(), currentUser.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa (ẩn) câu hỏi.");
+            return "redirect:/question/list";
+        }
+
         questionService.delete(question);
-        ra.addFlashAttribute("message","Xóa câu hỏi thành công!");
+        ra.addFlashAttribute("message", "Đã xóa (ẩn) câu hỏi thành công!");
+        return "redirect:/question/list";
+    }
+
+    @GetMapping("/question/delete/{id}")
+    public String deleteLegacy(@PathVariable("id") Integer id, RedirectAttributes ra) {
+        ra.addFlashAttribute("error", "Thao tác xóa yêu cầu xác thực mật khẩu qua biểu mẫu bảo mật!");
         return "redirect:/question/list";
     }
 

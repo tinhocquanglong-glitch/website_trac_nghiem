@@ -64,6 +64,9 @@ public class LessonPlan {
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = false;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -113,6 +116,9 @@ public class LessonPlan {
     }
     public Boolean getIsPublic() { return isPublic; }
     public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+    public boolean isActive() { return status == null || status == 1; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

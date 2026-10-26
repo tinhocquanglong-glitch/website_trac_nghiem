@@ -234,18 +234,17 @@ public class QuestionApiController {
             return ResponseEntity.ok(questionService.findBySub(sub.get()));
         }
     }
-    @DeleteMapping(value = "/{id}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> remove(@PathVariable Integer id){
-        Question question = questionService.findById(id);
-        for(Exam exam : question.getExams()){
-            if(exam.getQuestions().size() == 1){
-                examService.delete(exam);
-                continue;
-            }
-            List<Question> questions = exam.getQuestions();
-            questions.remove(question);
-            exam.setQuestions(questions);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !privileged(auth)) {
+            return ResponseEntity.status(403).body("Chỉ Quản trị viên hoặc Hiệu trưởng mới có quyền xóa (ẩn) câu hỏi.");
         }
+        Question question = questionService.findById(id);
+        if (question == null) {
+            return ResponseEntity.notFound().build();
+        }
+        // Xóa mềm: đánh dấu status = 0, bảo toàn dữ liệu các đề thi đã gắn câu hỏi này
         questionService.delete(question);
         return ResponseEntity.ok(id);
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Duyệt câu hỏi</title>
@@ -67,12 +67,53 @@
                     </form>
                     <a class="btn btn-sm btn-outline-primary" th:href="@{/question/editQuest/{id}(id=${question.quesId})}">
                         <i class="fas fa-edit mr-1"></i>Sửa</a>
-                    <a class="btn btn-sm btn-outline-danger" th:href="@{/question/delete/{id}(id=${question.quesId})}"
-                       onclick="return confirm('Xóa câu hỏi này?')"><i class="fas fa-trash mr-1"></i>Xóa</a>
+                    <th:block sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')">
+                        <button type="button" class="btn btn-sm btn-outline-danger" th:onclick="|openDeleteModal(${question.quesId})|">
+                            <i class="fas fa-trash mr-1"></i>Xóa
+                        </button>
+                    </th:block>
                 </div>
             </div>
         </div>
     </main>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Cảnh báo: Xác nhận xóa (ẩn) câu hỏi</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form th:action="@{/question/delete}" method="post">
+                    <input type="hidden" name="id" id="deleteQuestionId">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Câu hỏi sẽ được <strong>chuyển sang trạng thái ẩn</strong>.
+                        </div>
+                        <p class="text-danger font-weight-bold">Chỉ Quản trị viên và Hiệu trưởng có quyền xóa. Vui lòng nhập mật khẩu của bạn để xác nhận:</p>
+                        <div class="form-group">
+                            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa (ẩn)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeleteModal(id) {
+            $('#deleteQuestionId').val(id);
+            $('#deleteModal').modal('show');
+        }
+    </script>
+
     <div th:insert="~{index.html :: footerAdmin}"></div>
 </div></div>
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>

@@ -1,4 +1,5 @@
 package com.tttn.webthitracnghiem.controller;
+import com.tttn.webthitracnghiem.model.User;
 
 import com.tttn.webthitracnghiem.model.Classes;
 import com.tttn.webthitracnghiem.service.IClassesService;
@@ -20,6 +21,10 @@ import java.util.Optional;
 public class ClassController {
     @Autowired
     private IClassesService classesService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.IUserService userService;
+    @Autowired
+    private org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
     @GetMapping("/list")
     public String index(Model model, @PageableDefault(value = 10) Pageable pageable){
         Page<Classes> classes;
@@ -54,13 +59,44 @@ public class ClassController {
         return "redirect:/class/list";
     }
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable String id,RedirectAttributes ra){
-        if (!canManageCurriculum()) {
+    public String deleteLegacy(@PathVariable String id, RedirectAttributes ra) {
+        ra.addFlashAttribute("error", "Thao tác xóa khối học yêu cầu quyền Quản trị viên cấp cao và xác thực mật khẩu!");
+        return "redirect:/class/list";
+    }
+
+    @PostMapping("/delete")
+    public String deletePost(@RequestParam("id") Integer id,
+                             @RequestParam(value = "password", required = false) String password,
+                             RedirectAttributes ra) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện!");
+            return "redirect:/login";
+        }
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống (Admin) mới có quyền xóa khối học!");
             return "redirect:/class/list";
         }
-        Classes classes = classesService.findById(Integer.parseInt(id));
+        User currentUser = userService.findById(auth.getName());
+        if (currentUser == null || password == null || password.trim().isEmpty() || !passwordEncoder.matches(password.trim(), currentUser.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa khối học.");
+            return "redirect:/class/list";
+        }
+
+        Classes classes = classesService.findById(id);
+        if (classes == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy khối học!");
+            return "redirect:/class/list";
+        }
+
+        if (classes.getSubjectClasses() != null && !classes.getSubjectClasses().isEmpty()) {
+            ra.addFlashAttribute("error", "Không thể xóa khối học đang chứa môn học và chương trình đào tạo!");
+            return "redirect:/class/list";
+        }
+
         classesService.remove(classes);
-        ra.addFlashAttribute("message","Xóa lớp học thành công!");
+        ra.addFlashAttribute("message", "Xóa khối học thành công!");
         return "redirect:/class/list";
     }
     @PostMapping("/update")

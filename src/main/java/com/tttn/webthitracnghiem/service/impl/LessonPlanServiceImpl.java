@@ -475,10 +475,9 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
     public void delete(int id, String ownerId) {
         LessonPlan plan = lessonPlanRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Giáo án không tồn tại"));
-        if (plan.getOwner() == null || !plan.getOwner().getId().equals(ownerId)) {
-            throw new SecurityException("Bạn không có quyền xóa giáo án này");
-        }
-        lessonPlanRepository.delete(plan);
+        // Xóa mềm: đánh dấu status = 0 để bảo toàn tính toàn vẹn dữ liệu
+        plan.setStatus(0);
+        lessonPlanRepository.save(plan);
     }
 
     @Override

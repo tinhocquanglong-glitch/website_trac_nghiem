@@ -114,6 +114,13 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                         th:if="${error != null}">
+                        <strong th:text="${error}"></strong>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
                     <div class="btn-group mb-3 d-flex justify-content-between">
                         <div class="d-inline-flex">
                             <form class="d-inline-flex mr-5 gap-10" action="/question/list" method="get">
@@ -211,10 +218,12 @@
                                 </span>
                             </td>
                             <td class="text-center wt-nowrap">
-                                <a th:href="@{/question/editQuest/{id}(id=${question.quesId})}"><i
-                                        class="fas fa-edit text-primary"></i></a>
-                                <a type="button" th:onclick="|remove(${question.quesId})|" id="deleteButton"><i
-                                        class="far fa-trash-alt text-danger"></i></a>
+                                <a th:href="@{/question/editQuest/{id}(id=${question.quesId})}" title="Chỉnh sửa câu hỏi"><i
+                                        class="fas fa-edit text-primary mr-2"></i></a>
+                                <th:block sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')">
+                                    <a type="button" href="javascript:void(0)" th:onclick="|openDeleteModal(${question.quesId})|" title="Xóa (ẩn) câu hỏi"><i
+                                            class="far fa-trash-alt text-danger"></i></a>
+                                </th:block>
                             </td>
                         </tr>
                         </tbody>
@@ -263,19 +272,29 @@
         <div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <div class="modal-header bg-info">
-                        <h5 class="modal-title">Xác nhận</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Cảnh báo: Xác nhận xóa (ẩn) câu hỏi</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <p>Bạn có muốn xoá câu hỏi này không ?<a></a></p>
-                    </div>
-                    <div class="modal-footer">
-                        <a type="button" class="btn btn-primary" id="delRef">Có</a>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
-                    </div>
+                    <form th:action="@{/question/delete}" method="post">
+                        <input type="hidden" name="id" id="deleteQuestionId">
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Câu hỏi sẽ được <strong>chuyển sang trạng thái ẩn</strong> và không còn xuất hiện khi tạo đề thi mới. Toàn bộ đề thi và kết quả làm bài lịch sử đã dùng câu hỏi này vẫn được bảo toàn nguyên vẹn.
+                            </div>
+                            <p class="text-danger font-weight-bold">Hành động này chỉ dành cho Quản trị viên và Hiệu trưởng. Vui lòng nhập mật khẩu tài khoản của bạn để xác nhận:</p>
+                            <div class="form-group">
+                                <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                            <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa (ẩn)</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -333,25 +352,9 @@
         $("#question").toggle();
     });
 
-    function remove(id) {
-        $('#deleteModal #delRef').click(function () {
-            $.ajax({
-                contentType: 'application/json; charset=utf-8',
-                type: 'DELETE',
-                url: '/api/question/' + id,
-                success: function () {
-                    var url = window.location.href;
-                    if (url.endsWith("delete=true")) {
-                        window.location.replace(window.location.href);
-                    } else {
-                        window.location.replace(window.location.href + '&delete=' + true);
-                    }
-                },
-                failure: function (response) {
-                }
-            });
-        });
-        $('#deleteModal').modal();
+    function openDeleteModal(id) {
+        $('#deleteQuestionId').val(id);
+        $('#deleteModal').modal('show');
     }
 </script>
 

@@ -49,6 +49,8 @@ public class LessonPlanController {
     @Autowired
     private ILessonPlanService lessonPlanService;
     @Autowired
+    private org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
+    @Autowired
     private IUserService userService;
     @Autowired
     private LessonPlanDocumentService documentService;
@@ -251,10 +253,46 @@ public class LessonPlanController {
     }
 
     @PostMapping("/{id}/delete")
-    public String delete(@PathVariable int id, RedirectAttributes ra) {
+    public String delete(@PathVariable int id,
+                         @RequestParam(value = "password", required = false) String password,
+                         RedirectAttributes ra) {
+        User currentUser = currentUser();
+        if (currentUser == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập để thực hiện thao tác này!");
+            return "redirect:/login";
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+
+        if (!isAdmin && !isSchoolAdmin) {
+            ra.addFlashAttribute("error", "Chỉ Quản trị viên hệ thống hoặc Hiệu trưởng mới có quyền xóa (ẩn) kế hoạch bài dạy!");
+            return "redirect:/lesson-plans";
+        }
+
+        LessonPlan plan = lessonPlanService.findById(id);
+        if (plan == null) {
+            ra.addFlashAttribute("error", "Không tìm thấy kế hoạch bài dạy cần xóa!");
+            return "redirect:/lesson-plans";
+        }
+
+        if (isSchoolAdmin && !isAdmin) {
+            if (plan.getOwner() == null || plan.getOwner().getSchool() == null || currentUser.getSchool() == null
+                    || !plan.getOwner().getSchool().getId().equals(currentUser.getSchool().getId())) {
+                ra.addFlashAttribute("error", "Bạn chỉ có thể xóa kế hoạch bài dạy của giáo viên thuộc trường học của mình!");
+                return "redirect:/lesson-plans";
+            }
+        }
+
+        if (password == null || password.trim().isEmpty() || !passwordEncoder.matches(password.trim(), currentUser.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể xóa (ẩn) kế hoạch bài dạy.");
+            return "redirect:/lesson-plans";
+        }
+
         try {
-            lessonPlanService.delete(id, currentUser().getId());
-            ra.addFlashAttribute("message", "Đã xóa giáo án.");
+            lessonPlanService.delete(id, currentUser.getId());
+            ra.addFlashAttribute("message", "Đã xóa (ẩn) kế hoạch bài dạy thành công!");
         } catch (SecurityException | IllegalArgumentException ex) {
             ra.addFlashAttribute("error", ex.getMessage());
         }

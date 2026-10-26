@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title th:text="${plan.name}">Chi tiết Kế hoạch bài dạy (KHBD)</title>
@@ -49,7 +49,10 @@
                         <div th:unless="${plan.isPublic}" class="visibility-private small"><i class="fas fa-lock mr-1"></i> Private</div>
                         <div class="mt-3">
                             <a th:href="@{/lesson-plans/{id}/export(id=${plan.id})}" class="btn btn-outline-light btn-sm mr-2"><i class="fas fa-file-word mr-1"></i> Xuất Word</a>
-                            <a th:if="${canEdit}" th:href="@{/lesson-plans/{id}/edit(id=${plan.id})}" class="btn btn-light btn-sm"><i class="fas fa-edit mr-1"></i> Sửa KHBD</a>
+                            <a th:if="${canEdit}" th:href="@{/lesson-plans/{id}/edit(id=${plan.id})}" class="btn btn-light btn-sm mr-2"><i class="fas fa-edit mr-1"></i> Sửa KHBD</a>
+                            <th:block sec:authorize="hasAnyRole('ADMIN', 'SCHOOL_ADMIN')">
+                                <button type="button" class="btn btn-danger btn-sm" th:onclick="|openDeleteModal(${plan.id}, '${plan.name}')|"><i class="fas fa-trash-alt mr-1"></i> Xóa KHBD</button>
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -110,6 +113,44 @@
             </section>
         </div>
     </main>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="deletePlanModal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Cảnh báo: Xác nhận xóa (ẩn) KHBD</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="deletePlanForm" method="post">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Kế hoạch bài dạy <strong id="deletePlanName"></strong> sẽ được <strong>chuyển sang trạng thái ẩn</strong>. Dữ liệu đề thi và câu hỏi liên quan vẫn được bảo toàn nguyên vẹn.
+                        </div>
+                        <p class="text-danger font-weight-bold">Chỉ Quản trị viên và Hiệu trưởng có quyền thực hiện. Vui lòng nhập mật khẩu tài khoản của bạn để xác nhận:</p>
+                        <div class="form-group">
+                            <input type="password" name="password" class="form-control" placeholder="Nhập mật khẩu của bạn..." required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-danger font-weight-bold"><i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa (ẩn)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDeleteModal(planId, planName) {
+            $('#deletePlanName').text(planName || ('#' + planId));
+            $('#deletePlanForm').attr('action', '/lesson-plans/' + planId + '/delete');
+            $('#deletePlanModal').modal('show');
+        }
+    </script>
+
     <div th:insert="~{index.html :: footerAdmin}"></div>
 </div></div>
 <script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
