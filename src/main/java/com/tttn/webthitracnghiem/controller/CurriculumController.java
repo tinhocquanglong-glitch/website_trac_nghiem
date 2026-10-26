@@ -77,6 +77,7 @@ public class CurriculumController {
             subjectClasses = List.of();
         } else if (admin && targetSchoolId == null) {
             subjectClasses = subjectClassRepository.findByClassId(grade.getId()).stream()
+                    .filter(item -> item.getSubject() != null && !item.getSubject().isDeleted())
                     .sorted(Comparator.comparing(item -> item.getSubject().getName(),
                             Comparator.nullsLast(String::compareToIgnoreCase)))
                     .collect(Collectors.toList());
@@ -84,12 +85,12 @@ public class CurriculumController {
             List<SubjectClasses> rawList = subjectClassRepository.findByClassIdAndSchoolOrGlobal(grade.getId(), targetSchoolId);
             Map<Integer, SubjectClasses> map = new LinkedHashMap<>();
             for (SubjectClasses sc : rawList) {
-                if (sc.getSchool() == null) {
+                if (sc.getSubject() != null && !sc.getSubject().isDeleted() && sc.getSchool() == null) {
                     map.put(sc.getSubject().getId(), sc);
                 }
             }
             for (SubjectClasses sc : rawList) {
-                if (sc.getSchool() != null && Objects.equals(sc.getSchool().getId(), targetSchoolId)) {
+                if (sc.getSubject() != null && !sc.getSubject().isDeleted() && sc.getSchool() != null && Objects.equals(sc.getSchool().getId(), targetSchoolId)) {
                     map.put(sc.getSubject().getId(), sc);
                 }
             }

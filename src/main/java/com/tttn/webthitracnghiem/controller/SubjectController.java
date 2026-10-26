@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -248,9 +249,21 @@ public class SubjectController {
         return "redirect:/subject/list";
     }
 
-    @GetMapping("/delete/{id}")
-    public String remove(@PathVariable Integer id, RedirectAttributes ra) {
+    @PostMapping("/delete")
+    public String remove(@RequestParam("id") Integer id,
+                         @RequestParam("password") String password,
+                         RedirectAttributes ra) {
         if (!canManageSubjects()) {
+            return "redirect:/subject/list";
+        }
+        User user = currentUser();
+        if (user == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập lại!");
+            return "redirect:/subject/list";
+        }
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), user.getPassWord())) {
+            ra.addFlashAttribute("error", "Mật khẩu xác thực không chính xác! Không thể xóa môn học.");
             return "redirect:/subject/list";
         }
         Subject subject = subjectService.findById(id);
@@ -258,16 +271,22 @@ public class SubjectController {
             ra.addFlashAttribute("error", "Không tìm thấy môn học!");
             return "redirect:/subject/list";
         }
-        if (!subjectService.canManage(subject, currentUser(), isAdmin())) {
+        if (!subjectService.canManage(subject, user, isAdmin())) {
             ra.addFlashAttribute("error", "Bạn không có quyền xóa môn học này!");
             return "redirect:/subject/list";
         }
         try {
             subjectService.remove(subject);
-            ra.addFlashAttribute("message", "Xóa môn học thành công!");
+            ra.addFlashAttribute("message", "Đã xóa môn học '" + subject.getName() + "' thành công!");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", "Không thể xóa môn học này vì đã có dữ liệu liên kết!");
+            ra.addFlashAttribute("error", "Đã xảy ra lỗi khi xóa môn học!");
         }
+        return "redirect:/subject/list";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String removeGet(@PathVariable Integer id, RedirectAttributes ra) {
+        ra.addFlashAttribute("error", "Hành động xóa môn học yêu cầu xác thực mật khẩu qua biểu mẫu!");
         return "redirect:/subject/list";
     }
 

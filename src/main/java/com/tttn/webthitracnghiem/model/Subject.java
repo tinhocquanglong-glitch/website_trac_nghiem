@@ -26,6 +26,9 @@ public class Subject {
     @JsonIgnore
     private School school;
 
+    @Column(name = "status")
+    private Integer status = 1;
+
     public Subject() {
     }
 
@@ -47,6 +50,18 @@ public class Subject {
 
     public boolean isGlobal() {
         return this.school == null;
+    }
+
+    public Integer getStatus() {
+        return status != null ? status : 1;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public boolean isDeleted() {
+        return Integer.valueOf(0).equals(this.status);
     }
 
     public Set<SubjectClasses> getSubjectClasses() {

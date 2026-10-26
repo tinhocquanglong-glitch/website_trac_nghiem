@@ -492,7 +492,7 @@ public class LessonPlanServiceImpl implements ILessonPlanService {
     @Override
     @Transactional(readOnly = true)
     public List<Subject> findSubjects() {
-        return subjectRepository.findAll().stream()
+        return subjectRepository.findAllActive().stream()
                 .sorted(Comparator.comparing(Subject::getName,
                         Comparator.nullsLast(String::compareToIgnoreCase)))
                 .collect(Collectors.toList());

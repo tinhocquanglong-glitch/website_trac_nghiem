@@ -118,13 +118,13 @@
                             <!-- Admin can edit & delete any subject -->
                             <span th:if="${isAdmin}">
                                 <a th:href="@{/subject/edit/{id}(id=${subject.getId()})}" class="btn btn-sm btn-outline-primary mr-1" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
-                                <a th:href="@{/subject/delete/{id}(id=${subject.getId()})}" id="deleteButton" class="btn btn-sm btn-outline-danger" title="Xóa"><i class="far fa-trash-alt"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-subject" title="Xóa môn học" th:data-id="${subject.getId()}" th:data-name="${subject.getName()}"><i class="far fa-trash-alt"></i></button>
                             </span>
                             <!-- School Admin: can edit/delete OWN school subjects; can copy global subjects -->
                             <span th:if="${!isAdmin and isSchoolAdmin}">
                                 <span th:if="${subject.school != null and currentSchool != null and subject.school.id == currentSchool.id}">
                                     <a th:href="@{/subject/edit/{id}(id=${subject.getId()})}" class="btn btn-sm btn-outline-primary mr-1" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
-                                    <a th:href="@{/subject/delete/{id}(id=${subject.getId()})}" id="deleteButton" class="btn btn-sm btn-outline-danger" title="Xóa"><i class="far fa-trash-alt"></i></a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-subject" title="Xóa môn học" th:data-id="${subject.getId()}" th:data-name="${subject.getName()}"><i class="far fa-trash-alt"></i></button>
                                 </span>
                                 <span th:if="${subject.school == null}">
                                     <a th:href="@{/subject/copy/{id}(id=${subject.getId()})}" class="btn btn-sm btn-outline-info" title="Sao chép về trường để chỉnh sửa riêng" onclick="return confirm('Bạn có muốn tạo bản sao môn học này cho riêng trường mình không?');">
@@ -177,22 +177,63 @@
     </div>
 </div>
 
-<div class="modal fade" tabindex="-1" role="dialog" id="deleteModal">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info">
-                <h5 class="modal-title">Xác nhận xóa</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+<div class="modal fade" tabindex="-1" role="dialog" id="deleteSubjectModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-danger text-white py-3">
+                <h5 class="modal-title font-weight-bold" style="font-size: 16px;">
+                    <i class="fas fa-shield-alt mr-2"></i>Xác nhận xóa môn học
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <p>Bạn có muốn xoá môn học này không ?<a></a></p>
-            </div>
-            <div class="modal-footer">
-                <a href="" type="button" class="btn btn-primary" id="delRef">Có</a>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Không</button>
-            </div>
+            <form th:action="@{/subject/delete}" method="post" id="deleteSubjectForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="id" id="modalSubjectId">
+                    
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="font-size: 38px; color: #dc3545;">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <p class="mb-1 text-muted" style="font-size: 14px;">Bạn có chắc chắn muốn xóa môn học sau?</p>
+                        <h4 class="font-weight-bold text-dark mb-0" id="modalSubjectName"></h4>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small py-2 px-3 mb-3" style="background-color: #fff3cd; color: #856404; border-radius: 8px; font-size: 12.5px;">
+                        <i class="fas fa-exclamation-triangle mr-1 text-warning"></i>
+                        <strong>Lưu ý:</strong> Môn học này sẽ được xóa và <strong>ẩn khỏi toàn bộ giao diện hệ thống</strong> (học sinh, giáo viên, hiệu trưởng, admin và khung chương trình). Các bài thi và kết quả cũ đã thực hiện trước đây vẫn được bảo lưu an toàn.
+                    </div>
+
+                    <div class="form-group text-left mb-0">
+                        <label for="confirmPassword" class="font-weight-bold text-dark mb-1" style="font-size: 13px;">
+                            <i class="fas fa-key mr-1 text-danger"></i>Nhập mật khẩu tài khoản của bạn để xác nhận xóa: <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="confirmPassword" name="password" required
+                                   placeholder="Nhập mật khẩu của bạn..." autocomplete="current-password"
+                                   style="border-radius: 6px 0 0 6px; font-size: 14px; height: 42px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn"
+                                        style="border-radius: 0 6px 6px 0; border-color: #ced4da;" title="Hiện/Ẩn mật khẩu">
+                                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted mt-1" style="font-size: 11.5px;">
+                            Bảo mật: Bắt buộc phải xác nhận mật khẩu tài khoản hiện tại để tránh thao tác xóa nhầm.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal" style="border-radius: 6px;">
+                        <i class="fas fa-times mr-1"></i>Hủy bỏ
+                    </button>
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold" id="confirmDeleteSubmitBtn" style="border-radius: 6px;">
+                        <i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -239,11 +280,29 @@
 <script th:src="@{/js/loader.js}"></script>
 <script>
     $(document).ready(function () {
-        $(".table #deleteButton").on('click', function (event) {
+        $(".btn-delete-subject").on('click', function (event) {
             event.preventDefault();
-            var href = $(this).attr('href');
-            $('#deleteModal #delRef').attr('href', href);
-            $('#deleteModal').modal();
+            var id = $(this).attr('data-id');
+            var name = $(this).attr('data-name');
+            $('#modalSubjectId').val(id);
+            $('#modalSubjectName').text(name);
+            $('#confirmPassword').val('');
+            $('#deleteSubjectModal').modal('show');
+            setTimeout(function() {
+                $('#confirmPassword').focus();
+            }, 500);
+        });
+
+        $('#togglePasswordBtn').on('click', function () {
+            var input = $('#confirmPassword');
+            var icon = $('#togglePasswordIcon');
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                input.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
         });
     });
 

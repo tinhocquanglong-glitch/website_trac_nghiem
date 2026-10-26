@@ -36,17 +36,17 @@ public class SubjectServiceImpl implements ISubjectService {
 
     @Override
     public Iterable<Subject> findAll() {
-        return subjectRepository.findAll();
+        return subjectRepository.findAllActive();
     }
 
     @Override
     public List<Subject> getAll() {
-        return subjectRepository.findAll();
+        return subjectRepository.findAllActive();
     }
 
     @Override
     public Page<Subject> findAll(Pageable pageable) {
-        return subjectRepository.findAll(pageable);
+        return subjectRepository.findAllActive(pageable);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class SubjectServiceImpl implements ISubjectService {
     @Override
     public Page<Subject> findBySchoolOrGlobal(Integer schoolId, Pageable pageable) {
         if (schoolId == null) {
-            return subjectRepository.findAll(pageable);
+            return subjectRepository.findAllActive(pageable);
         }
         return subjectRepository.findAllBySchoolOrGlobal(schoolId, pageable);
     }
@@ -73,7 +73,7 @@ public class SubjectServiceImpl implements ISubjectService {
     @Override
     public List<Subject> getBySchoolOrGlobal(Integer schoolId) {
         if (schoolId == null) {
-            return subjectRepository.findAll();
+            return subjectRepository.findAllActive();
         }
         return subjectRepository.findBySchoolIdOrGlobal(schoolId);
     }
@@ -96,15 +96,18 @@ public class SubjectServiceImpl implements ISubjectService {
         if (subjectRequest.getId() == null) {
             subject = modelMapper.map(subjectRequest, Subject.class);
             subject.setSchool(school);
+            subject.setStatus(1);
             oldUrl = "/img/default.jpg";
         } else {
             Optional<Subject> findSubject = subjectRepository.findById(subjectRequest.getId());
             subject = modelMapper.map(subjectRequest, Subject.class);
             if (findSubject.isPresent()) {
                 subject.setSchool(findSubject.get().getSchool());
+                subject.setStatus(findSubject.get().getStatus() != null ? findSubject.get().getStatus() : 1);
                 oldUrl = findSubject.get().getImage();
             } else {
                 subject.setSchool(school);
+                subject.setStatus(1);
                 oldUrl = "/img/default.jpg";
             }
         }
@@ -178,6 +181,7 @@ public class SubjectServiceImpl implements ISubjectService {
         copy.setName(original.getName());
         copy.setImage(original.getImage());
         copy.setSchool(school);
+        copy.setStatus(1);
         return subjectRepository.save(copy);
     }
 
@@ -194,6 +198,9 @@ public class SubjectServiceImpl implements ISubjectService {
 
     @Override
     public void remove(Subject subject) {
-        subjectRepository.delete(subject);
+        if (subject != null) {
+            subject.setStatus(0);
+            subjectRepository.save(subject);
+        }
     }
 }

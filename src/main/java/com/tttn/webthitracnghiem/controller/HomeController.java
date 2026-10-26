@@ -278,14 +278,14 @@ public class HomeController {
     private List<Subject> studentSubjects(User user) {
         if (!isStudent(user) || user.getTrackingClass() == null) return null;
         List<Subject> subjects = assignmentRepository.findByTrackingClassId(user.getTrackingClass().getId()).stream()
-                .map(ClassSubjectAssignment::getSubject).filter(Objects::nonNull).distinct()
+                .map(ClassSubjectAssignment::getSubject).filter(s -> s != null && !s.isDeleted()).distinct()
                 .sorted(Comparator.comparing(Subject::getName, Comparator.nullsLast(String::compareToIgnoreCase)))
                 .collect(Collectors.toList());
         if (!subjects.isEmpty()) return subjects;
         Integer grade = studentGrade(user);
         return subjectClassService.findAll().stream()
                 .filter(item -> item.getClasses() != null && Objects.equals(item.getClasses().getGrade(), grade))
-                .map(SubjectClasses::getSubject).filter(Objects::nonNull).distinct()
+                .map(SubjectClasses::getSubject).filter(s -> s != null && !s.isDeleted()).distinct()
                 .sorted(Comparator.comparing(Subject::getName, Comparator.nullsLast(String::compareToIgnoreCase)))
                 .collect(Collectors.toList());
     }

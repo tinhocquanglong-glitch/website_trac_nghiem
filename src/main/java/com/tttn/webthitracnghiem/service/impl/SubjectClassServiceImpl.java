@@ -17,12 +17,12 @@ public class SubjectClassServiceImpl implements ISubjectClassService {
 
     @Override
     public List<SubjectClasses> findAll() {
-        return subjectClassRepository.findAll();
+        return subjectClassRepository.findAllActive();
     }
 
     @Override
     public Page<SubjectClasses> findAll(Pageable pageable) {
-        return subjectClassRepository.findAll(pageable);
+        return subjectClassRepository.findAllActive(pageable);
     }
 
     @Override
