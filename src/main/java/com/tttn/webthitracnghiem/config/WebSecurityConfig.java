@@ -103,6 +103,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/create-teacher").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/delete/**").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
                 .antMatchers("/user/editMember/**", "/user/update").hasAnyRole("ADMIN", "SCHOOL_ADMIN")
+                .antMatchers("/user/reset-password", "/user/editPass/**", "/user/updatePass")
+                    .hasAnyRole("ADMIN", "SCHOOL_ADMIN", "TEACHER")
                 .antMatchers("/user/update-role").hasRole("ADMIN")
                 .antMatchers("/user/**", "/school/**").hasRole("ADMIN")
                 .antMatchers("/subject/create", "/subject/edit/**", "/subject/delete/**")

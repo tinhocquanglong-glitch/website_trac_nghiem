@@ -115,6 +115,41 @@ class TeacherHomeroomControllerTest {
         verify(userService).save(any(User.class));
     }
 
+    @Test
+    void teacherCanResetStudentPasswordInHomeroomClass() {
+        TeacherHomeroomController controller = new TeacherHomeroomController();
+        StudentTrackingClassRepository classRepository = mock(StudentTrackingClassRepository.class);
+        IUserService userService = mock(IUserService.class);
+
+        User teacher = new User();
+        teacher.setId("teacher");
+        StudentTrackingClass trackingClass = new StudentTrackingClass();
+        trackingClass.setId(7);
+        trackingClass.setHomeroomTeacher(teacher);
+
+        User student = new User();
+        student.setId("hs01");
+        student.setFullName("Nguyen Van HS");
+        student.setTrackingClass(trackingClass);
+
+        when(userService.findById("teacher")).thenReturn(teacher);
+        when(userService.findById("hs01")).thenReturn(student);
+        when(classRepository.findById(7)).thenReturn(Optional.of(trackingClass));
+
+        ReflectionTestUtils.setField(controller, "userService", userService);
+        ReflectionTestUtils.setField(controller, "trackingClassRepository", classRepository);
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "teacher", "n/a", List.of(new SimpleGrantedAuthority("ROLE_TEACHER"))));
+
+        RedirectAttributesModelMap ra = new RedirectAttributesModelMap();
+        String result = controller.resetStudentPassword(7, "hs01", "newPass123", "newPass123", ra);
+
+        assertThat(result).isEqualTo("redirect:/teacher/homeroom?classId=7");
+        assertThat(ra.getFlashAttributes().get("message").toString()).contains("Đã cấp lại mật khẩu thành công cho học sinh");
+        verify(userService).save(student);
+    }
+
     private School school(Integer id, String name, String ward, String district, String province) {
         School school = new School();
         school.setId(id);

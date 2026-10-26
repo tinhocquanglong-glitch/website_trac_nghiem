@@ -388,6 +388,15 @@
                                class="btn btn-outline-primary btn-sm" title="Chỉnh sửa thông tin">
                                 <i class="fas fa-edit mr-1"></i>Sửa
                             </a>
+                            <button type="button" class="btn btn-outline-warning btn-sm js-reset-pass"
+                                    title="Cấp lại mật khẩu cho giáo viên"
+                                    data-toggle="modal" data-target="#resetPasswordModal"
+                                    th:data-user-id="${teacher.id}"
+                                    th:data-user-name="${teacher.fullName}"
+                                    data-user-role="Giáo viên"
+                                    th:data-return-url="@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='teacher')}">
+                                <i class="fas fa-key mr-1"></i>Cấp lại MK
+                            </button>
                             <a th:href="@{/user/delete/{id}(id=${teacher.id})}"
                                class="btn btn-outline-danger btn-sm" title="Xóa tài khoản"
                                th:attr="data-name=${teacher.fullName}"
@@ -512,6 +521,15 @@
                                                            title="Sửa" style="font-size:.72rem;">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
+                                                        <button type="button" class="btn btn-outline-warning btn-sm py-1 px-2 ml-1 js-reset-pass"
+                                                                title="Cấp lại mật khẩu cho học sinh" style="font-size:.72rem;"
+                                                                data-toggle="modal" data-target="#resetPasswordModal"
+                                                                th:data-user-id="${student.id}"
+                                                                th:data-user-name="${student.fullName}"
+                                                                data-user-role="Học sinh"
+                                                                th:data-return-url="@{/school-admin/users(schoolId=${targetSchool != null ? targetSchool.id : ''}, activeTab='student')}">
+                                                            <i class="fas fa-key"></i>
+                                                        </button>
                                                         <a th:href="@{/user/delete/{id}(id=${student.id})}"
                                                            class="btn btn-outline-danger btn-sm py-1 px-2 ml-1"
                                                            title="Xóa" style="font-size:.72rem;"
@@ -537,6 +555,7 @@
 
             </div>
         </div>
+        <div th:replace="~{user/reset-password-modal :: modal}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

@@ -166,6 +166,16 @@
                                                 <strong th:text="${mgr.fullName}"></strong>
                                                 <span class="text-muted" th:text="'(@' + ${mgr.id} + ')'"></span>
                                                 <span class="ml-1 text-muted" th:if="${mgr.phoneNumber != null}" th:text="'· SĐT: ' + ${mgr.phoneNumber}"></span>
+                                                <button type="button" class="btn btn-xs btn-outline-warning ml-2 py-0 px-1 js-reset-pass"
+                                                        style="font-size: 0.72rem;"
+                                                        title="Cấp lại mật khẩu cho Quản lý trường"
+                                                        data-toggle="modal" data-target="#resetPasswordModal"
+                                                        th:data-user-id="${mgr.id}"
+                                                        th:data-user-name="${mgr.fullName}"
+                                                        data-user-role="Hiệu trưởng / Quản lý trường"
+                                                        th:data-return-url="${returnUrl}">
+                                                    <i class="fas fa-key mr-1"></i>Đổi MK
+                                                </button>
                                             </div>
                                         </div>
                                         <div th:if="${schoolManagersMap[school.id] == null or schoolManagersMap[school.id].isEmpty()}">
@@ -292,7 +302,11 @@
                                 <a th:href="@{/user/delete/{id}(id=${user.id})}" title="Xóa"
                                    onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')"><i class="far fa-trash-alt text-danger"></i></a>
                                 <span>&nbsp;&nbsp;</span>
-                                <a th:href="@{/user/editPass/{id}(id=${user.id})}" title="Đổi mật khẩu"><i class="fas fa-key text-success"></i></a>
+                                <a th:href="@{/user/editPass/{id}(id=${user.id})}" title="Cấp lại mật khẩu"
+                                   data-toggle="modal" data-target="#resetPasswordModal"
+                                   th:data-user-id="${user.id}"
+                                   th:data-user-name="${user.fullName}"
+                                   th:data-return-url="@{/user/list(viewMode='all', page=${users.number}, keyword=${keyword})}"><i class="fas fa-key text-warning"></i></a>
                             </td>
                         </tr>
                     </table>
@@ -315,6 +329,7 @@
             </div>
         </div>
         <div th:replace="~{school/delete-modal :: modal(${returnUrl})}"></div>
+        <div th:replace="~{user/reset-password-modal :: modal}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

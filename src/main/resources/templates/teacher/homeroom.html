@@ -359,6 +359,15 @@
                                         <a th:href="@{'/user/editMember/' + ${student.id}}" class="btn btn-sm btn-outline-primary py-1 px-2" title="Chỉnh sửa thông tin">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <button type="button" class="btn btn-sm btn-outline-warning py-1 px-2 ml-1 js-reset-pass"
+                                                title="Cấp lại mật khẩu cho học sinh"
+                                                data-toggle="modal" data-target="#resetPasswordModal"
+                                                th:data-user-id="${student.id}"
+                                                th:data-user-name="${student.fullName}"
+                                                data-user-role="Học sinh"
+                                                th:data-return-url="@{/teacher/homeroom(classId=${selectedClass.id}, schoolId=${targetSchool != null ? targetSchool.id : ''})}">
+                                            <i class="fas fa-key"></i>
+                                        </button>
                                         <!-- Form Rút học sinh khỏi lớp: an toàn không dùng th:onsubmit chuỗi -->
                                         <form th:action="@{/teacher/homeroom/remove-student}" method="post" class="d-inline ml-1"
                                               onsubmit="return confirm('Bạn có chắc chắn muốn rút học sinh này khỏi lớp?');">
@@ -382,6 +391,7 @@
         </div>
         <!-- /page content -->
 
+        <div th:replace="~{user/reset-password-modal :: modal}"></div>
         <div th:insert="~{index.html :: footerAdmin}"></div>
     </div>
 </div>

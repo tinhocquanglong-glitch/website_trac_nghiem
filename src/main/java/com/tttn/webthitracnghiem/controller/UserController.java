@@ -3,6 +3,7 @@ package com.tttn.webthitracnghiem.controller;
 import com.tttn.webthitracnghiem.model.ClassSubjectAssignment;
 import com.tttn.webthitracnghiem.model.School;
 import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.model.StudentTrackingClass;
 import com.tttn.webthitracnghiem.repository.ClassSubjectAssignmentRepository;
 import com.tttn.webthitracnghiem.repository.StudentTrackingClassRepository;
 import com.tttn.webthitracnghiem.repository.UserRepository;
@@ -548,35 +549,182 @@ public class UserController {
         return "redirect:/user/list?viewMode=all";
     }
 
+    /**
+     * Kiểm tra quyền cấp lại mật khẩu theo phân cấp:
+     * - ROLE_ADMIN: cấp lại cho Hiệu trưởng (ROLE_SCHOOL_ADMIN), Giáo viên (ROLE_TEACHER), Học sinh (ROLE_USER).
+     * - ROLE_SCHOOL_ADMIN: cấp lại cho Giáo viên và Học sinh thuộc cùng trường mình.
+     * - ROLE_TEACHER: cấp lại cho Học sinh thuộc lớp mình chủ nhiệm hoặc phụ trách giảng dạy.
+     * - Không ai được cấp lại mật khẩu cho tài khoản ADMIN qua chức năng phân cấp này.
+     * Trả về null nếu được phép, hoặc thông báo lỗi nếu không được phép.
+     */
+    public String checkResetPasswordPermission(User currentUser, User targetUser) {
+        if (targetUser == null) {
+            return "Không tìm thấy tài khoản cần cấp lại mật khẩu.";
+        }
+        if (currentUser == null) {
+            return "Bạn chưa đăng nhập.";
+        }
+
+        Set<String> currentRoles = currentUser.getRoles() == null ? Collections.emptySet() :
+                currentUser.getRoles().stream().map(com.tttn.webthitracnghiem.model.Role::getRoleName).collect(Collectors.toSet());
+        Set<String> targetRoles = targetUser.getRoles() == null ? Collections.emptySet() :
+                targetUser.getRoles().stream().map(com.tttn.webthitracnghiem.model.Role::getRoleName).collect(Collectors.toSet());
+
+        boolean isCurrentAdmin = currentRoles.contains("ROLE_ADMIN");
+        boolean isCurrentSchoolAdmin = currentRoles.contains("ROLE_SCHOOL_ADMIN");
+        boolean isCurrentTeacher = currentRoles.contains("ROLE_TEACHER");
+
+        boolean isTargetAdmin = targetRoles.contains("ROLE_ADMIN");
+        boolean isTargetSchoolAdmin = targetRoles.contains("ROLE_SCHOOL_ADMIN");
+        boolean isTargetTeacher = targetRoles.contains("ROLE_TEACHER");
+        boolean isTargetStudent = targetRoles.contains("ROLE_USER") || (!isTargetAdmin && !isTargetSchoolAdmin && !isTargetTeacher);
+
+        // 1. Không thể cấp lại mật khẩu cho tài khoản ADMIN qua chức năng phân cấp này
+        if (isTargetAdmin) {
+            return "Không thể cấp lại mật khẩu cho tài khoản Quản trị viên hệ thống.";
+        }
+
+        // 2. ADMIN: Quyền cao nhất, có thể cấp lại mật khẩu cho Hiệu trưởng, Giáo viên, Học sinh
+        if (isCurrentAdmin) {
+            return null;
+        }
+
+        // 3. HIỆU TRƯỞNG: Cấp lại cho Giáo viên và Học sinh thuộc trường mình
+        if (isCurrentSchoolAdmin) {
+            if (isTargetSchoolAdmin) {
+                return "Hiệu trưởng không thể cấp lại mật khẩu cho Hiệu trưởng khác.";
+            }
+            if (!isTargetTeacher && !isTargetStudent) {
+                return "Hiệu trưởng chỉ được cấp lại mật khẩu cho Giáo viên và Học sinh.";
+            }
+            Integer currentSchoolId = currentUser.getSchool() != null ? currentUser.getSchool().getId() : null;
+            Integer targetSchoolId = schoolIdForUser(targetUser);
+            if (currentSchoolId == null || !Objects.equals(currentSchoolId, targetSchoolId)) {
+                return "Hiệu trưởng chỉ được cấp lại mật khẩu cho cán bộ, giáo viên và học sinh thuộc trường mình.";
+            }
+            return null;
+        }
+
+        // 4. GIÁO VIÊN / GVCN: Cấp lại cho Học sinh thuộc lớp mình
+        if (isCurrentTeacher) {
+            if (isTargetSchoolAdmin || isTargetTeacher) {
+                return "Giáo viên không có quyền cấp lại mật khẩu cho Ban giám hiệu hoặc Giáo viên khác.";
+            }
+            if (!isTargetStudent) {
+                return "Giáo viên chỉ có thể cấp lại mật khẩu cho học sinh.";
+            }
+
+            StudentTrackingClass studentClass = targetUser.getTrackingClass();
+            if (studentClass == null) {
+                return "Học sinh này hiện chưa thuộc lớp học nào mà bạn quản lý.";
+            }
+
+            boolean isHomeroom = studentClass.getHomeroomTeacher() != null
+                    && Objects.equals(studentClass.getHomeroomTeacher().getId(), currentUser.getId());
+
+            boolean isAssignedSubject = false;
+            if (assignmentRepository != null) {
+                List<ClassSubjectAssignment> assignments = assignmentRepository.findByTrackingClassId(studentClass.getId());
+                if (assignments != null) {
+                    isAssignedSubject = assignments.stream()
+                            .anyMatch(a -> a.getTeacher() != null && Objects.equals(a.getTeacher().getId(), currentUser.getId()));
+                }
+            }
+
+            if (!isHomeroom && !isAssignedSubject) {
+                return "Giáo viên chỉ được cấp lại mật khẩu cho học sinh thuộc lớp mình chủ nhiệm hoặc phụ trách giảng dạy.";
+            }
+            return null;
+        }
+
+        return "Bạn không có quyền thực hiện chức năng này.";
+    }
+
+    private String getUserRoleLabel(User user) {
+        if (user == null || user.getRoles() == null) return "người dùng";
+        for (com.tttn.webthitracnghiem.model.Role r : user.getRoles()) {
+            if ("ROLE_ADMIN".equals(r.getRoleName())) return "Quản trị viên";
+            if ("ROLE_SCHOOL_ADMIN".equals(r.getRoleName())) return "Hiệu trưởng / Quản lý trường";
+            if ("ROLE_TEACHER".equals(r.getRoleName())) return "Giáo viên";
+            if ("ROLE_USER".equals(r.getRoleName())) return "Học sinh";
+        }
+        return "người dùng";
+    }
+
+    private String determineDefaultReturnUrl(User currentUser) {
+        if (currentUser == null) return "/";
+        Set<String> roles = currentUser.getRoles() == null ? Collections.emptySet() :
+                currentUser.getRoles().stream().map(com.tttn.webthitracnghiem.model.Role::getRoleName).collect(Collectors.toSet());
+        if (roles.contains("ROLE_ADMIN")) return "/user/list";
+        if (roles.contains("ROLE_SCHOOL_ADMIN")) return "/school-admin/users";
+        if (roles.contains("ROLE_TEACHER")) return "/teacher/homeroom";
+        return "/";
+    }
+
+    @PostMapping("/user/reset-password")
+    public String resetPassword(@RequestParam("userId") String userId,
+                                @RequestParam("newPassword") String newPassword,
+                                @RequestParam(value = "confirmPassword", required = false) String confirmPassword,
+                                @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                                RedirectAttributes redirectAttributes) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (auth != null) ? userService.findById(auth.getName()) : null;
+        User targetUser = userService.findById(userId != null ? userId.trim() : "");
+
+        String fallbackUrl = determineDefaultReturnUrl(currentUser);
+        String redirectTarget = (returnUrl != null && !returnUrl.trim().isEmpty()) ? returnUrl.trim() : fallbackUrl;
+
+        String permissionDenied = checkResetPasswordPermission(currentUser, targetUser);
+        if (permissionDenied != null) {
+            redirectAttributes.addFlashAttribute("error", permissionDenied);
+            return "redirect:" + redirectTarget;
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự.");
+            return "redirect:" + redirectTarget;
+        }
+
+        if (confirmPassword != null && !confirmPassword.trim().isEmpty() && !newPassword.trim().equals(confirmPassword.trim())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không khớp với mật khẩu mới.");
+            return "redirect:" + redirectTarget;
+        }
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encoded = passwordEncoder.encode(newPassword.trim());
+        targetUser.setPassWord(encoded);
+        targetUser.setRePassWord(encoded);
+        userService.save(targetUser);
+
+        String roleLabel = getUserRoleLabel(targetUser);
+        redirectAttributes.addFlashAttribute("message",
+                "Đã cấp lại mật khẩu thành công cho " + roleLabel + " " + targetUser.getFullName() + " (@" + targetUser.getId() + ")!");
+        return "redirect:" + redirectTarget;
+    }
+
     @GetMapping("/user/editPass/{id}")
-    public String editPass(@PathVariable("id") String id, Model model) {
-        User user = userService.findById(id);
-        model.addAttribute("user", user);
+    public String editPass(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (auth != null) ? userService.findById(auth.getName()) : null;
+        User targetUser = userService.findById(id);
+
+        String denied = checkResetPasswordPermission(currentUser, targetUser);
+        if (denied != null) {
+            redirectAttributes.addFlashAttribute("error", denied);
+            return "redirect:" + determineDefaultReturnUrl(currentUser);
+        }
+
+        model.addAttribute("user", targetUser);
+        model.addAttribute("backUrl", determineDefaultReturnUrl(currentUser));
         return "user/editPass";
     }
 
     @PostMapping("/user/updatePass")
-    public String updatePass(@Valid @ModelAttribute User user, BindingResult bindingResult, Model model,
-                             @RequestParam("oldPass") String oldPass, RedirectAttributes redirectAttributes) {
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String oldPass2 = userService.findByPass(user.getId());
-        if (!passwordEncoder.matches(oldPass,oldPass2)){
-            model.addAttribute("messages","Mật Khẩu Cũ Không Đúng !");
-            return "user/editPass";
-        }
-        if (user.getPassWord() != null && user.getRePassWord() != null) {
-            if (!user.getPassWord().equals(user.getRePassWord())) {
-                bindingResult.addError(new FieldError("user", "rePassWord", "Mật khẩu phải trùng nhau"));
-            }
-        }
-        if (bindingResult.hasFieldErrors()) {
-            return "user/editPass";
-        }
-        User user1 = userService.findById(user.getId());
-        user1.setPassWord(passwordEncoder.encode(user.getPassWord()));
-        user1.setRePassWord(passwordEncoder.encode(user.getRePassWord()));
-        userService.save(user1);
-        redirectAttributes.addFlashAttribute("message", "Cập Nhật Thành Công !");
-        return "redirect:/user/list";
+    public String updatePass(@RequestParam("id") String id,
+                             @RequestParam("newPassword") String newPassword,
+                             @RequestParam(value = "confirmPassword", required = false) String confirmPassword,
+                             @RequestParam(value = "returnUrl", required = false) String returnUrl,
+                             RedirectAttributes redirectAttributes) {
+        return resetPassword(id, newPassword, confirmPassword, returnUrl, redirectAttributes);
     }
 }

@@ -366,6 +366,46 @@ public class TeacherHomeroomController {
         return "redirect:/teacher/homeroom?classId=" + classId;
     }
 
+    @PostMapping("/reset-password")
+    public String resetStudentPassword(@RequestParam Integer classId,
+                                       @RequestParam String studentUsername,
+                                       @RequestParam String newPassword,
+                                       @RequestParam(required = false) String confirmPassword,
+                                       RedirectAttributes redirectAttributes) {
+        if (!hasManagePermission(classId)) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền quản lý lớp học này.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+
+        User student = userService.findById(studentUsername != null ? studentUsername.trim() : "");
+        if (student == null) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy học sinh.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+
+        if (student.getTrackingClass() == null || !student.getTrackingClass().getId().equals(classId)) {
+            redirectAttributes.addFlashAttribute("error", "Học sinh không thuộc lớp này.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+
+        if (newPassword == null || newPassword.trim().length() < 6) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+
+        if (confirmPassword != null && !confirmPassword.trim().isEmpty() && !newPassword.trim().equals(confirmPassword.trim())) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không khớp với mật khẩu mới.");
+            return "redirect:/teacher/homeroom?classId=" + classId;
+        }
+
+        student.setPassWord(passwordEncoder.encode(newPassword.trim()));
+        student.setRePassWord(student.getPassWord());
+        userService.save(student);
+
+        redirectAttributes.addFlashAttribute("message", "Đã cấp lại mật khẩu thành công cho học sinh " + student.getFullName() + " (@" + student.getId() + ")!");
+        return "redirect:/teacher/homeroom?classId=" + classId;
+    }
+
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9][A-Za-z0-9_.-]*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+$");
     }

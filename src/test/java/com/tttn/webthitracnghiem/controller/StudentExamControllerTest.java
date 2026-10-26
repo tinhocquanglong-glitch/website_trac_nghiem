@@ -120,7 +120,7 @@ class StudentExamControllerTest {
                 .contains("assignedExams")
                 .contains("/css/navbar.css")
                 .contains("completedExamIds")
-                .contains("exam-card--completed")
+                .contains("completed-card")
                 .contains("Bài thi được giao");
     }
 }
