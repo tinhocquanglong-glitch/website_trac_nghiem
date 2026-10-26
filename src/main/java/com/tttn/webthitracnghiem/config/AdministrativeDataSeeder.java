@@ -336,6 +336,10 @@ public class AdministrativeDataSeeder implements CommandLineRunner {
                 () -> ensureColumn("question", "lesson_plan_lesson_id", "INT NULL"));
         runSchemaMigration("exam lesson plan link",
                 () -> ensureColumn("exam", "lesson_plan_lesson_id", "INT NULL"));
+        runSchemaMigration("user status column",
+                () -> ensureColumn("user", "status", "INT DEFAULT 1"));
+        runSchemaMigration("user status backfill",
+                () -> jdbcTemplate.execute("UPDATE user SET status = 1 WHERE status IS NULL"));
     }
 
     private void runSchemaMigration(String description, Runnable migration) {

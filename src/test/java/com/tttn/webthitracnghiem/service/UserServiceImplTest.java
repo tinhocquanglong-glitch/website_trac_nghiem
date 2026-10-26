@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -37,16 +38,19 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     @Test
-    void clearsStudentClassBeforeDeletingUser() {
+    void softDeletesUserInsteadOfHardDeleting() {
         User user = new User();
-        user.setId("student-1");
-        when(lessonPlanRepository.findByOwner_IdOrderByUpdatedAtDesc("student-1")).thenReturn(List.of());
+        user.setId("teacher-1");
+        user.setStatus(1);
 
         userService.delete(user);
 
-        verify(userRepository).clearTrackingClass("student-1");
-        verify(lessonPlanRepository).deleteAll(List.of());
-        verify(userRepository).delete(user);
+        assertEquals(Integer.valueOf(0), user.getStatus());
+        verify(userRepository).clearHomeroomTeacher("teacher-1");
+        verify(userRepository).clearTrackingClass("teacher-1");
+        verify(userRepository).deleteTeacherAssignments("teacher-1");
+        verify(userRepository).save(user);
+        verify(userRepository, never()).delete(user);
     }
 
     @Test

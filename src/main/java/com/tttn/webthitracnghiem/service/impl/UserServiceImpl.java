@@ -38,7 +38,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Page<User> findAll(Pageable pageable) {
-        return userRepository.findAll(pageable);
+        return userRepository.findAllActive(pageable);
     }
 
     @Override
@@ -83,18 +83,11 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     public void delete(User user) {
         String userId = user.getId();
-        userRepository.deleteResults(userId);
-        userRepository.deleteIqResults(userId);
-        userRepository.clearExamAuthors(userId);
-        userRepository.clearDocumentAuthors(userId);
-        userRepository.clearNewsAuthors(userId);
+        user.setStatus(0);
         userRepository.clearHomeroomTeacher(userId);
         userRepository.clearTrackingClass(userId);
         userRepository.deleteTeacherAssignments(userId);
-        userRepository.deleteStudentNotifications(userId);
-        lessonPlanRepository.deleteAll(lessonPlanRepository.findByOwner_IdOrderByUpdatedAtDesc(userId));
-        userRepository.deleteRoleLinks(userId);
-        userRepository.delete(user);
+        userRepository.save(user);
     }
     @Override
     public  Integer findByTotalUser(){return userRepository.findByTotalUser();}

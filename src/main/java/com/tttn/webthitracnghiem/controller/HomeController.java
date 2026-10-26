@@ -81,6 +81,7 @@ public class HomeController {
     public String showLogin(@RequestParam Optional<String> error,
                             @RequestParam Optional<String> locked,
                             @RequestParam Optional<String> deleted,
+                            @RequestParam Optional<String> userDeleted,
                             Model model) {
         if (error.isPresent()) {
             model.addAttribute("message", "Tài khoản hoặc mật khẩu không chính xác!");
@@ -90,6 +91,9 @@ public class HomeController {
         }
         if (deleted.isPresent()) {
             model.addAttribute("message", "Quản trị viên (Admin) đã xóa trường học này khỏi hệ thống. Tài khoản của bạn không thể truy cập được nữa. Vui lòng liên hệ quản trị viên.");
+        }
+        if (userDeleted.isPresent()) {
+            model.addAttribute("message", "Tài khoản của bạn đã bị xóa (vô hiệu hóa) khỏi hệ thống. Vui lòng liên hệ quản trị viên.");
         }
         return "login";
     }

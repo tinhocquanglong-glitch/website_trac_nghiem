@@ -90,6 +90,6 @@ public class MyUserDetail implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return !schoolDeleted;
+        return (user == null || user.isActive()) && !schoolDeleted;
     }
 }

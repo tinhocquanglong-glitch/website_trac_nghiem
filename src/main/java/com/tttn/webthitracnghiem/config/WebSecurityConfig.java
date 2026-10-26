@@ -52,7 +52,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin().loginPage("/login")
                 .failureHandler((request, response, exception) -> {
                     if (exception instanceof DisabledException) {
-                        response.sendRedirect(request.getContextPath() + "/login?deleted=true");
+                        response.sendRedirect(request.getContextPath() + "/login?userDeleted=true");
                     } else if (exception instanceof LockedException) {
                         response.sendRedirect(request.getContextPath() + "/login?locked=true");
                     } else {
@@ -71,6 +71,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                             if (!isAdmin) {
                                 User u = userRepository.findById(auth.getName()).orElse(null);
                                 if (u != null) {
+                                    if (!u.isActive()) {
+                                        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                                        HttpSession session = request.getSession(false);
+                                        if (session != null) session.invalidate();
+                                        response.sendRedirect(request.getContextPath() + "/login?userDeleted=true");
+                                        return;
+                                    }
                                     School s = u.getTrackingClass() != null && u.getTrackingClass().getSchool() != null
                                             ? u.getTrackingClass().getSchool()
                                             : u.getSchool();

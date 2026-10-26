@@ -29,9 +29,9 @@
 <section class="ftco-section">
     <div class="container">
         <div class="alert alert-dismissible fade show shadow-sm"
-             th:classappend="${param.deleted != null || param.error != null ? 'alert-danger' : (param.locked != null ? 'alert-warning' : 'alert-primary')}"
+             th:classappend="${param.deleted != null || param.userDeleted != null || param.error != null ? 'alert-danger' : (param.locked != null ? 'alert-warning' : 'alert-primary')}"
              role="alert" th:if="${message}">
-            <i class="fa fa-exclamation-triangle mr-1" th:if="${param.deleted != null}"></i>
+            <i class="fa fa-exclamation-triangle mr-1" th:if="${param.deleted != null || param.userDeleted != null}"></i>
             <i class="fa fa-lock mr-1" th:if="${param.locked != null}"></i>
             <i class="fa fa-times-circle mr-1" th:if="${param.error != null}"></i>
             <strong th:text="${message}"></strong>

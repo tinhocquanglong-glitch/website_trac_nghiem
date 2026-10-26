@@ -87,6 +87,25 @@ public class User {
     @Column(name = "school_level")
     private Integer schoolLevel; // 1: Cấp 1 (Khối 1-5), 2: Cấp 2 (Khối 6-9), 3: Cấp 3 (Khối 10-12)
 
+    @Column(name = "status")
+    private Integer status = 1; // 1: đang hoạt động, 0: đã xóa / ẩn (soft-delete)
+
+    public Integer getStatus() {
+        return status != null ? status : 1;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public boolean isActive() {
+        return status == null || status == 1;
+    }
+
+    public void setActive(boolean active) {
+        this.status = active ? 1 : 0;
+    }
+
     public Integer getSchoolLevel() {
         return schoolLevel;
     }

@@ -101,6 +101,39 @@ class UserControllerTest {
     }
 
     @Test
+    void schoolAdminCanDeleteTeacherAssignedToTheirSchool() {
+        School school = school(5, "School A", "Ward", "District", "Province");
+
+        User schoolAdmin = new User();
+        schoolAdmin.setId("principal");
+        schoolAdmin.setSchool(school);
+
+        Role teacherRole = new Role();
+        teacherRole.setRoleName("ROLE_TEACHER");
+        User teacher = new User();
+        teacher.setId("teacher-1");
+        teacher.setFullName("Nguyen Van A");
+        teacher.setRoles(java.util.Set.of(teacherRole));
+        teacher.setSchool(school);
+
+        IUserService userService = mock(IUserService.class);
+        when(userService.findById("teacher-1")).thenReturn(teacher);
+        when(userService.findById("principal")).thenReturn(schoolAdmin);
+
+        UserController controller = new UserController();
+        ReflectionTestUtils.setField(controller, "userService", userService);
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "principal", "password", List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"))));
+
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap ra = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        String result = controller.delete("teacher-1", "/school-admin/users?activeTab=teacher", ra);
+
+        verify(userService).delete(teacher);
+        org.junit.jupiter.api.Assertions.assertEquals("redirect:/school-admin/users?activeTab=teacher", result);
+    }
+
+    @Test
     void principalEditsTeacherOfOwnSchoolDespiteMissingPasswordFields() {
         School school = school(5, "School A", "Ward", "District", "Province");
         User principal = new User();
