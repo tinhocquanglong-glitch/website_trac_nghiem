@@ -78,12 +78,18 @@ public class HomeController {
     }
 
     @GetMapping("/login")
-    public String showLogin(@RequestParam Optional<String> error, @RequestParam Optional<String> locked, Model model) {
+    public String showLogin(@RequestParam Optional<String> error,
+                            @RequestParam Optional<String> locked,
+                            @RequestParam Optional<String> deleted,
+                            Model model) {
         if (error.isPresent()) {
             model.addAttribute("message", "Tài khoản hoặc mật khẩu không chính xác!");
         }
         if (locked.isPresent()) {
-            model.addAttribute("message", "Trường của bạn đang bị khóa. Vui lòng liên hệ quản trị viên.");
+            model.addAttribute("message", "Trường học của bạn đang bị tạm khóa. Vui lòng liên hệ quản trị viên.");
+        }
+        if (deleted.isPresent()) {
+            model.addAttribute("message", "Quản trị viên (Admin) đã xóa trường học này khỏi hệ thống. Tài khoản của bạn không thể truy cập được nữa. Vui lòng liên hệ quản trị viên.");
         }
         return "login";
     }

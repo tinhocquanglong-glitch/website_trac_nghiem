@@ -9,16 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.util.List;
 
 /**
- * Deletes schools for the system admin. A school that still has accounts or
- * classes is refused instead of cascading, so one confirmation can never wipe
- * a school's teachers, students and grade books; such schools should be locked.
+ * Xóa mềm trường học cho Quản trị viên (Admin).
+ * Khi xóa, trường học được đánh dấu đã xóa (deleted = true, active = false),
+ * các môn học riêng do trường tạo được ẩn đi (status = 0),
+ * và các tài khoản thuộc trường sẽ bị chặn đăng nhập kèm thông báo rõ ràng.
  */
 @Service
 public class SchoolManagementService {
-    private static final List<String> CONTENT_WITH_OPTIONAL_SCHOOL = List.of("Exam", "Question", "News", "Document");
 
     private final SchoolRepository schoolRepository;
     private final UserRepository userRepository;
@@ -39,28 +38,20 @@ public class SchoolManagementService {
     public School deleteSchool(Integer schoolId) {
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy trường học."));
-        long accountCount = userRepository.countBySchoolId(schoolId);
-        long classCount = classRepository.countBySchoolId(schoolId);
-        if (accountCount > 0 || classCount > 0) {
-            throw new IllegalStateException("Không thể xóa trường \"" + school.getName() + "\" vì vẫn còn "
-                    + accountCount + " tài khoản và " + classCount + " lớp. "
-                    + "Hãy xóa hoặc chuyển các tài khoản, lớp trước, hoặc dùng chức năng Khóa trường.");
+        if (school.isDeleted()) {
+            return school;
         }
-        // Exams, questions, news and documents stay available without a school.
-        for (String entity : CONTENT_WITH_OPTIONAL_SCHOOL) {
-            entityManager.createQuery("UPDATE " + entity + " e SET e.school = NULL WHERE e.school.id = :schoolId")
-                    .setParameter("schoolId", schoolId)
-                    .executeUpdate();
-        }
-        // The school's chat rooms only make sense for that school.
-        entityManager.createQuery("DELETE FROM ChatMessage m WHERE m.room.id IN "
-                        + "(SELECT r.id FROM ChatRoom r WHERE r.school.id = :schoolId)")
+
+        // 1. Đánh dấu trường đã bị xóa mềm và vô hiệu hóa hoạt động
+        school.setDeleted(true);
+        school.setActive(false);
+        school = schoolRepository.save(school);
+
+        // 2. Ẩn toàn bộ môn học do trường này tạo (status = 0)
+        entityManager.createQuery("UPDATE Subject s SET s.status = 0 WHERE s.school.id = :schoolId")
                 .setParameter("schoolId", schoolId)
                 .executeUpdate();
-        entityManager.createQuery("DELETE FROM ChatRoom r WHERE r.school.id = :schoolId")
-                .setParameter("schoolId", schoolId)
-                .executeUpdate();
-        schoolRepository.delete(school);
+
         return school;
     }
 }

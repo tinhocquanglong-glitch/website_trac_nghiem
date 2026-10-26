@@ -12,6 +12,7 @@ class MyUserDetailTest {
     void accountsOfLockedSchoolCannotSignInButSystemAdminCan() {
         School lockedSchool = new School();
         lockedSchool.setActive(false);
+        lockedSchool.setDeleted(false);
 
         assertThat(new MyUserDetail(user("ROLE_TEACHER", lockedSchool)).isAccountNonLocked()).isFalse();
         assertThat(new MyUserDetail(user("ROLE_SCHOOL_ADMIN", lockedSchool)).isAccountNonLocked()).isFalse();
@@ -19,10 +20,30 @@ class MyUserDetailTest {
     }
 
     @Test
+    void accountsOfDeletedSchoolAreDisabledButSystemAdminIsNotDisabled() {
+        School deletedSchool = new School();
+        deletedSchool.setActive(false);
+        deletedSchool.setDeleted(true);
+
+        MyUserDetail teacherDetail = new MyUserDetail(user("ROLE_TEACHER", deletedSchool));
+        assertThat(teacherDetail.isEnabled()).isFalse();
+
+        MyUserDetail principalDetail = new MyUserDetail(user("ROLE_SCHOOL_ADMIN", deletedSchool));
+        assertThat(principalDetail.isEnabled()).isFalse();
+
+        MyUserDetail studentDetail = new MyUserDetail(user("ROLE_USER", deletedSchool));
+        assertThat(studentDetail.isEnabled()).isFalse();
+
+        MyUserDetail adminDetail = new MyUserDetail(user("ROLE_ADMIN", deletedSchool));
+        assertThat(adminDetail.isEnabled()).isTrue();
+    }
+
+    @Test
     void studentIsLockedThroughTheSchoolOfTheirClass() {
         School activeSchool = new School();
         School lockedSchool = new School();
         lockedSchool.setActive(false);
+        lockedSchool.setDeleted(false);
         StudentTrackingClass trackingClass = new StudentTrackingClass();
         trackingClass.setSchool(lockedSchool);
         User student = user("ROLE_USER", activeSchool);

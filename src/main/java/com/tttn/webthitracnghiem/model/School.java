@@ -46,6 +46,9 @@ public class School {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
     public School() {
     }
 
@@ -145,6 +148,14 @@ public class School {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public String getFullLocationString() {

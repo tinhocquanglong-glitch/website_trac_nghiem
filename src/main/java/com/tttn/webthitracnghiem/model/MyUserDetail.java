@@ -11,30 +11,54 @@ import java.util.List;
 public class MyUserDetail implements UserDetails {
     private User user;
     private final boolean schoolLocked;
+    private final boolean schoolDeleted;
 
     public MyUserDetail(User user) {
         this.user = user;
+        this.schoolDeleted = belongsToDeletedSchool(user);
         this.schoolLocked = belongsToLockedSchool(user);
     }
 
-    /** Accounts of a locked school cannot sign in; the system admin is never locked out. */
-    private static boolean belongsToLockedSchool(User user) {
-        boolean systemAdmin = user.getRoles() != null && user.getRoles().stream()
+    private static School getSchoolOfUser(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (user.getTrackingClass() != null && user.getTrackingClass().getSchool() != null) {
+            return user.getTrackingClass().getSchool();
+        }
+        return user.getSchool();
+    }
+
+    private static boolean isSystemAdmin(User user) {
+        return user != null && user.getRoles() != null && user.getRoles().stream()
                 .anyMatch(role -> "ROLE_ADMIN".equals(role.getRoleName()));
-        if (systemAdmin) {
+    }
+
+    /** Accounts of a deleted school cannot sign in; the system admin is never locked out. */
+    private static boolean belongsToDeletedSchool(User user) {
+        if (isSystemAdmin(user)) {
             return false;
         }
-        School school = user.getTrackingClass() != null && user.getTrackingClass().getSchool() != null
-                ? user.getTrackingClass().getSchool()
-                : user.getSchool();
-        return school != null && !school.isActive();
+        School school = getSchoolOfUser(user);
+        return school != null && school.isDeleted();
+    }
+
+    /** Accounts of a temporarily locked school cannot sign in. */
+    private static boolean belongsToLockedSchool(User user) {
+        if (isSystemAdmin(user)) {
+            return false;
+        }
+        School school = getSchoolOfUser(user);
+        return school != null && !school.isDeleted() && !school.isActive();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> grantedAuthorityList = new ArrayList<>();
-        for (Role role : user.getRoles()){
-            grantedAuthorityList.add(new SimpleGrantedAuthority(role.getRoleName()));
+        if (user.getRoles() != null) {
+            for (Role role : user.getRoles()){
+                grantedAuthorityList.add(new SimpleGrantedAuthority(role.getRoleName()));
+            }
         }
         return grantedAuthorityList;
     }
@@ -48,7 +72,6 @@ public class MyUserDetail implements UserDetails {
     public String getUsername() {
         return user.getId();
     }
-
 
     @Override
     public boolean isAccountNonExpired() {
@@ -67,7 +90,6 @@ public class MyUserDetail implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return !schoolDeleted;
     }
 }
-

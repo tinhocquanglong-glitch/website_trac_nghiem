@@ -14,19 +14,26 @@ import java.util.Optional;
 @Repository
 public interface SchoolRepository extends JpaRepository<School, Integer> {
 
-    Optional<School> findBySchoolCode(String schoolCode);
+    @Query("SELECT s FROM School s WHERE s.schoolCode = :schoolCode AND s.deleted = false")
+    Optional<School> findBySchoolCode(@Param("schoolCode") String schoolCode);
 
+    @Query("SELECT s FROM School s WHERE s.active = true AND s.deleted = false ORDER BY s.name ASC")
     List<School> findAllByActiveTrueOrderByNameAsc();
 
+    @Query("SELECT s FROM School s WHERE s.deleted = false ORDER BY s.name ASC")
     List<School> findAllByOrderByNameAsc();
 
-    List<School> findByProvinceCodeAndActiveTrueOrderByNameAsc(Integer provinceCode);
+    @Query("SELECT s FROM School s WHERE s.provinceCode = :provinceCode AND s.active = true AND s.deleted = false ORDER BY s.name ASC")
+    List<School> findByProvinceCodeAndActiveTrueOrderByNameAsc(@Param("provinceCode") Integer provinceCode);
 
-    List<School> findByDistrictCodeAndActiveTrueOrderByNameAsc(Integer districtCode);
+    @Query("SELECT s FROM School s WHERE s.districtCode = :districtCode AND s.active = true AND s.deleted = false ORDER BY s.name ASC")
+    List<School> findByDistrictCodeAndActiveTrueOrderByNameAsc(@Param("districtCode") Integer districtCode);
 
-    List<School> findByWardCodeAndActiveTrueOrderByNameAsc(Integer wardCode);
+    @Query("SELECT s FROM School s WHERE s.wardCode = :wardCode AND s.active = true AND s.deleted = false ORDER BY s.name ASC")
+    List<School> findByWardCodeAndActiveTrueOrderByNameAsc(@Param("wardCode") Integer wardCode);
 
-    @Query("SELECT s FROM School s WHERE (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.schoolCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+    @Query("SELECT s FROM School s WHERE s.deleted = false " +
+           "AND (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.schoolCode) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND (:provinceCode IS NULL OR s.provinceCode = :provinceCode)")
     Page<School> searchSchools(@Param("keyword") String keyword, @Param("provinceCode") Integer provinceCode, Pageable pageable);
 }

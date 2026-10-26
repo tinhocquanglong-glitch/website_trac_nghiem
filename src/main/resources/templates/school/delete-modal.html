@@ -5,28 +5,60 @@
 <div th:fragment="modal(returnTo)">
     <div class="modal fade" id="deleteSchoolModal" tabindex="-1" role="dialog"
          aria-labelledby="deleteSchoolModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <form class="modal-content" method="post" id="deleteSchoolForm" action="">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;" method="post" id="deleteSchoolForm" action="">
                 <input type="hidden" name="returnTo" th:value="${returnTo}">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="deleteSchoolModalLabel">Xóa trường học</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Đóng">
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title font-weight-bold" id="deleteSchoolModalLabel" style="font-size: 16px;">
+                        <i class="fas fa-trash-alt mr-2"></i>Xác nhận xóa trường học
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Đóng" style="opacity: 0.9;">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <p>Bạn sắp xóa trường <strong id="deleteSchoolName"></strong>. Thao tác này không thể hoàn tác.</p>
-                    <p class="small text-muted">
-                        Chỉ xóa được trường không còn tài khoản và lớp học. Nếu trường vẫn còn dữ liệu,
-                        hãy dùng chức năng Khóa trường.
-                    </p>
-                    <label for="deleteSchoolPassword">Nhập mật khẩu admin để xác nhận</label>
-                    <input type="password" class="form-control" id="deleteSchoolPassword" name="adminPassword"
-                           required autocomplete="current-password">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="font-size: 38px; color: #dc3545;">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <p class="mb-1 text-muted" style="font-size: 14px;">Bạn có chắc chắn muốn xóa trường học sau?</p>
+                        <h4 class="font-weight-bold text-dark mb-0" id="deleteSchoolName"></h4>
+                    </div>
+
+                    <div class="alert alert-warning border-0 small py-2 px-3 mb-3" style="background-color: #fff3cd; color: #856404; border-radius: 8px; font-size: 12.5px;">
+                        <i class="fas fa-exclamation-triangle mr-1 text-warning"></i>
+                        <strong>Cảnh báo quan trọng:</strong>
+                        <ul class="mb-0 pl-3 mt-1 text-left">
+                            <li>Toàn bộ tài khoản của <strong>Hiệu trưởng, Giáo viên và Học sinh</strong> thuộc trường này sẽ <strong>không thể đăng nhập</strong> vào hệ thống nữa.</li>
+                            <li>Tất cả các <strong>môn học riêng do trường tạo</strong> sẽ bị ẩn khỏi toàn bộ hệ thống.</li>
+                            <li>Trường học sẽ bị ẩn khỏi danh sách trường hoạt động. Các đề thi và kết quả thi trước đây vẫn được lưu trữ an toàn trong lịch sử.</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group text-left mb-0">
+                        <label for="deleteSchoolPassword" class="font-weight-bold text-dark mb-1" style="font-size: 13px;">
+                            <i class="fas fa-key mr-1 text-danger"></i>Nhập mật khẩu Admin để xác nhận xóa: <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="deleteSchoolPassword" name="adminPassword"
+                                   required autocomplete="current-password" placeholder="Nhập mật khẩu Admin của bạn..."
+                                   style="border-radius: 6px 0 0 6px; font-size: 14px; height: 42px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleSchoolPasswordBtn"
+                                        style="border-radius: 0 6px 6px 0; border-color: #ced4da;" title="Hiện/Ẩn mật khẩu">
+                                    <i class="fas fa-eye" id="toggleSchoolPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Xóa trường</button>
+                <div class="modal-footer bg-light border-top-0 px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal" style="border-radius: 6px;">
+                        <i class="fas fa-times mr-1"></i>Hủy bỏ
+                    </button>
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold" style="border-radius: 6px;">
+                        <i class="fas fa-trash-alt mr-1"></i>Xác nhận xóa trường
+                    </button>
                 </div>
             </form>
         </div>
@@ -44,6 +76,20 @@
             window.jQuery('#deleteSchoolModal')
                 .one('shown.bs.modal', function () { password.focus(); })
                 .modal('show');
+        });
+
+        document.getElementById('toggleSchoolPasswordBtn')?.addEventListener('click', function () {
+            var input = document.getElementById('deleteSchoolPassword');
+            var icon = document.getElementById('toggleSchoolPasswordIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         });
     </script>
 </div>

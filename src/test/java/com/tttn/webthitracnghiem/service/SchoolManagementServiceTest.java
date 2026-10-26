@@ -15,10 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class SchoolManagementServiceTest {
     private final SchoolRepository schoolRepository = mock(SchoolRepository.class);
@@ -29,41 +27,41 @@ class SchoolManagementServiceTest {
             schoolRepository, userRepository, classRepository);
 
     @Test
-    void refusesToDeleteSchoolThatStillHasAccountsOrClasses() {
+    void softDeletesSchoolAndHidesSchoolSubjects() {
         School school = school();
         when(schoolRepository.findById(4)).thenReturn(Optional.of(school));
-        when(userRepository.countBySchoolId(4)).thenReturn(3L);
-        when(classRepository.countBySchoolId(4)).thenReturn(2L);
-        ReflectionTestUtils.setField(service, "entityManager", entityManager);
+        when(schoolRepository.save(any(School.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> service.deleteSchool(4))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("3 tài khoản")
-                .hasMessageContaining("2 lớp");
-        verify(schoolRepository, never()).delete(any());
-        verify(entityManager, never()).createQuery(anyString());
-    }
-
-    @Test
-    void deletesEmptySchoolAfterDetachingContentAndRemovingChatRooms() {
-        School school = school();
         Query query = mock(Query.class);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(entityManager.createQuery(anyString())).thenReturn(query);
-        when(schoolRepository.findById(4)).thenReturn(Optional.of(school));
         ReflectionTestUtils.setField(service, "entityManager", entityManager);
 
-        assertThat(service.deleteSchool(4)).isSameAs(school);
+        School result = service.deleteSchool(4);
 
-        verify(entityManager).createQuery("UPDATE Exam e SET e.school = NULL WHERE e.school.id = :schoolId");
-        verify(entityManager).createQuery("DELETE FROM ChatRoom r WHERE r.school.id = :schoolId");
-        verify(schoolRepository).delete(school);
+        assertThat(result.isDeleted()).isTrue();
+        assertThat(result.isActive()).isFalse();
+        verify(schoolRepository).save(school);
+        verify(entityManager).createQuery("UPDATE Subject s SET s.status = 0 WHERE s.school.id = :schoolId");
+        verify(query).setParameter("schoolId", 4);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    void throwsWhenSchoolNotFound() {
+        when(schoolRepository.findById(99)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.deleteSchool(99))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Không tìm thấy trường học.");
     }
 
     private static School school() {
         School school = new School();
         school.setId(4);
         school.setName("THCS A");
+        school.setActive(true);
+        school.setDeleted(false);
         return school;
     }
 }

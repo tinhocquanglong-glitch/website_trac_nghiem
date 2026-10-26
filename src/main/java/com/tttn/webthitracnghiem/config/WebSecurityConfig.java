@@ -9,7 +9,19 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
+import com.tttn.webthitracnghiem.repository.UserRepository;
+import com.tttn.webthitracnghiem.model.User;
+import com.tttn.webthitracnghiem.model.School;
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -20,6 +32,9 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private MyUserDetailServiceImpl myUserDetailService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -35,10 +50,51 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .formLogin().loginPage("/login")
-                .failureHandler((request, response, exception) -> response.sendRedirect(request.getContextPath()
-                        + (exception instanceof LockedException ? "/login?locked=true" : "/login?error=true")))
+                .failureHandler((request, response, exception) -> {
+                    if (exception instanceof DisabledException) {
+                        response.sendRedirect(request.getContextPath() + "/login?deleted=true");
+                    } else if (exception instanceof LockedException) {
+                        response.sendRedirect(request.getContextPath() + "/login?locked=true");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/login?error=true");
+                    }
+                })
                 .defaultSuccessUrl("/role", true)
                 .and()
+                .addFilterAfter(new OncePerRequestFilter() {
+                    @Override
+                    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                            throws ServletException, IOException {
+                        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+                        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+                            boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+                            if (!isAdmin) {
+                                User u = userRepository.findById(auth.getName()).orElse(null);
+                                if (u != null) {
+                                    School s = u.getTrackingClass() != null && u.getTrackingClass().getSchool() != null
+                                            ? u.getTrackingClass().getSchool()
+                                            : u.getSchool();
+                                    if (s != null) {
+                                        if (s.isDeleted()) {
+                                            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                                            HttpSession session = request.getSession(false);
+                                            if (session != null) session.invalidate();
+                                            response.sendRedirect(request.getContextPath() + "/login?deleted=true");
+                                            return;
+                                        } else if (!s.isActive()) {
+                                            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                                            HttpSession session = request.getSession(false);
+                                            if (session != null) session.invalidate();
+                                            response.sendRedirect(request.getContextPath() + "/login?locked=true");
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        filterChain.doFilter(request, response);
+                    }
+                }, SecurityContextPersistenceFilter.class)
                 .authorizeRequests()
                 .antMatchers("/role", "/api/location/**").permitAll()
                 .antMatchers("/chat/**", "/api/chat/**", "/ws", "/ws/**")
