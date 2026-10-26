@@ -669,8 +669,13 @@ public class StudentTrackingController {
             redirectAttributes.addFlashAttribute("error", "Chỉ Ban giám hiệu / Quản trị viên mới có quyền hủy phân công giáo viên bộ môn.");
             return "redirect:/student-tracking/classes/" + classId;
         }
-        User currentUser = currentUser();
-        if (password == null || password.trim().isEmpty() || currentUser == null || !passwordEncoder.matches(password.trim(), currentUser.getPassWord())) {
+        User currentUser = (auth != null && userService != null) ? userService.findById(auth.getName()) : null;
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập lại!");
+            return "redirect:/student-tracking/classes/" + classId;
+        }
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        if (password == null || password.trim().isEmpty() || !encoder.matches(password.trim(), currentUser.getPassWord())) {
             redirectAttributes.addFlashAttribute("error", "Mật khẩu xác nhận không chính xác! Không thể hủy phân công giáo viên bộ môn.");
             return "redirect:/student-tracking/classes/" + classId;
         }
