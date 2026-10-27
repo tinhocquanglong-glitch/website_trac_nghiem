@@ -17,4 +17,22 @@ public interface QuestionGenerator {
 
     /** Questions for the request; may return fewer than asked. Output is validated by the caller. */
     List<GeneratedQuestion> generate(QuestionGenerationRequest request);
+
+    /**
+     * Generates multiple-choice questions directly from raw lesson-plan document content,
+     * applying strict pedagogical filtering to ignore teacher management/administrative sections
+     * and strictly extract pure subject-matter knowledge.
+     */
+    default List<GeneratedQuestion> generateFromUploadedLessonPlan(
+            String subjectName, Integer grade, String content, int count, int easy, int medium, int hard) {
+        int c = Math.max(1, count);
+        return generate(new QuestionGenerationRequest(
+                subjectName != null ? subjectName : "",
+                grade != null ? grade : 0,
+                "Bài học từ tài liệu KHBD",
+                null,
+                content != null && content.length() > 8000 ? content.substring(0, 8000) : (content != null ? content : ""),
+                c, easy, medium, hard
+        ));
+    }
 }

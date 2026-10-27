@@ -29,6 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -165,4 +166,19 @@ class QuestionGenerationServiceTest {
         lesson.setContent("<p>Tập hợp là một khái niệm cơ bản của toán học.</p>");
         return lesson;
     }
+
+    @Test
+    void generateQuestionsFromUploadedFileDelegatesToGenerator() {
+        QuestionGenerator generator = mock(QuestionGenerator.class);
+        when(generator.isAvailable()).thenReturn(true);
+        when(generator.generateFromUploadedLessonPlan(any(), any(), any(), anyInt(), anyInt(), anyInt(), anyInt()))
+                .thenReturn(List.of(new GeneratedQuestion("Hàm số là gì?", "A", "B", "C", "D", 1, 1)));
+
+        QuestionGenerationService service = service(generator);
+        List<GeneratedQuestion> result = service.generateQuestionsFromUploadedFile("Toán", 10, "Lý thuyết hàm số...", 5);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).title()).isEqualTo("Hàm số là gì?");
+    }
+
 }

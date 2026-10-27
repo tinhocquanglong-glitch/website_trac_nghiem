@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sinh Câu Hỏi Từ File KHBD Bằng AI - Website Trắc Nghiệm</title>
+    <!-- Bootstrap -->
+    <link th:href="@{/vendors/bootstrap/dist/css/bootstrap.min.css}" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link th:href="@{/vendors/font-awesome/css/font-awesome.min.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <link rel="stylesheet" th:href="@{/css/loader.css}">
+    <!-- Custom Theme Style -->
+    <link th:href="@{/build/css/custom.min.css}" rel="stylesheet">
+    <style>
+        body { background: #f4f6f9; }
+        .page-header-box {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            padding: 24px 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+        .config-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            margin-bottom: 25px;
+        }
+        .dropzone-area {
+            border: 2px dashed #059669;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f0fdf4;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dropzone-area:hover, .dropzone-area.dragover {
+            background: #dcfce7;
+            border-color: #047857;
+            transform: scale(1.01);
+        }
+        .question-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: border-color 0.2s ease;
+        }
+        .question-card.selected {
+            border-color: #10b981;
+            background: #fafdfb;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .option-label {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #475569;
+            flex-shrink: 0;
+        }
+        .option-item.correct .option-label {
+            background: #10b981;
+            color: #fff;
+        }
+        .ai-banner-tip {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 18px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13.5px;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="nav-md">
+<div id="preloader"></div>
+<div class="container body">
+    <div class="main_container">
+        <div th:insert="~{index.html :: navbarAdmin}"></div>
+        <div th:insert="~{index.html :: topnavAdmin}"></div>
+
+        <div class="right_col" role="main">
+            <div class="container" style="max-width: 1100px;">
+                <!-- Header -->
+                <div class="page-header-box d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1 text-white font-weight-bold">
+                            <i class="fas fa-robot mr-2"></i>Sinh Câu Hỏi Trắc Nghiệm Từ File KHBD Bằng AI
+                        </h3>
+                        <p class="mb-0 text-white-50">
+                            Tự động trích xuất kiến thức cốt lõi từ Kế hoạch bài dạy (Word / PDF / Text) và loại bỏ các phần nghiệp vụ sư phạm
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/question/list" class="btn btn-light text-dark font-weight-bold">
+                            <i class="fas fa-arrow-left mr-1"></i> Ngân hàng câu hỏi
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tip Banner -->
+                <div class="ai-banner-tip">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Cơ chế phân loại thông minh:</strong> AI sẽ tự động đọc tài liệu của bạn, 
+                    <strong>bỏ qua các phần nghiệp vụ sư phạm</strong> (mục tiêu phẩm chất/năng lực, hoạt động của GV và HS, tiến trình tiết học, phiếu học tập...) 
+                    và <strong>chỉ trích xuất kiến thức chuyên môn cốt lõi</strong> để sinh các câu hỏi trắc nghiệm kiểm tra độ hiểu bài của học sinh.
+                </div>
+
+                <!-- Form Upload & Cấu hình -->
+                <div class="config-card" id="configCard">
+                    <h5 class="font-weight-bold mb-3 text-success">
+                        <i class="fas fa-sliders-h mr-2"></i>1. Cấu hình thông tin & Tải file KHBD
+                    </h5>
+                    <form id="aiFileForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="font-weight-bold">Môn học <span class="text-danger">*</span></label>
+                                <select class="form-control" id="subjectSelect" name="subjectId" required>
+                                    <option value="">-- Chọn môn học --</option>
+                                    <option th:each="sub : ${subjects}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="font-weight-bold">Khối lớp (tùy chọn)</label>
+                                <select class="form-control" id="classSelect" name="classId">
+                                    <option value="">-- Áp dụng chung cho khối --</option>
+                                    <option th:each="cls : ${classesList}" th:value="${cls.id}" th:text="${cls.displayName}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="font-weight-bold">Số lượng câu hỏi</label>
+                                <select class="form-control" id="questionCount" name="count">
+                                    <option value="5" selected>5 câu</option>
+                                    <option value="10">10 câu</option>
+                                    <option value="15">15 câu</option>
+                                    <option value="20">20 câu</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Dropzone Upload Area -->
+                        <div class="dropzone-area mt-2" id="dropzoneArea" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-cloud-upload-alt text-success mb-2" style="font-size: 42px;"></i>
+                            <h6 class="font-weight-bold mb-1" id="fileTitle">Bấm để chọn file hoặc Kéo & Thả file KHBD vào đây</h6>
+                            <p class="text-muted small mb-0" id="fileSubtitle">Hỗ trợ các định dạng Word (.docx, .doc), PDF (.pdf), Text (.txt) - Tối đa 15MB</p>
+                            <input type="file" id="fileInput" name="file" accept=".docx,.doc,.pdf,.txt" style="display: none;" onchange="handleFileSelect(this)">
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-success btn-lg px-4 font-weight-bold" id="btnGenerate" onclick="submitForPreview()">
+                                <i class="fas fa-magic mr-2"></i>Đọc File & Sinh Câu Hỏi Bằng AI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Loading Box -->
+                <div id="loadingBox" class="text-center my-5 py-4" style="display: none;">
+                    <div class="spinner-border text-success" style="width: 3.5rem; height: 3.5rem;" role="status">
+                        <span class="sr-only">Đang xử lý...</span>
+                    </div>
+                    <h5 class="mt-3 font-weight-bold text-dark">AI đang đọc tài liệu & trích xuất kiến thức...</h5>
+                    <p class="text-muted">Đang phân tích nội dung, lọc bỏ nghiệp vụ sư phạm và sáng tạo câu hỏi trắc nghiệm chất lượng cao.</p>
+                </div>
+
+                <!-- Khung Xem trước & Lưu (Preview) -->
+                <div id="previewCard" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h4 class="font-weight-bold mb-0 text-dark">
+                                <i class="fas fa-clipboard-check text-success mr-2"></i>Danh Sách Câu Hỏi Do AI Sinh Ra
+                            </h4>
+                            <p class="text-muted small mb-0">Bạn có thể trực tiếp chỉnh sửa nội dung, đáp án và chọn các câu ưng ý trước khi lưu vào hệ thống</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" onclick="toggleSelectAll(true)">
+                                <i class="fas fa-check-double mr-1"></i>Chọn tất cả
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm mr-3" onclick="toggleSelectAll(false)">
+                                <i class="fas fa-times mr-1"></i>Bỏ chọn
+                            </button>
+                            <button type="button" class="btn btn-success font-weight-bold" id="btnSaveQuestions" onclick="saveSelectedQuestions()">
+                                <i class="fas fa-save mr-1"></i>Lưu câu hỏi đã chọn
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="questionsContainer">
+                        <!-- Questions will be injected here via JavaScript -->
+                    </div>
+
+                    <div class="text-center mt-4 mb-5">
+                        <button type="button" class="btn btn-success btn-lg px-5 font-weight-bold" onclick="saveSelectedQuestions()">
+                            <i class="fas fa-save mr-2"></i>Lưu Tất Cả Câu Hỏi Đã Chọn Vào Ngân Hàng
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script th:src="@{/vendors/jquery/dist/jquery.min.js}"></script>
+<script th:src="@{/vendors/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/build/js/custom.min.js}"></script>
+
+<script>
+    let generatedList = [];
+
+    // Drag and drop handlers
+    const dropzone = document.getElementById('dropzoneArea');
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('dragover');
+        }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('dragover');
+        }, false);
+    });
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            document.getElementById('fileInput').files = files;
+            handleFileSelect(document.getElementById('fileInput'));
+        }
+    }, false);
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('fileTitle').innerHTML = '<span class="text-success"><i class="fas fa-file-alt mr-1"></i> ' + file.name + '</span>';
+            document.getElementById('fileSubtitle').innerText = 'Dung lượng: ' + sizeMb + ' MB (Đã sẵn sàng tải lên)';
+        }
+    }
+
+    function submitForPreview() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        const fileInput = document.getElementById('fileInput');
+
+        if (!subjectId) {
+            alert('Vui lòng chọn môn học trước khi tiếp tục!');
+            document.getElementById('subjectSelect').focus();
+            return;
+        }
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Vui lòng tải lên file Kế hoạch bài dạy (.docx, .doc, .pdf, .txt)!');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('subjectId', subjectId);
+        const classId = document.getElementById('classSelect').value;
+        if (classId) {
+            formData.append('classId', classId);
+        }
+        formData.append('count', document.getElementById('questionCount').value);
+
+        // Show loading
+        document.getElementById('configCard').style.opacity = '0.5';
+        document.getElementById('btnGenerate').disabled = true;
+        document.getElementById('loadingBox').style.display = 'block';
+        document.getElementById('previewCard').style.display = 'none';
+
+        // Scroll to loading
+        document.getElementById('loadingBox').scrollIntoView({ behavior: 'smooth' });
+
+        fetch('/question/ai-generate-from-file/preview', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('configCard').style.opacity = '1';
+            document.getElementById('btnGenerate').disabled = false;
+            document.getElementById('loadingBox').style.display = 'none';
+
+            if (data.success) {
+                generatedList = data.questions || [];
+                renderQuestions(generatedList);
+                document.getElementById('previewCard').style.display = 'block';
+                document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert(data.message || 'Có lỗi xảy ra khi tạo câu hỏi bằng AI.');
+            }
+        })
+        .catch(err => {
+            document.getElementById('configCard').style.opacity = '1';
+            document.getElementById('btnGenerate').disabled = false;
+            document.getElementById('loadingBox').style.display = 'none';
+            alert('Lỗi kết nối máy chủ: ' + err.message);
+        });
+    }
+
+    function renderQuestions(questions) {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+
+        if (!questions || questions.length === 0) {
+            container.innerHTML = '<div class="alert alert-warning">Không có câu hỏi nào được sinh ra.</div>';
+            return;
+        }
+
+        questions.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.className = 'question-card selected';
+            card.id = 'q_card_' + idx;
+
+            const level = q.level || 1;
+            const levelText = level === 1 ? 'Nhận biết' : (level === 2 ? 'Thông hiểu' : 'Vận dụng');
+
+            card.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="checkbox" class="q-checkbox" id="chk_${idx}" checked onchange="toggleCardSelect(${idx})" style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="chk_${idx}" class="font-weight-bold text-success mb-0 ml-2" style="cursor: pointer; font-size: 15px;">Câu #${idx + 1}</label>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <label class="small text-muted mb-0 mr-2">Độ khó:</label>
+                        <select class="form-control form-control-sm" id="level_${idx}" style="width: 130px;">
+                            <option value="1" ${level === 1 ? 'selected' : ''}>Nhận biết</option>
+                            <option value="2" ${level === 2 ? 'selected' : ''}>Thông hiểu</option>
+                            <option value="3" ${level === 3 ? 'selected' : ''}>Vận dụng</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold small text-muted">Nội dung câu hỏi:</label>
+                    <textarea class="form-control" id="title_${idx}" rows="2">${escapeHtml(q.title || '')}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <div class="option-item ${q.answer === 1 ? 'correct' : ''}">
+                            <input type="radio" name="ans_${idx}" value="1" ${q.answer === 1 ? 'checked' : ''} onchange="updateRadioAnswer(${idx}, 1)">
+                            <div class="option-label">A</div>
+                            <input type="text" class="form-control" id="optA_${idx}" value="${escapeHtml(q.optionA || '')}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="option-item ${q.answer === 2 ? 'correct' : ''}">
+                            <input type="radio" name="ans_${idx}" value="2" ${q.answer === 2 ? 'checked' : ''} onchange="updateRadioAnswer(${idx}, 2)">
+                            <div class="option-label">B</div>
+                            <input type="text" class="form-control" id="optB_${idx}" value="${escapeHtml(q.optionB || '')}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="option-item ${q.answer === 3 ? 'correct' : ''}">
+                            <input type="radio" name="ans_${idx}" value="3" ${q.answer === 3 ? 'checked' : ''} onchange="updateRadioAnswer(${idx}, 3)">
+                            <div class="option-label">C</div>
+                            <input type="text" class="form-control" id="optC_${idx}" value="${escapeHtml(q.optionC || '')}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="option-item ${q.answer === 4 ? 'correct' : ''}">
+                            <input type="radio" name="ans_${idx}" value="4" ${q.answer === 4 ? 'checked' : ''} onchange="updateRadioAnswer(${idx}, 4)">
+                            <div class="option-label">D</div>
+                            <input type="text" class="form-control" id="optD_${idx}" value="${escapeHtml(q.optionD || '')}">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function updateRadioAnswer(idx, ans) {
+        const card = document.getElementById('q_card_' + idx);
+        card.querySelectorAll('.option-item').forEach((item, oIdx) => {
+            if (oIdx + 1 === ans) {
+                item.classList.add('correct');
+            } else {
+                item.classList.remove('correct');
+            }
+        });
+    }
+
+    function toggleCardSelect(idx) {
+        const chk = document.getElementById('chk_' + idx);
+        const card = document.getElementById('q_card_' + idx);
+        if (chk.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    }
+
+    function toggleSelectAll(select) {
+        const checkboxes = document.querySelectorAll('.q-checkbox');
+        checkboxes.forEach((chk, idx) => {
+            chk.checked = select;
+            toggleCardSelect(idx);
+        });
+    }
+
+    function saveSelectedQuestions() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        const classId = document.getElementById('classSelect').value || null;
+
+        const questionsToSave = [];
+        const checkboxes = document.querySelectorAll('.q-checkbox');
+
+        checkboxes.forEach((chk, idx) => {
+            if (chk.checked) {
+                const title = document.getElementById('title_' + idx).value;
+                const optA = document.getElementById('optA_' + idx).value;
+                const optB = document.getElementById('optB_' + idx).value;
+                const optC = document.getElementById('optC_' + idx).value;
+                const optD = document.getElementById('optD_' + idx).value;
+
+                let selectedAns = 1;
+                const radios = document.getElementsByName('ans_' + idx);
+                for (let r of radios) {
+                    if (r.checked) {
+                        selectedAns = parseInt(r.value, 10);
+                        break;
+                    }
+                }
+
+                const level = parseInt(document.getElementById('level_' + idx).value, 10);
+
+                questionsToSave.push({
+                    title: title,
+                    optionA: optA,
+                    optionB: optB,
+                    optionC: optC,
+                    optionD: optD,
+                    ans: selectedAns,
+                    level: level
+                });
+            }
+        });
+
+        if (questionsToSave.length === 0) {
+            alert('Vui lòng chọn ít nhất 1 câu hỏi để lưu!');
+            return;
+        }
+
+        if (!confirm('Bạn có chắc chắn muốn lưu ' + questionsToSave.length + ' câu hỏi này vào Ngân hàng câu hỏi không?')) {
+            return;
+        }
+
+        const payload = {
+            subjectId: parseInt(subjectId, 10),
+            classId: classId ? parseInt(classId, 10) : null,
+            questions: questionsToSave
+        };
+
+        const btnSave = document.getElementById('btnSaveQuestions');
+        btnSave.disabled = true;
+        btnSave.innerText = 'Đang lưu...';
+
+        fetch('/question/ai-generate-from-file/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Lưu câu hỏi thành công!');
+                window.location.href = data.redirectUrl || '/question/list';
+            } else {
+                btnSave.disabled = false;
+                btnSave.innerHTML = '<i class="fas fa-save mr-1"></i>Lưu câu hỏi đã chọn';
+                alert(data.message || 'Lỗi khi lưu câu hỏi.');
+            }
+        })
+        .catch(err => {
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="fas fa-save mr-1"></i>Lưu câu hỏi đã chọn';
+            alert('Lỗi kết nối: ' + err.message);
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+</body>
+</html>

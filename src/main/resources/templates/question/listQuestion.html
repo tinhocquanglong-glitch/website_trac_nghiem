@@ -159,6 +159,7 @@
                             </form>
                         </div>
                         <div style="display: flex;gap: 15px;">
+                            <a href="/question/ai-generate-from-file" class="btn btn-success" title="Sinh câu hỏi tự động từ file KHBD bằng AI"><i class="fas fa-robot mr-1"></i> Sinh từ file KHBD (AI)</a>
                             <a href="/question/review" class="btn btn-outline-warning"
                                th:classappend="${pendingCount != null and pendingCount > 0} ? 'btn-warning text-dark'">
                                 Chờ duyệt (<span th:text="${pendingCount != null ? pendingCount : 0}">0</span>)

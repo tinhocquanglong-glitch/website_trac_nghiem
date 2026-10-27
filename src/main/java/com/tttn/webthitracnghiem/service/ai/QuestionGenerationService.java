@@ -50,6 +50,30 @@ public class QuestionGenerationService {
         return generator() != null;
     }
 
+    /**
+     * Sinh câu hỏi trắc nghiệm từ nội dung file KHBD được tải lên, lọc bỏ nghiệp vụ sư phạm.
+     */
+    public List<GeneratedQuestion> generateQuestionsFromUploadedFile(
+            String subjectName, Integer grade, String fileContent, int count) {
+        QuestionGenerator generator = generator();
+        if (generator == null) {
+            throw new IllegalStateException("Chức năng sinh câu hỏi bằng AI chưa được cấu hình (thiếu GEMINI_API_KEY).");
+        }
+        if (fileContent == null || fileContent.isBlank()) {
+            throw new IllegalArgumentException("Nội dung tài liệu trống.");
+        }
+        int wanted = Math.max(1, Math.min(count, 30));
+        int easy = Math.max(1, Math.round(wanted * 0.4f));
+        int hard = Math.max(1, Math.round(wanted * 0.2f));
+        int medium = Math.max(0, wanted - easy - hard);
+
+        return generator.generateFromUploadedLessonPlan(
+                subjectName != null ? subjectName : "",
+                grade != null ? grade : 0,
+                fileContent,
+                wanted, easy, medium, hard);
+    }
+
     private QuestionGenerator generator() {
         return generators.orderedStream().filter(QuestionGenerator::isAvailable).findFirst().orElse(null);
     }

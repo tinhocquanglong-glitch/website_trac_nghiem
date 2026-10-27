@@ -51,6 +51,11 @@ public class QuestionController {
     private com.tttn.webthitracnghiem.repository.QuestionRepository questionRepository;
     @Autowired
     private org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.FileContentExtractorService fileContentExtractorService;
+    @Autowired
+    private com.tttn.webthitracnghiem.service.ai.QuestionGenerationService questionGenerationService;
+
 
     @ModelAttribute("exams")
     public Iterable<Exam> exams() {
@@ -341,5 +346,143 @@ public class QuestionController {
         ra.addFlashAttribute("message", "Thêm câu hỏi thành công");
         questionService.save(question);
         return "redirect:/question/list";
+    }
+
+    @GetMapping("/question/ai-generate-from-file")
+    public String showAiGenerateFromFilePage(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        User user = userService.findById(auth.getName());
+        boolean isAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        boolean isSchoolAdmin = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_SCHOOL_ADMIN"));
+        boolean isTeacher = auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_TEACHER"));
+
+        if (!isAdmin && !isSchoolAdmin && !isTeacher) {
+            return "redirect:/question/list";
+        }
+
+        model.addAttribute("currentUser", user);
+        model.addAttribute("subjects", subjectService.findAll());
+        model.addAttribute("classesList", classesService.findAll());
+        model.addAttribute("isAiAvailable", questionGenerationService.isAvailable());
+        return "question/aiGenerateFromFile";
+    }
+
+    @PostMapping("/question/ai-generate-from-file/preview")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> previewAiQuestionsFromFile(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("subjectId") Integer subjectId,
+            @RequestParam(value = "classId", required = false) Integer classId,
+            @RequestParam(value = "count", defaultValue = "5") int count) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng chọn file Kế hoạch bài dạy (.docx, .doc, .pdf, .txt)."));
+            }
+            if (subjectId == null) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Vui lòng chọn môn học."));
+            }
+            com.tttn.webthitracnghiem.model.Subject subject = subjectService.findById(subjectId);
+            if (subject == null) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không tìm thấy môn học đã chọn."));
+            }
+
+            Integer grade = null;
+            if (classId != null) {
+                com.tttn.webthitracnghiem.model.Classes cls = classesService.findById(classId);
+                if (cls != null) {
+                    grade = cls.getGrade();
+                }
+            }
+
+            // Trích xuất nội dung văn bản từ file (Word, PDF, Text)
+            String extractedText = fileContentExtractorService.extractText(file);
+            if (extractedText == null || extractedText.isBlank()) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không thể đọc được nội dung văn bản từ file tải lên."));
+            }
+
+            // Gọi AI phân tích và sinh câu hỏi trắc nghiệm (lọc bỏ phần nghiệp vụ sư phạm)
+            List<com.tttn.webthitracnghiem.service.ai.GeneratedQuestion> generatedQuestions =
+                    questionGenerationService.generateQuestionsFromUploadedFile(subject.getName(), grade, extractedText, count);
+
+            if (generatedQuestions == null || generatedQuestions.isEmpty()) {
+                return org.springframework.http.ResponseEntity.ok(Map.of(
+                        "success", false,
+                        "message", "AI không thể trích xuất kiến thức hoặc không sinh được câu hỏi nào từ file này."));
+            }
+
+            return org.springframework.http.ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "count", generatedQuestions.size(),
+                    "questions", generatedQuestions,
+                    "subjectName", subject.getName()));
+        } catch (IllegalArgumentException ex) {
+            return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
+        } catch (Exception ex) {
+            return org.springframework.http.ResponseEntity.status(500).body(Map.of("success", false, "message", "Lỗi hệ thống khi sinh câu hỏi: " + ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/question/ai-generate-from-file/save")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> saveAiQuestionsFromFile(
+            @RequestBody com.tttn.webthitracnghiem.model.SaveAiQuestionsRequest request) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            User user = (auth != null && auth.getName() != null) ? userService.findById(auth.getName()) : null;
+
+            if (request == null || request.getSubjectId() == null) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Thiếu thông tin môn học."));
+            }
+            if (request.getQuestions() == null || request.getQuestions().isEmpty()) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Không có câu hỏi nào để lưu."));
+            }
+
+            com.tttn.webthitracnghiem.model.Subject subject = subjectService.findById(request.getSubjectId());
+            if (subject == null) {
+                return org.springframework.http.ResponseEntity.badRequest().body(Map.of("success", false, "message", "Môn học không tồn tại."));
+            }
+
+            com.tttn.webthitracnghiem.model.Classes cls = null;
+            if (request.getClassId() != null) {
+                cls = classesService.findById(request.getClassId());
+            }
+
+            int savedCount = 0;
+            for (com.tttn.webthitracnghiem.model.SaveAiQuestionsRequest.QuestionItem item : request.getQuestions()) {
+                if (item.getTitle() == null || item.getTitle().isBlank()) continue;
+
+                Question q = new Question();
+                q.setTitle(item.getTitle().trim());
+                q.setOptionA(item.getOptionA() != null ? item.getOptionA().trim() : "");
+                q.setOptionB(item.getOptionB() != null ? item.getOptionB().trim() : "");
+                q.setOptionC(item.getOptionC() != null ? item.getOptionC().trim() : "");
+                q.setOptionD(item.getOptionD() != null ? item.getOptionD().trim() : "");
+                q.setAns(item.getAns() >= 1 && item.getAns() <= 4 ? item.getAns() : 1);
+                q.setLevel(item.getLevel() >= 1 && item.getLevel() <= 3 ? item.getLevel() : 1);
+
+                q.setSubject(subject);
+                q.setClasses(cls);
+                q.setAuthor(user);
+                q.setSchool(user != null ? user.getSchool() : null);
+                q.setSource(Question.SOURCE_AI);
+                q.setReviewStatus(Question.REVIEW_APPROVED);
+                q.setIsPublic(true);
+                q.setStatus(1);
+
+                questionRepository.save(q);
+                savedCount++;
+            }
+
+            return org.springframework.http.ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "count", savedCount,
+                    "message", "Đã lưu thành công " + savedCount + " câu hỏi vào Ngân hàng câu hỏi!",
+                    "redirectUrl", "/question/list?subjectId=" + request.getSubjectId()));
+        } catch (Exception ex) {
+            return org.springframework.http.ResponseEntity.status(500).body(Map.of("success", false, "message", "Lỗi khi lưu câu hỏi: " + ex.getMessage()));
+        }
     }
 }

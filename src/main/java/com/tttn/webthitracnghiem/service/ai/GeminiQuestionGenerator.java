@@ -67,13 +67,24 @@ public class GeminiQuestionGenerator implements QuestionGenerator {
 
     @Override
     public List<GeneratedQuestion> generate(QuestionGenerationRequest request) {
+        return generateWithPrompt(buildPrompt(request));
+    }
+
+    @Override
+    public List<GeneratedQuestion> generateFromUploadedLessonPlan(
+            String subjectName, Integer grade, String content, int count, int easy, int medium, int hard) {
+        String prompt = buildUploadedLessonPlanPrompt(subjectName, grade, content, count, easy, medium, hard);
+        return generateWithPrompt(prompt);
+    }
+
+    private List<GeneratedQuestion> generateWithPrompt(String prompt) {
         if (!isAvailable()) {
             throw new IllegalStateException("Gemini chưa được cấu hình API key.");
         }
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("contents", List.of(Map.of(
-                "parts", List.of(Map.of("text", buildPrompt(request))))));
+                "parts", List.of(Map.of("text", prompt)))));
         payload.put("generationConfig", Map.of(
                 "temperature", 0.7,
                 "maxOutputTokens", 4096,
@@ -266,6 +277,80 @@ public class GeminiQuestionGenerator implements QuestionGenerator {
                 safe(request.subjectName()),
                 request.grade() == null ? "Không xác định" : request.grade().toString(),
                 safe(request.lessonName()), safe(request.objectives()), safe(request.content()));
+    }
+
+    private static String buildUploadedLessonPlanPrompt(
+            String subjectName, Integer grade, String rawPlanContent, int count, int easy, int medium, int hard) {
+        String safeContent = rawPlanContent == null ? "" : rawPlanContent.trim();
+        if (safeContent.length() > 35000) {
+            safeContent = safeContent.substring(0, 35000) + "\n...[Tài liệu tiếp tục nhưng đã cắt bớt để vừa giới hạn]";
+        }
+
+        return """
+                Bạn là Chuyên gia Khảo thí và Đo lường Giáo dục hàng đầu tại Việt Nam, am hiểu sâu sắc Chương trình Giáo dục Phổ thông mới.
+                Người dùng (giáo viên) đã tải lên một tài liệu KẾ HOẠCH BÀI DẠY (KHBD / Giáo án) thuộc Môn học: %s (Khối lớp: %s).
+
+                NHIỆM VỤ CỦA BẠN:
+                Đọc hiểu toàn bộ tài liệu giáo án được cung cấp dưới đây, sau đó SÁNG TẠO ra đúng %d câu hỏi trắc nghiệm 4 lựa chọn (A, B, C, D) chất lượng cao để kiểm tra mức độ tiếp thu KIẾN THỨC BÀI HỌC của học sinh.
+
+                ****************************************************************************************
+                QUY TẮC PHÂN LOẠI VÀ CHỌN LỌC NỘI DUNG SƯ PHẠM (BẮT BUỘC TUÂN THỦ 100%%):
+                Một bản KHBD luôn có 2 nhóm nội dung. Bạn phải phân biệt và xử lý như sau:
+
+                NHÓM 1: CÁC NỘI DUNG NGHIỆP VỤ SƯ PHẠM CỦA GIÁO VIÊN (TUYỆT ĐỐI KHÔNG ĐƯỢC LẤY ĐỂ ĐẶT CÂU HỎI):
+                - Tuyệt đối KHÔNG hỏi về Mục tiêu bài học (Ví dụ: "Mục tiêu của bài này là gì?", "Học sinh cần phát triển năng lực gì?", "Học sinh phải hiểu được...", "Yêu cầu cần đạt là gì?").
+                - Tuyệt đối KHÔNG hỏi về Phẩm chất và Năng lực chung/đặc thù (yêu nước, nhân ái, chăm chỉ, trung thực, tự chủ, giao tiếp...).
+                - Tuyệt đối KHÔNG hỏi về Tiến trình bài dạy và các bước tổ chức hoạt động của giáo viên và học sinh (Ví dụ: "Hoạt động 1 có tên là gì?", "Giáo viên yêu cầu học sinh làm gì?", "Học sinh chuyển giao nhiệm vụ như thế nào?", "Các bước thực hiện hoạt động khởi động...").
+                - Tuyệt đối KHÔNG hỏi về Thiết bị dạy học, đồ dùng dạy học, phiếu học tập, bảng kiểm, tiêu chí đánh giá (Ví dụ: "Phiếu học tập số 1 yêu cầu gì?", "Giáo viên sử dụng đồ dùng nào?").
+                => NHỮNG CÂU HỎI VỀ NHÓM 1 LÀ HOÀN TOÀN SAI VỀ MẶT KHẢO THÍ HỌC SINH! BẠN TUYỆT ĐỐI KHÔNG ĐƯỢC TẠO RA BẤT KỲ CÂU NÀO DẠNG NÀY.
+
+                NHÓM 2: KIẾN THỨC CỐT LÕI CỦA BÀI HỌC DÀNH CHO HỌC SINH (CHỈ ĐƯỢC PHÉP LẤY NHÓM NÀY ĐỂ ĐẶT CÂU HỎI):
+                - Chỉ trích xuất phần KIẾN THỨC MÔN HỌC THỰC TẾ xuất hiện trong bài giảng (thường nằm ở phần nội dung bài học, kết luận kiến thức, phần kiến thức mới, bảng dữ liệu kiến thức):
+                  + Định nghĩa, khái niệm khoa học, thuật ngữ chuyên môn.
+                  + Định lý, tính chất, quy tắc, công thức toán học/khoa học.
+                  + Cú pháp câu lệnh, cấu trúc giải thuật, dữ liệu (nếu là môn Tin học).
+                  + Hiện tượng tự nhiên, phản ứng hóa học, cơ chế sinh học, định luật vật lý.
+                  + Sự kiện, nguyên nhân - kết quả, nhân vật lịch sử, địa lý kinh tế - xã hội.
+                  + Ý nghĩa tác phẩm, hình tượng, nghệ thuật, từ vựng, ngữ pháp...
+                - Từ kiến thức cốt lõi đó, hãy đặt câu hỏi trắc nghiệm kiểm tra độ hiểu bài, khả năng phân tích, so sánh và vận dụng kiến thức của học sinh.
+                ****************************************************************************************
+
+                YÊU CẦU ĐỘ KHÓ:
+                - Tổng số câu: %d câu.
+                - Mức 1 (Nhận biết - %d câu): Kiểm tra sự ghi nhớ và nhận diện khái niệm, định nghĩa, công thức cốt lõi của bài.
+                - Mức 2 (Thông hiểu - %d câu): Yêu cầu giải thích nguyên nhân, so sánh, phân biệt các trường hợp, suy luận logic từ kiến thức đã học.
+                - Mức 3 (Vận dụng - %d câu): Đưa ra tình huống thực tế, bài toán thực tiễn, số liệu hoặc ngữ cảnh mới đòi hỏi học sinh áp dụng kiến thức để giải quyết.
+
+                YÊU CẦU PHƯƠNG ÁN TRẢ LỜI & ĐÁP ÁN:
+                - Mỗi câu hỏi gồm 4 phương án: optionA, optionB, optionC, optionD.
+                - 3 phương án gây nhiễu phải hợp lý, khoa học, đánh trúng vào các ngộ nhận sai lầm thường gặp của học sinh, có độ dài và văn phong tương đương phương án đúng.
+                - answer: số nguyên 1, 2, 3 hoặc 4 (tương ứng A=1, B=2, C=3, D=4).
+                - Phân bổ ngẫu nhiên đáp án đúng giữa các phương án.
+
+                ĐỊNH DẠNG ĐẦU RA (JSON BẮT BUỘC):
+                Chỉ trả về DUY NHẤT một JSON array thuần túy, không có giải thích hay markdown bên ngoài:
+                [
+                  {
+                    "title": "Nội dung câu hỏi trắc nghiệm kiểm tra kiến thức học sinh",
+                    "optionA": "Nội dung phương án A",
+                    "optionB": "Nội dung phương án B",
+                    "optionC": "Nội dung phương án C",
+                    "optionD": "Nội dung phương án D",
+                    "answer": 1,
+                    "level": 1
+                  }
+                ]
+
+                NỘI DUNG TÀI LIỆU KẾ HOẠCH BÀI DẠY CỦA GIÁO VIÊN:
+                <tai-lieu-khbd>
+                %s
+                </tai-lieu-khbd>
+                """.formatted(
+                safe(subjectName),
+                grade == null || grade <= 0 ? "Chung" : "Lớp " + grade,
+                count,
+                count, easy, medium, hard,
+                safeContent);
     }
 
     private static String extractJson(String text) {
